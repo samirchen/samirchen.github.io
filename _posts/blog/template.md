@@ -9,4 +9,4 @@ category: blog
 
 
 
-[BeiYuu]:    http://beiyuu.com  "BeiYuu"
+[SamirChen]:    http://samirchen-non.com  "SamirChen"

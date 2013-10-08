@@ -6,6 +6,6 @@ paginate: 8
 permalink: /:title
 
 title: SamirChen
-url: http://samirchen-non.com
+url: http://samirchen.com
 feed: /atom.xml
-author_info: <a href="http://samirchen-non.com/">SamirChen</a>
+author_info: <a href="http://samirchen.com/">SamirChen</a>

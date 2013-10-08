@@ -9,4 +9,4 @@ category: blog
 
 
 
-[SamirChen]:    http://samirchen-non.com  "SamirChen"
+[SamirChen]:    http://samirchen.com  "SamirChen"

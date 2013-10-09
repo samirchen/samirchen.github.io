@@ -8,8 +8,10 @@ body,div,dl,dt,dd,ul,ol,li,h1,h2,h3,h4,h5,h6,pre,code,form,fieldset,legend,input
 article,aside,details,figcaption,figure,footer,header,hgroup,menu,nav,section{display:block;}
 body,button,input,select,textarea{font-size:12px/1.5;}
 input,select,textarea{font-size:100%;}
-table{border-collapse:collapse;border-spacing:0;}
-th{text-align:inherit;}
+/*table{border-collapse:collapse;border-spacing:0;}*/
+table{border-bottom:1px solid #ededed;color:#757575;width:100%;margin-bottom:24px;}
+/*th{text-align:inherit;}*/
+th{text-align:center;font-weight:bold;}
 fieldset,img,a img{border:0;}
 iframe{display:block;}
 abbr,acronym{border:0;font-variant:normal;}
@@ -182,3 +184,5 @@ h3.about {color:#777;margin-top:20px;font-size:22px;margin-bottom:10px}
 @media (max-width: 1300px){
     .home-menu { position:absolute; }
 }
+
+

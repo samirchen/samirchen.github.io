@@ -57,12 +57,10 @@ category: blog
 
 撤销提交：
 
-- 反转提交：
-
+	//反转提交：
 	git revert --no-commit head //反转提交，相当于提交最近一次提交的反操作
-
-- 复位：
-
+	
+	//复位：
 	git reset head //复位，取消暂存
 	git reset head <filename> //复位，取消暂存
 	git reset --hard head^ //复位到head之前的那个版本，不会在版本库中留下痕迹

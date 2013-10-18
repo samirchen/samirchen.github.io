@@ -79,8 +79,8 @@ category: blog
 
 	/*合并分支*/
 	//普通合并
-	git merge <branchname> //合并并提交，如果发生了冲突就不会自动提交，不想立即解决这些冲突的话，可以用 git checkout head . 撤销
-	git merge --no-commit //合并但不提交
+	git merge <branchname> //合并分支<branchname>到当前所在分支并提交，如果发生了冲突就不会自动提交，不想立即解决这些冲突的话，可以用 git checkout head . 撤销
+	git merge --no-commit <branchname> //合并但不提交
 	//压合合并
 	git merge --squash <branchname> //压合合并后直接提交
 	git merge --squash --no-commit <branchname> //当两个人合作开发一个新功能时，需要在一个分支提交多次，开发完成之后再压合成一次提交
@@ -193,6 +193,13 @@ category: blog
 
 	git pull <remoteName> <localBranchName> //拉取远程库到本地分支
 	git pull origin test //拉取远程库到本地test分支
+	
+**推荐用下列方式从远程库获取代码：**
+
+	git fetch origin master:tmp //从远程库origin的master分支获取版本库到本地tmp分支
+	git diff tmp //比较本地tmp分支和当前所在分支（一般为本地master分支）
+	git merge tmp //合并本地tmp分支到当前分支（一般为本地master分支）
+	//如果这里遇到冲突，则参考“本地（Local） 2.4 解决冲突”来解决冲突
 
 ###2.3、推入远程库
 	git push origin master //推入远程库，这里远程库默认别名origin，本地默认分支master

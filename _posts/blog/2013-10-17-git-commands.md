@@ -175,7 +175,11 @@ category: blog
 ###2.1、分支
 
 	git branch -r //列出远程分支
+	git branch -a //列出所有分支（本地和远程）
 	git remote prune origin //删除远程库中已经不存在的分支
+	
+	git push origin --delete <branchName> //删除远程分支
+	git push origin :<branchName> //推送一个空分支到远程分支，相当于删除远程分支
 
 ###2.2、从远程库获取
 

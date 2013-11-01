@@ -208,9 +208,9 @@ category: blog
 
 可以这样解决：
 
-1）把上述文件加到 `.gitignore`，最好参考上文的 `.gitignore` 文件内容；
+- 1）把上述文件加到 `.gitignore`，最好参考上文的 `.gitignore` 文件内容；
 
-2）通过下面命令让git停止track相应的文件：
+- 2）通过下面命令让git停止track相应的文件：
 
 	git rm --cached ProjectFolder.xcodeproj/project.xcworkspace/xcuserdata/myUserName.xcuserdatad/UserInterfaceState.xcuserstate
 	git commit -m "Removed file that shouldn't be tracked"

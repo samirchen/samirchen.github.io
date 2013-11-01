@@ -533,3 +533,7 @@ processorNum
 [http://blog.csdn.net/zg_hover/article/details/4356210](http://blog.csdn.net/zg_hover/article/details/4356210)
 
 [《鸟哥Linux私房菜》](http://www.amazon.cn/%E9%B8%9F%E5%93%A5%E7%9A%84Linux%E7%A7%81%E6%88%BF%E8%8F%9C-%E5%9F%BA%E7%A1%80%E5%AD%A6%E4%B9%A0%E7%AF%87-%E9%B8%9F%E5%93%A5/dp/B003TJNO98/ref=sr_1_1?ie=UTF8&qid=1381382041&sr=8-1&keywords=%E9%B8%9F%E5%93%A5+linux+%E7%A7%81%E6%88%BF%E8%8F%9C)
+
+
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})

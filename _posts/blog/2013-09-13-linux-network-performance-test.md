@@ -353,7 +353,8 @@ category: blog
 
 本文参考：[《网络管理必备工具软件精解（Linux版）》][]，作者：李波；杨红，人民邮电出版社。
 
-
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})
 [iperf]: http://iperf.sourceforge.net/ "iperf"
 [netperf]: http://www.netperf.org/netperf/ "netperf"
 [pathload]: http://www.cc.gatech.edu/fac/constantinos.dovrolis/bw-est/pathload.html "pathload"

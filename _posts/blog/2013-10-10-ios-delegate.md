@@ -146,3 +146,7 @@ delegation，委托模式（另外有个常用的proxy模式，二者的区别�
 	}
 	 
 	@end
+
+
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})

@@ -19,6 +19,9 @@ description: 对于开博客这个想法已是念念不忘好久，开博第一�
 
 这个博客的设计是来自我非常喜欢的[BeiYuu][]，感谢他设计了这么动人的界面并不吝分享给大家。我本着惰性和“不重复造轮子”的借口就借来用了，谢谢！
 
+
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})
 [SAE]: http://sae.sina.com.cn/ "SAE"
 [WordPress]: http://wordpress.org/ "WordPress"
 [Structs]: http://struts.apache.org/ "Structs"

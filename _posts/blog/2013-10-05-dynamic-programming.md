@@ -224,3 +224,7 @@ C 语言代码：
 2.4）构造最优解
 
 略。
+
+
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})

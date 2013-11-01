@@ -214,3 +214,7 @@ category: blog
 
 以上内容，难免有差错纰漏，欢迎大家指正！
 
+
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})
+

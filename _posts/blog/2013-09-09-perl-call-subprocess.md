@@ -108,5 +108,6 @@ category: blog
 	[cx@rh Perl]$ perl test.pl
 	httpd dead but subsys locked
 
-
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})
 [iperf]: http://iperf.sourceforge.net/ "iperf"

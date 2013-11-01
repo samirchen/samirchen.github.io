@@ -55,3 +55,7 @@ C 语言代码：
 	    return 0;
 	}
 
+
+
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})

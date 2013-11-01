@@ -213,7 +213,8 @@ category: blog
 
 	
 
-
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})
 [Git]: http://zh.wikipedia.org/wiki/Git "Git"
 [Linus Torvalds]: http://zh.wikipedia.org/wiki/%E6%9E%97%E7%BA%B3%E6%96%AF%C2%B7%E6%89%98%E7%93%A6%E5%85%B9 "Linus Torvalds"
 [Subversion]: http://zh.wikipedia.org/wiki/Subversion "Subversion"

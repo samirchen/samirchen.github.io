@@ -209,11 +209,11 @@ category: blog
 		$ git checkout b2
 		$ git merge b1
 
-<img src="/images/function-returns/xcode-merge.png" alt="xcode-merge">
+<img src="/images/git-in-xcode/xcode-merge.png" alt="xcode-merge">
 
 如果出现冲突，我们可以到 [Xcode][5] 中去 merge 了。
 
-<img src="/images/function-returns/xcode-merge-tool.png" alt="xcode-merge-tool">
+<img src="/images/git-in-xcode/xcode-merge-tool.png" alt="xcode-merge-tool">
 
 ###遇到不能checkout的错误
 

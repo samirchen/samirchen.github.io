@@ -192,8 +192,28 @@ category: blog
 
 开发某个项目的多个版本时，可以为不同的版本建立不同的分支来管理。
 
+###合并不同分支
+现在我们有两个分支：b1 和 b2，我们当前在 b1 上。
 
+	$ git branch
+	master
+	* b1
+	b2
 
+- 1）我们想把 b2 合并到 b1 里来，也就是 [Xcode][5] 里的 merge from，也就相当于在命令行直接合并b2: git merge b2。
+
+		$ git merge b2
+
+- 2）我们想把 b1 合并到 b2 里去，也就是 [Xcode][5] 里的 merge into，也就相当于在命令行先切换到 b2: git checkout b2(要记得所有更改都先 commit 了)；然后合并b1: git merge b1。
+
+		$ git checkout b2
+		$ git merge b1
+
+<img src="/images/function-returns/xcode-merge.png" alt="xcode-merge">
+
+如果出现冲突，我们可以到 [Xcode][5] 中去 merge 了。
+
+<img src="/images/function-returns/xcode-merge-tool.png" alt="xcode-merge-tool">
 
 ###遇到不能checkout的错误
 

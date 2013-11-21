@@ -1,6 +1,6 @@
 ---
 layout: post
-title: （算法与数据结构-6）二分查找（折半查找）
+title: 二分查找（折半查找）【算法与数据结构-6】
 description: 二分查找的介绍及代码实现。
 category: blog
 ---

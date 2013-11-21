@@ -1,6 +1,6 @@
 ---
 layout: post
-title: （算法与数据结构-4）计数排序
+title: 计数排序【算法与数据结构-4】
 description: 计数排序的介绍及代码实现。
 category: blog
 ---

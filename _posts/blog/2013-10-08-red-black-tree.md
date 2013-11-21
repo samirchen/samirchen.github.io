@@ -1,6 +1,6 @@
 ---
 layout: post
-title: （算法与数据结构-10）红黑树
+title: 红黑树【算法与数据结构-10】
 description: 红黑树的介绍及代码实现。
 category: blog
 ---

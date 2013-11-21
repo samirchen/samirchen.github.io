@@ -1,6 +1,6 @@
 ---
 layout: post
-title: （算法与数据结构-1）快速排序
+title: 快速排序【算法与数据结构-1】
 description: 快速排序的介绍及代码实现。
 category: blog
 ---

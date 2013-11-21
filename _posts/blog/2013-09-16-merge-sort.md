@@ -1,6 +1,6 @@
 ---
 layout: post
-title: （算法与数据结构-2）归并排序
+title: 归并排序【算法与数据结构-2】
 description: 归并排序的介绍及代码实现。
 category: blog
 ---

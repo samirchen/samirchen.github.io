@@ -1,6 +1,6 @@
 ---
 layout: post
-title: （算法与数据结构-5）基数排序
+title: 基数排序【算法与数据结构-5】
 description: 基数排序的介绍及代码实现。
 category: blog
 ---

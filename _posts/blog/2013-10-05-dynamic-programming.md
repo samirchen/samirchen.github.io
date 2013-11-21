@@ -1,6 +1,6 @@
 ---
 layout: post
-title: （算法与数据结构-9）动态规划
+title: 动态规划【算法与数据结构-9】
 description: 动态规划的介绍及一些示例的代码实现。
 category: blog
 ---

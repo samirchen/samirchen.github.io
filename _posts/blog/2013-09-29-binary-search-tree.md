@@ -1,6 +1,6 @@
 ---
 layout: post
-title: （算法与数据结构-7）二叉查找树
+title: 二叉查找树【算法与数据结构-7】
 description: 二叉查找树的介绍及代码实现。
 category: blog
 ---

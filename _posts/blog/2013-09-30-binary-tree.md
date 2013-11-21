@@ -1,6 +1,6 @@
 ---
 layout: post
-title: （算法与数据结构-8）二叉树的各种遍历算法
+title: 二叉树的各种遍历算法【算法与数据结构-8】
 description: 二叉树的各种遍历算法的介绍及代码实现。
 category: blog
 ---

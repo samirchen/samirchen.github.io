@@ -5,7 +5,7 @@ description: “更好的办法”有时候是内心的一种借口。
 category: opinion
 ---
 
-![](warning-of-better-solution/dig-a-well.jpg)
+<img src="/images/warning-of-better-solution/dig-a-well.jpg" alt="dig-a-well">
 
 最近和朋友聊天，聊到她初学日语需要记忆五十音图的事情，毕竟是新学一门语言，人生地不熟，对着歪歪扭扭的日文，前面记后面忘，痛苦！于是她觉得死记硬背五十音图这方法可能不适合她，太枯燥，准备找一种更好的办法来记忆，准备直接去记一些常用的句子，比较有成就感一点，没准在这个过程中也就把五十音图记下来了。
 

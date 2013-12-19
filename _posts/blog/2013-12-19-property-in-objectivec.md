@@ -115,7 +115,7 @@ tag: iOS, Objective-C, property
 
 这里的 `IBAction` 其实返回的是 void，类似 `typedef IBAction void`。IBAction 是为了让 Xcode 去区别方法是不是 target action，这样我们可以做到鼠标在上面的时候界面会高亮对应的控件之类的。但是编译器会忽略它，对编译器来说它就是 void。当你要改这个方法名的时候，有点麻烦的是你需要对着对应的控件点右键，然后叉掉方法绑定，然后重新连接。
 
-当我们从界面上按住Option拖一个控件到代码的属性区，会得到类似：
+从界面上的一个控件 Control+drag 拖一个方法到代码的属性区，会得到类似：
 
 	@property (weak, nonatomic) IBOutlet UILabel* flipsLabel;
 

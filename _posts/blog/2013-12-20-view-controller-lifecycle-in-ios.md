@@ -31,6 +31,7 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 几种初始化 View Controller 的方式:
 
 - 从 Storyboard 中加载
+
 	如果是从 Storyboard 中加载 View Controller，当 View Controller 被初始化的时候，`archive` （在 Storyboard 中用 Interface Builder 中创建的 View Controller 的各种属性会被序列化为归档文件（`archive`））会被加载到内存进行处理，这个过程是通过自动调用 View Controller 的 [initWithCoder:][3] 方法来实现的。
 	
 	App 启动时，首先自动加载其 rootViewController（`self.window.rootViewController`），这个过程是自动调用 [instantiateInitialViewController][10] 来完成的。此后 Storyboard 中 View Controller 之间的跳转是通过 segue，navigation 等机制来实现的。通常我们在 App 启动后，想要初始化 Storyboard 中其他的 View Controller 时，可以调用 [instantiateViewControllerWithIdentifier:][9]，比如：
@@ -43,6 +44,7 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 	这个 View Controller 的 [awakeFromNib][4] 方法，以及它的各个 SubViews 的 [awakeFromNib][4] 方法都会被调用。**接着，需要关注的是 View Controller 及其 Subviews 的 [awakeFromNib][4] 方法。**
 
 - 从 Nib 文件中加载
+
 	View Controller 指定的初始化方法是 [initWithNibName:bundle:][6]。 如果指定了该方法的 nib，那么会自动从对应的 nib 文件去加载 View Controller。比如：
 	
 		YourViewController *vc = [YourViewController initWithNibName:@"YourViewController" bundle:nil];
@@ -52,6 +54,7 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 	这个 View Controller 的 [awakeFromNib][4] 方法**不会**被调用，这个不需要我们关注，但是它的各个 SubViews 的 [awakeFromNib][4] 方法都会被调用。所以**接着，需要关注的是 View Controller 的 Subviews 的 [awakeFromNib][4] 方法。**
 
 - 从代码中创建
+
 	如果你使用指定的初始化方法 [initWithNibName:bundle:][6] 并且传递两个参数为 nil，或者你自己定义 View Controller 的 `init` 类似的方法，这时需要在初始化方法中自己实现相关的代码，当然在这个方法中，你需要调用你的父类的 `init` 类似的方法。一般不要实现过于复杂的初始化方法，你只用提供出 View Controller 的相关属性让客户在后面调用时再配置它的行为即可。
 	
 	在这种情况下创建的 View Controller ，是不会自动调用 [awakeFromNib][4] 方法的，所以不需要我们关注它。但是，在这种情况下，我们通常需要去重载 [loadView][5] 方法，所以**接着需要关注的是 [loadView][5] 方法。**

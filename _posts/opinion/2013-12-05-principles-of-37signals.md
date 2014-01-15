@@ -4,6 +4,7 @@ title: 摘录理念
 description: 摘录了一些 "Getting Real"、"Rework" 上提到的比较有感触的理念。
 category: opinion
 ---
+下面的一些理念主要是从[37signals][2]的两本书`Getting Real`和`Rework`上摘录的。
 
 不要加班工作。永远把注意力放在提高工作效率上，而不是延长工作时间上。
 

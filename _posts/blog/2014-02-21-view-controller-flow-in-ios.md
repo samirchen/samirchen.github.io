@@ -1,7 +1,7 @@
 ---
 layout: post
 title: View Controller 流(纯代码版)
-description: 总结一下基于 Navigation+Modal 形式的 View Controller 流的正向和方向的跳转实现，以及在这些跳转过程中的数据传输。
+description: 总结一下基于 Navigation+Modal 形式的 View Controller 流的正向和反向的跳转实现，以及在跳转过程中的数据传输。
 category: blog
 tag: view controller, flow, navigation, modal
 ---

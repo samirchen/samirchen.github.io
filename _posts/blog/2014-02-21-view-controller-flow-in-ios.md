@@ -243,7 +243,7 @@ SubNavigationVC.VCN5->VCN4 的跳转代码：
 此外为了达到反向页面跳转时的传参，我们还可以使用下列机制：
 
 - Delegate机制
-- 广播机制，即设置Observer来监听Notification
+- 广播机制，即设置Observer来监听Notifications
 
 ##小结
 上面说了这么多，其实总结起来也就是需要注意这几点：

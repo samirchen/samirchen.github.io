@@ -48,7 +48,7 @@ Within the Keychain Access drop down menu, select Keychain Access > Certificate 
 这里的证书一般也是 `.cer` 类型的，要制作的话，按照苹果 Certificates, Identifier & Profiles 网站上的提示一步一步来做，跟上一节是一样的。
 
 
-这里需要注意的就是私钥证书(.p12)一定要保存好，这样当你换电脑开发或者多人开发的时候，只需要重新下载一下 `.cer` 文件，然后再双击导入一下 `.p12` 即可。
+对于`Certificates`这块，需要注意的就是私钥证书(.p12)一定要保存好，这样当你换电脑开发或者多人开发的时候，只需要重新下载一下 `.cer` 文件，然后再双击导入一下 `.p12` 即可。
 
 ##Identifiers
 

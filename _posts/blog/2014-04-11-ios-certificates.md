@@ -72,7 +72,7 @@ Within the Keychain Access drop down menu, select Keychain Access > Certificate 
 
 
 更多内容可以参考：
-[https://developer.apple.com/library/ios/documentation/IDEs/Conceptual/AppDistributionGuide/MaintainingCertificates/MaintainingCertificates.html][3]
+[证书相关文档][3]
 
 [SamirChen]: http://samirchen.com "SamirChen"
 [1]: {{ page.url }} {{ page.title }}

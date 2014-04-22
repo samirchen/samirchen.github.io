@@ -155,8 +155,9 @@ View B’s middle in its own coordinate space is (bound.size.width/2+bounds.orig
 
 **尤其需要注意的一点是**，对于 UIView 的 `frame` 属性，苹果文档中可以看到这样一些描述：
 
-	// If the transform property is not the identity transform, the value of this property is undefined and therefore should be ignored.
-	// animatable. do not use frame if view is transformed since it will not correctly reflect the actual location of the view. use bounds + center instead.
+> // If the transform property is not the identity transform, the value of this property is undefined and therefore should be ignored.
+> 
+> // animatable. do not use frame if view is transformed since it will not correctly reflect the actual location of the view. use bounds + center instead.
 
 即说明当 view 的 `transform` 属性值不是 **identify transform**，即 
 

@@ -11,7 +11,7 @@ Block是Apple在C语言的基础上添加的扩展功能，由于Ojective-C、C+
 
 `匿名函数`就是没有名称的函数，C语言的标准不允许存在这样的函数，而通过Block，源代码中就可以使用匿名函数了。
 
-`能持有作用域变量`就是指Block能够获得其所在作用域的变量。其中其所在作用域的变量就包括：局部变量（自动变量）、函数的参数、静态变量（静态局部变量）、静态全部变量、全局变量。
+`能持有作用域变量`就是指Block能够获得其所在作用域的变量。其中其所在作用域的变量就包括：局部变量（自动变量）、函数的参数、静态局部变量、静态全局变量、全局变量。
 
 
 ##Block语法
@@ -237,11 +237,11 @@ Block没有参数，则 `()` 可以省略：
 	    NSLog(@"Block for asynchronous execution");
 	});
 
-####小结一下
+####Block的使用场景小结
 
-* Enumeration (like we saw above with NSDictionary)
-* View Animations (we’ll talk about that next)
-* Sorting (sort this thing using a blockas the comparison method)
+* Enumeration (like we saw above with NSArray)
+* View Animations (animations)
+* Sorting (sort this thing using a block as the comparison method)
 * Notification (when something happens, execute this block)
 * Error handlers (if an error happens while doing this, execute this block)
 * Completion handlers (when you are done doing this, execute this block)

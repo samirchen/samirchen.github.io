@@ -95,6 +95,36 @@ Block没有参数，则 `()` 可以省略：
     testBlock(); // 输出：Integer is: 42
     NSLog(@"Value of original variable is now: %i", anInteger); // 输出：Value of original variable is now: 100
 
+>
+如果获得对象（在堆上），调用变更该对象的方法是没问题的（存储对象的空间在堆上），而直接向截获的变量赋值则会产生编译错误（这个对象的指针是在栈上的）。
+>
+	// 这样是没问题的：
+	id array = [[NSMutableArray alloc] init];
+	void (^blk)(void) = ^{
+		id obj = [[NSObject alloc] init];
+		[array addObject:obj];
+	};
+	// 这样是不对的：
+	id array = [[NSMutableArray alloc] init];
+	void (^blk)(void) = ^{
+		array = [[NSMutableArray alloc] init];
+	};
+
+>
+在 block 中使用 C 语言的数组时必须小心使用其指针。在现在的 block 中，截获自动变量的方法并没有实现对 C 语言数组的截获，使用指针可以解决该问题。
+>
+	// 这样是有问题的：
+	const char text[] = "hello";
+	void (^blk)(void) = {
+		printf("%c\n", text[2]);
+	}
+	// 这样是没问题的：
+	const char* text = "hello";
+	void (^blk)(void) = {
+		printf("%c\n", text[2]);
+	}
+
+
 - 实例变量 instance varible，在 block 里是可读可写的。
 
 - 静态变量在 block 里是可读可写的。

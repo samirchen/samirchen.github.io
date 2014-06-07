@@ -77,7 +77,6 @@ category: blog
 	git branch emputy bfe57de0 //用来查看某个历史断面很方便
 	git branch emputy2 emputy
 
-	/*合并分支*/
 	//普通合并
 	git merge <branchname> //合并分支<branchname>到当前所在分支并提交，如果发生了冲突就不会自动提交，不想立即解决这些冲突的话，可以用 git checkout head . 撤销
 	git merge --no-commit <branchname> //合并但不提交
@@ -86,6 +85,18 @@ category: blog
 	git merge --squash --no-commit <branchname> //当两个人合作开发一个新功能时，需要在一个分支提交多次，开发完成之后再压合成一次提交
 	//拣选合并
 	git cherry-pick --no-commit 5b62b6 //挑选某次提交合并但并不提交
+	
+	// rebase: 现有 origin 分支(c1-c2-c3-c4)和 mywork 分支(c1-c2-c5-c6)，在 mywork 分支和 origin 分支上各有提交，即：origin 上有 c3-c4，mywork 上又 c5-c6
+	git checkout mywork
+	git rebase origin // 这些命令会把"mywork"分支里的每个提交(commit)取消掉，并且把它们临时保存为补丁(patch)(这些补丁放到".git/rebase"目录中),然后把"mywork"分支更新到最新的"origin"分支，最后把保存的这些补丁应用到"mywork"分支上。
+	// 在 rebase 的过程中如果出现冲突，那么 git 会停止让你解决冲突。解决好冲突后：
+	git add <fixed-conflict-file> // 更新这些文件的索引
+	git rebase --continue // 继续 rebase
+	// 如果你觉得当前的冲突无需修改，那么可以跳过，这样会直接使用 origin 分支的这部分内容：
+	git rebase --skip
+	// 在任何时候，你可以用 --abort 参数来终止 rebase 的行动，并且"mywork" 分支会回到rebase开始前的状态。
+	git rebase --abort // 终止 rebase
+	
 
 	//重命名分支
 	git branch -m <branchname> <newname> //不会覆盖已存在的同名分支

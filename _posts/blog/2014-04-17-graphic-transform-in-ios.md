@@ -138,7 +138,9 @@ bounds 这个属性是 UIView 自己内部的实际边界。在自己的坐标�
 
 * `@property CGRect frame;`  // a rectangle in your superview’s coordinate space which entirely contains your view’s bounds.size
 
-	- frame 这个属性是指在 UIView 的 superview 中能完整覆盖这个 UIView 的 bounds 的矩形区域。
+	- frame 这个属性是指在 UIView 的 superview 的坐标系统中能完整覆盖这个 UIView 的 bounds 的矩形区域。
+	
+我们通常用center和frame属性来改变view的位置和大小，但是如果你只是想改变view的位置时，最好坚持用center而不是frame，因为center会是一直有效的，而frame只有当view的transform是identity transform时才有效。我们主要在绘图的时候使用bounds，因为bounds表示的是view自己的坐标系统，初始化的bounds是大小等于frame的大小。
 
 ![](../../images/graphic-transform-in-ios/uiview-frame-bounds.png)
 
@@ -176,6 +178,11 @@ UIView 的 `transform` 属性就是一个 CGAffineTransform 类型的数据，
 ![](../../images/graphic-transform-in-ios/identify-transform.png)
 
 **需要注意的是，UIView 的 `transform` 表示的是 UIView 的图形变换的数据结构，其变换的原点是该 UIView 的 `center` （实际上是 UIView.`layer`.`anchorPoint`，默认是 {0.5, 0.5}, 即 UIView 的几何中心），这个跟 Quartz 的变换原点是不一样的。其变换的基础坐标系是该 UIView 自己的坐标系，而不是其 superView 的坐标系。对 UIView 进行图形变换的过程，其过程是对 UIView 的 `transform` 从 `CGAffineTransformIdentify` 开始进行累计计算的过程，至于 transform 是如何计算的，我们在下一节中将详细讨论。**
+
+
+如果想要变换整个view，就改变view的transform。如果只改变view的特定部分，就在view的drawRect:方法中修改相关内容的affine transform。
+
+你通常应该用transform这个属性来做动画效果，比如让view围绕它的中心点旋转等等。如果你想在view的superview的坐标系统中永久改变view的位置和大小，那么你应该去改变view的frame矩形而不是transform矩阵。
 
 CGAffineTransform的用法：
 

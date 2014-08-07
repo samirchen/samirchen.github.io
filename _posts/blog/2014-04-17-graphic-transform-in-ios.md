@@ -263,6 +263,8 @@ CGAffineTransform的用法：
 
 对于 rotate 和 scale 也同样要想清楚。
 
+[一个使用CGAffineTransform的Demo。][11]
+
 ###CGAffineTransform的理解
 
 `CGAffineTransform` 的数据结构表示的是用于仿射变换的矩阵。详细内容可以参考：[苹果文档：CGAffineTransform][2]
@@ -501,3 +503,4 @@ CALayer的 `transform` 属性是是 CATransform3D 类型的数据。就是 3D �
 [8]: http://wonderffee.github.io/blog/2013/10/13/understand-anchorpoint-and-position/
 [9]: https://dl.dropboxusercontent.com/u/108108523/CocoaConf%20PDX/Enter%20The%20Matrix.pdf
 [10]: https://github.com/mpospese/EnterTheMatrix
+[11]: https://github.com/samirchen/TransformDemo

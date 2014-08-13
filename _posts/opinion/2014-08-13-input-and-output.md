@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 输出比输入好100倍
-description:
+description: 关于如何能更有效学习的一点感受。
 category: opinion
 tag: opinion, study, output, input
 ---

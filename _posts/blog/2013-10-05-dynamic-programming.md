@@ -51,7 +51,7 @@ category: blog
 定义 c[i, j] 为序列 Xi 和 Yj 的一个 LCS 的长度。由 LCS 问题的最优子结构可得递归式：
 c[i, j] =
 0; 如果 i = 0 或 j = 0;
-c[i-1, j-1]; 如果 i,j > 0 和 xi = yj;
+c[i-1, j-1]+1; 如果 i,j > 0 和 xi = yj;
 max{c[i, j-1], c[i-1, j]}; 如果i,j > 0 和 xi != yj;
 
 2.3）计算最优解的值
@@ -93,7 +93,7 @@ C 语言代码：
 	    return 0;
 	}
 	 
-	// 动态规划算法，时间复杂度 O(MN)，空间负责度O(MN)
+	// 动态规划算法，时间复杂度 O(MN)，空间复杂度O(MN)
 	void dpLCS() {
 	 
 	    for (int i = 1; i <= M; i++) {

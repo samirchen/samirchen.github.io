@@ -49,10 +49,12 @@ category: blog
 2.2）递归定义最优解的值
 
 定义 c[i, j] 为序列 Xi 和 Yj 的一个 LCS 的长度。由 LCS 问题的最优子结构可得递归式：
+
 c[i, j] =
-0; 如果 i = 0 或 j = 0;
-c[i-1, j-1]+1; 如果 i,j > 0 和 xi = yj;
-max{c[i, j-1], c[i-1, j]}; 如果i,j > 0 和 xi != yj;
+
+- 0; 如果 i = 0 或 j = 0;
+- c[i-1, j-1]+1; 如果 i,j > 0 和 xi = yj;
+- max{c[i, j-1], c[i-1, j]}; 如果i,j > 0 和 xi != yj;
 
 2.3）计算最优解的值
 
@@ -227,4 +229,4 @@ C 语言代码：
 
 
 [SamirChen]: http://samirchen.com "SamirChen"
-[1]: {{ page.url }} ({{page.title}})
+[100]: {{ page.url }} ({{page.title}})

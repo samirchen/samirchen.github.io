@@ -429,7 +429,7 @@ Timer Source会在预设的时间点同步地分发事件到你的线程上。Ti
 
 
 ##Run Loop Observers
-对比上面说的事件源，它们是在特定的同步事件或异步事件发生时被触发，run loop observer就不一样了，它是在run loop执行自己的代码到某一个指定位置时被触发。我们可以用run loop observers来跟踪到这些事件：
+对比上面说的事件源---它们是在特定的同步事件或异步事件发生时被触发，run loop observer就不一样了，它是在run loop执行自己的代码到某一个指定位置时被触发。我们可以用run loop observers来跟踪到这些事件：
 
 - 进入run loop的时候。
 - run loop将要处理一个timer source的时候。

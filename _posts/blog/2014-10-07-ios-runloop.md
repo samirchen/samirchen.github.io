@@ -428,7 +428,7 @@ Timer Source会在预设的时间点同步地分发事件到你的线程上。Ti
 
 
 
-###Run Loop Observers
+##Run Loop Observers
 对比上面说的事件源，它们是在特定的同步事件或异步事件发生时被触发，run loop observer就不一样了，它是在run loop执行自己的代码到某一个指定位置时被触发。我们可以用run loop observers来跟踪到这些事件：
 
 - 进入run loop的时候。
@@ -500,7 +500,7 @@ Timer Source会在预设的时间点同步地分发事件到你的线程上。Ti
 	}
 
 
-###线程安全和Run Loop对象
+##线程安全和Run Loop对象
 线程是否安全取决于你用什么API来操作你的Run Loop。Core Foundation的函数一般都是线程安全的。
 
 Cocoa的NSRunLoop不是线程安全的，如果你使用NSRunLoop对象来修改你的run loop，那么你最好只从拥有该run loop的thread上去操作。把属于一个线程的input source或timer source再添加到其他的线程会引起崩溃。

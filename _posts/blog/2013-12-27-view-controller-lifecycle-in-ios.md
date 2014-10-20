@@ -224,7 +224,7 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 
 [SamirChen]: http://samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://samirchen/view-controller-lifecycle-in-ios
+[2]: http://samirchen.com/view-controller-lifecycle-in-ios
 [3]: https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Protocols/NSCoding_Protocol/Reference/Reference.html#//apple_ref/occ/intfm/NSCoding/initWithCoder:
 [4]: https://developer.apple.com/library/ios/documentation/UIKit/Reference/NSObject_UIKitAdditions/Introduction/Introduction.html#//apple_ref/occ/instm/NSObject/awakeFromNib
 [5]: https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIViewController_Class/Reference/Reference.html#//apple_ref/occ/instm/UIViewController/loadView

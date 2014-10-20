@@ -148,6 +148,8 @@ Cocoa和Core Foundation中直接用端口相关的对象和函数就能创建基
 	    }
 	}
 
+可以看到，NSPort提供了一个挺清晰的线程间通信的方案。但是在iOS中，这个用的并不多，因为大多数情况，我们都可以用系统提供给我们的`performSelector:onThread:...`来搞定了，关于**Cocoa Perform Selector Sources**，在后面的**自定义的input source**中会提到。
+
 #####配置一个NSMessagePort对象
 `NSMessagePort`主要用于本机分布式连接通信。它的解释是这样的：
 

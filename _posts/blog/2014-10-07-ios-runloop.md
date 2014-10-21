@@ -501,6 +501,33 @@ Timer Source会在预设的时间点同步地分发事件到你的线程上。Ti
 	    // Clean up code here. Be sure to release any allocated autorelease pools.
 	}
 
+##Run Loop事件队列
+每次运行时，你的线程的Run Loop就会开始处理等待的事件并为run loop observers生成通知。整个的处理流程大致如下：
+
+1. 通知observers已经进入run loop了。
+2. 通知observers所有就绪的timer就要触发了。
+3. 通知observers所有非基于端口的input source就要触发了。
+4. 触发所有就绪的非基于端口的input source。
+5. 如果一个基于端口的input source已经就绪，那就立即处理这个事件。跳转到步骤9。
+6. 通知observers线程就要休眠了。
+7. 让线程休眠，除非下面的事件发生：
+	* 一个对应着基于端口的input source的事件到来。
+	* 一个timer触发了。
+	* run loop的超时了。
+	* run loop被显示唤醒。
+8. 通知observers线程被唤醒。
+9. 处理等待的事件。
+	* 如果一个用户定义的timer触发了，处理这个timer事件并且重启run loop。跳转到步骤2。
+	* 如果一个input source触发了，分发这个事件。
+	* 如果run loop被显式地唤醒了并且还没超时，重启run loop。跳转到步骤2。
+10. 通知observers这个run loop要退出了。
+
+由于与timer source和input source相关的observer通知是在事件发生前发出去的，所以这些通知和真实的事件发生时间之间是存在一定的延时的。如果你需要精确的时间控制，而这个延时对你来说很致命的话，你可以使用休眠通知和唤醒通知来校队事件实际发生时间。
+
+由于timers和其他一些周期性的事件是在你运行其对应的run loop的时候被分发的，所以当绕过这个loop的时候，这些事件的分发也会被干扰到。一个典型的例子就是当你实现一个鼠标事件追踪的例程时，你进入到一个循环里不断地向应用请求事件，由于你直接抓取这些事件而不是正常地由应用向你的例程分发，这时那些活动的timer也会无法触发，除非你的鼠标事件追踪例程退出并将控制器交给应用。
+
+可以通过run loop object来显式地唤醒run loop。其他事件也可以唤醒run loop，比如：添加一个其他的非基于端口的input source可以唤醒run loop立即处理这个input source，而不是等到其他事件发生才处理。
+
 
 ##线程安全和Run Loop对象
 线程是否安全取决于你用什么API来操作你的Run Loop。Core Foundation的函数一般都是线程安全的。

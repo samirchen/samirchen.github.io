@@ -239,3 +239,9 @@ tag: product, iOS, app
 产品关键指标的统计，在产品开发过程中就应该埋好点，要求能够第一时间统计到。如果能够做到近乎实时统计，当然更好。
 
 统计数据也是功能。给团队成员使用的功能。没有地图，军队怎么作战? 没有数据，多数时候没办法做有效的分析。没有数据，又怎么支撑你的结论?
+
+
+
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{ page.title }})
+[2]: http://samirchen.com/my-product-concept/

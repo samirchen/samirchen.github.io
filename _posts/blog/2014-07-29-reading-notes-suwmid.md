@@ -259,4 +259,4 @@ tag: design, interaction, web, mobile, reading notes
 
 [SamirChen]: http://samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://samirchen/reding-notes-suwmid
+[2]: http://samirchen/reading-notes-suwmid/

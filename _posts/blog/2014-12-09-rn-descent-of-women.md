@@ -3,7 +3,7 @@ layout: post
 title: 读《女人的起源》
 description: 最近泛泛地读了一下伊莲·摩根的《女人的起源》，稍写点读后感当做是读书笔记吧。
 category: blog
-tag: women, requirement, Elaine Morgan, humanity
+tag: reading, women, requirement, Elaine Morgan, humanity
 ---
 
 我是看了网上盛传的张小龙的《微信背后的产品观》中的推荐而看的这本书，试图去领悟领悟所谓的人性。

@@ -13,28 +13,28 @@ tag: iOS, project structure
 
 ```
 |—MyProject
-  |—ignore-folder // 放置不想同步到代码服务器上的内容，通常包括一些体积太大、经常变动、对项目运行影响不大的文件。需要在该目录下添加 .gitignore 对本目录做一些设置。
-    |—readme.log // 因为 ignore-folder 目录下的内容都是不会同步到代码服务器上的，所以最好加一个 log 文件记录一下你在该目录的操作。
-    |—3rdparty // 比如，一些不能用 CocoaPods 管理也不想同步到代码服务器上的第三方库。
-    |—data // 比如，一些经常会变动的、自己的测试数据文件。
-  |—Utility // 自己实现的一些通用性较好的功能代码，这些代码有比较好的接口且与本项目不存在耦合，可直接复用于其他项目。
-  |—Common // 本项目的一些全局性代码，这些代码通常与本项目的业务逻辑存在一些耦合，所以不放在 Utility 目录中。
-  |—Feature // 本项目的功能模块目录，该目录下将项目的功能划分为多个模块，每个模块穿透 MVC，可以独立划分出去。当然，在模块下你不采用 MVC，采用 MVVM 或其他架构方式也没问题的。
-    |—Base // 定义本项目中各种 Controller、View、Model 的基础类或基础接口。
-      |—Controller
-      |—View
-      |—Model
-    |—Main
-      |—Controller
-      |—View
-      |—Model
-    |—User
-      |—Controller
-      |—View
-      |—Model
-  |—Resource // 本项目的资源目录，放置图片、音频等资料。
-    |—Image
-    |—Sound
+    |—ignore-folder // 放置不想同步到代码服务器上的内容，通常包括一些体积太大、经常变动、对项目运行影响不大的文件。需要在该目录下添加 .gitignore 对本目录做一些设置。
+        |—readme.log // 因为 ignore-folder 目录下的内容都是不会同步到代码服务器上的，所以最好加一个 log 文件记录一下你在该目录的操作。
+        |—3rdparty // 比如，一些不能用 CocoaPods 管理也不想同步到代码服务器上的第三方库。
+        |—data // 比如，一些经常会变动的、自己的测试数据文件。
+    |—Utility // 自己实现的一些通用性较好的功能代码，这些代码有比较好的接口且与本项目不存在耦合，可直接复用于其他项目。
+    |—Common // 本项目的一些全局性代码，这些代码通常与本项目的业务逻辑存在一些耦合，所以不放在 Utility 目录中。
+    |—Feature // 本项目的功能模块目录，该目录下将项目的功能划分为多个模块，每个模块穿透 MVC，可以独立划分出去。当然，在模块下你不采用 MVC，采用 MVVM 或其他架构方式也没问题的。
+        |—Base // 定义本项目中各种 Controller、View、Model 的基础类或基础接口。
+            |—Controller
+            |—View
+            |—Model
+        |—Main
+            |—Controller
+            |—View
+            |—Model
+        |—User
+            |—Controller
+            |—View
+            |—Model
+    |—Resource // 本项目的资源目录，放置图片、音频等资料。
+        |—Image
+        |—Sound
 |—Pods // 采用 CocoaPods 管理的第三方库。
 ```
 
@@ -131,7 +131,7 @@ Group 的优点如下：
 
 - 1）你可以选择磁盘上的文件添加到项目中，不想要的不添加就行了。
 - 2）对不同的 target 对应的文件能够更好地管理，比如，你可以选择对一个 target 排除某一个文件。
-- 3）当 build 的时候，Xcode 会把所有的 Group 下的文件都放到 bundle 的顶级目录，所以你调用文件时不需要制定它的具体位置，比如，你不必这样 `[UIImage imageNamed:@"Images/Icons/Go"]`; ，这用这样就可以 `[UIImage imageNamed:@"Go"]`;，但是这就意味着在整个项目中，你不能有同名的文件了。
+- 3）当 build 的时候，Xcode 会把所有的 Group 下的文件都放到 bundle 的顶级目录，所以你调用文件时不需要制定它的具体位置，比如，你不必这样 `[UIImage imageNamed:@"Images/Icons/Go"];` ，这用这样就可以 `[UIImage imageNamed:@"Go"];`，但是这就意味着在整个项目中，你不能有同名的文件了。
 
 Folder Reference 的有这些优点：
 

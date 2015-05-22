@@ -2,7 +2,7 @@
 layout: post
 title: 从登录界面说起
 description: 从登录界面说起，谈一点界面与交互设计相关的感受。
-category: blog
+category: opinion
 tag: iOS, UI, interactive, design
 ---
 

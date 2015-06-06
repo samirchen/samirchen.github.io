@@ -207,8 +207,10 @@ Block没有参数，则 `()` 可以省略：
 	@property (copy) XYZSimpleBlock blockProperty;
 	@end
 
+##使用Block需要注意的问题
+
 ###避免强引用循环
-每次向 block 里的对象发送消息（方法调用）的时候，将会创建一个 strong 指针指向这个对象，直到 block 结束。所以像下面的代码，self strong 持有 block，而在 block 里又 strong 持有了 self：
+每次向 block 里的对象发送消息（方法调用）的时候，将会创建一个 strong 指针指向这个对象，直到 block 结束。所以像下面的代码，self strong 持有 block，而在 block 里又 strong 持有了 self，这样谁也不能被释放：
 
 	// .h
 	@interface XYZBlockKeeper : NSObject
@@ -225,7 +227,7 @@ Block没有参数，则 `()` 可以省略：
 	...
 	@end
 
-应该这样处理：
+可以这样处理：
 
 	- (void)configureBlock {
 	    XYZBlockKeeper * __weak weakSelf = self;
@@ -234,6 +236,59 @@ Block没有参数，则 `()` 可以省略：
 	        [weakSelf doSomething];
 	    }
 	}
+
+
+###避免Block使用的对象被提前释放
+上面提到了使用 weak 引用的方式解决 retain cycle 的方案，但随着应用场景的改变，又会带来新的问题，比如：在 block 中用异步的方式使用了外部对象，当对象被释放后，异步方法回调时访问该对象则会为空，这时就可能造成程序崩溃了。解决这个问题的方式则是 weak/strong 化，示例代码如下：
+
+TestBlockViewController.m
+
+	#import "TestBlockViewController.h"
+	#import "TestService.h"
+	
+	@interface TestBlockViewController ()
+	@property (nonatomic, strong) NSString *tag;
+	@property (nonatomic, copy) void (^myBlock)(void);
+	@end
+	
+	@implementation TestBlockViewController
+	
+	- (void)viewDidLoad {
+	    [super viewDidLoad];
+	    
+	    // Init properties.
+	    self.tag = @"tag is OK.";
+	    
+	    // Init TestService's block.
+        __weak typeof(self)weakSelf = self;
+	    self.myBlock = ^{
+	        __strong typeof(weakSelf)strongSelf = weakSelf;
+	        
+	        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
+                NSLog(@"strongSelf is OK.");
+                NSLog(@"%@", strongSelf.tag);
+                //NSLog(@"%@", self.tag); // Retain cycle.
+	        });
+	    };
+	    
+	}
+	
+	- (IBAction)callService:(id)sender {    
+	    self.myBlock();
+	    [self.navigationController popViewControllerAnimated:YES];
+	}
+	
+	- (void)dealloc {
+	    NSLog(@"TestBlockViewController dealloc.");
+	}
+	
+	@end
+
+这样即使当前的 TestBlockViewController 被 pop 后，block 中也由于强引用了 weakSelf 所以延长了其生命周期，最后打印的结果是：
+
+	strongSelf is OK.
+	tag is OK.
+	TestBlockViewController dealloc.
 
 
 ##Block的使用场景

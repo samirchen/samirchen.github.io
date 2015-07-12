@@ -14,16 +14,48 @@ Block是Apple在C语言的基础上添加的扩展功能，由于Ojective-C、C+
 `能持有作用域变量`就是指Block能够获得其所在作用域的变量。其中其所在作用域的变量就包括：局部变量（自动变量）、函数的参数、静态局部变量、静态全局变量、全局变量。
 
 
-##Block语法
 Block能够让我们创建明显的代码片段，并且可以像参数那样传递给方法或函数。在Objective-C中，Block就像对象一样，能够被添加到集合中（比如：NSArray、NSDictionary）。Block能够获得其所在作用域的变量，就如同其他语言里`闭包（Closure）`或者`lambda计算`的概念。
 
-###最简单的Block
-一个简单的 Block，不返回任何值，不接受任何参数：
+##Block语法形式
+Block 的语法遵循如下形式：
 
-	// 一个简单的block：
+- `^` `返回值类型` `参数列表` `表达式`
+
+其中`返回值类型`是可以省略的，但需要保证`表达式`中的所有 return 语句的返回值类型相同。`参数列表`在为空的情况下也是可以省略的。
+
+一些示例：
+
+	// 一个最简单的block：
 	^{
     	NSLog(@"This is a block");
     }
+    
+    // 不省略的block：
+    ^void (void) {
+    	NSLog(@"This is a block");
+    }
+    
+    // 普通的block：
+    ^int (int a, int b) {
+    	NSLog(@"a is %d, b is %d", a, b);
+    	return a + b;
+    }
+    
+可见，Block 语法从形式上来看除了没有名字以及带有 `^` 外，其他都和 C 语言的函数定义相同。
+
+
+##Block类型变量的使用
+在 C 语言中，可以把一个函数的地址赋值给函数指针类型的变量，如下：
+
+	int func(int a) {
+		return a + 1;
+	}
+	int (*func_pointer)(int) = &func;
+	
+同样，在 Block 语法中，也可以把一个 Block 赋值给 Block 类型的变量。
+
+###最简单的Block
+声明和定义一个不返回任何值，不接受任何参数的 Block：
     
 	// 完整的写法：
 	//// 声明
@@ -53,23 +85,118 @@ Block能够让我们创建明显的代码片段，并且可以像参数那样传
     double result = multiplyTwoValues(2,4);
     NSLog(@"The result is %f", result);
 
-###Block的缩写
-Block没有参数，则 `()` 可以省略：
+###Block作为参数时的缩写
 
+Block 作为参数时的缩写如 Block 语法规则所约定那样。
+
+	// Block没有参数，则 `()` 可以省略：
 	[UIView animateViewDuration:5.0 animation:^() { // 这个block没有参数，这里的 () 就可以省略。
 		view.opacity = 0.5;
 	}];
 
-如果Block中返回值的类型根据return后的内容能明显推出，那么可以省略：
-
+	// 如果Block中返回值的类型根据return后的内容能明显推出，那么可以省略：
 	NSSet* mySet = ...;
 	NSSet* matches = [mySet objectsPassingTest:^BOOL(id obj, ...) { // 根据return语句，这个block的返回值明显是BOOL，所以这里可以省略BOOL。
 		return [obj isKindOfClass:[UIView class]]; // 返回值是 BOOL，很明显。
 	}];
 
-###Block获得作用域的变量
 
-- 局部变量（local varible）在 block 里是只读的。如果想在 block 中读写局部变量，那么需要在局部变量前加 __block。__block 修饰的局部变量在 block 中会被编译器从栈上传递到堆上，这样 block 就能使用它改变它，当 block 代码结束，block 会再把这个变量值拷贝回堆，再拷贝回栈上。
+
+###把Block传递给方法或函数
+
+	// 调用带block参数的方法：
+	- (IBAction)fetchRemoteInformation:(id)sender {
+	    [self showProgressIndicator];
+	 
+	    XYZWebTask *task = ...
+	 
+	    [task beginTaskWithCallbackBlock:^{
+	        [self hideProgressIndicator];
+	    }];
+	}
+	
+	// 声明带block参数的方法：
+	- (void)beginTaskWithCallbackBlock:(void (^)(void))callbackBlock;
+	
+	// 方法的具体实现：
+	- (void)beginTaskWithCallbackBlock:(void (^)(void))callbackBlock {
+    	...
+    	callbackBlock();
+	}
+
+苹果的建议是在一个方法中最好只使用一个block变量，并且如果这个方法如果还带有其他非block变量，那么block变量应该放在最后一个。
+
+###使用typedef来简化Block定义
+
+上面的 Block 类型的变量在使用时，记述方式会一眼看上去有点不够简洁，这时候我们也可以用 typedef 来解决这个问题。
+
+	// typedef一个block
+	typedef void (^XYZSimpleBlock)(void);
+    // 使用1
+	XYZSimpleBlock anotherBlock = ^{
+        ...
+    };
+    // 使用2
+    - (void)beginFetchWithCallbackBlock:(XYZSimpleBlock)callbackBlock {
+    	...
+    	callbackBlock();
+	}
+    
+来看一个用typedef简化复杂Block定义的例子，下面的定义的名为complexBlock的变量是一个block，这个block接受一个block作为参数，并且返回一个block：
+
+	// 简化前：
+	void (^(^complexBlock)(void (^)(void)))(void) = ^ (void (^aBlock)(void)) {
+    	...
+    	return ^{
+        	...
+    	};
+	};
+	// 使用上面typedef的XYZSimpleBlock简化后：
+	XYZSimpleBlock (^betterBlock)(XYZSimpleBlock) = ^ (XYZSimpleBlock aBlock) {
+	    ...
+	    return ^{
+	        ...
+	    };
+	};
+
+###定义属性来持有Block
+使用`copy`，因为Block要持有它原本所在作用域的其他外面的变量：
+
+	@interface XYZObject : NSObject
+	@property (copy) void (^blockProperty)(void);
+	@end
+
+	// setter方法和调用
+	self.blockProperty = ^{
+        ...
+    };
+    self.blockProperty();
+    
+    // 使用typedef简化
+    typedef void (^XYZSimpleBlock)(void);
+ 
+	@interface XYZObject : NSObject
+	@property (copy) XYZSimpleBlock blockProperty;
+	@end
+
+###Block的指针类型变量
+我们还可以使用指向 Block 类型变量的指针，即 Block 的指针类型变量。
+
+	typedef int (^MyBlock)(int);
+	MyBlock aBlock = ^int(int a) {
+		return a + 1;
+	};
+	
+	MyBlock* aBlockPointer = &aBlock;
+	int result = (*aBlockPointer)(10); // result = 11.
+	
+可见 Block 类型变量可像 C 语言中其他类型变量一样使用。
+
+##使用Block需要注意的问题
+
+###Block截获作用域的变量
+
+- 局部变量（local varible）在 block 里是只读的。如果想在 block 中读写局部变量，那么需要在局部变量前加 `__block`。`__block` 修饰的局部变量在 block 中会被编译器从栈上传递到堆上，这样 block 就能使用它改变它，当 block 代码结束，block 会再把这个变量值拷贝回堆，再拷贝回栈上。
 
 >
 	// 不能改变局部变量：
@@ -130,84 +257,6 @@ Block没有参数，则 `()` 可以省略：
 - 静态变量在 block 里是可读可写的。
 
 - 全局变量在 block 里是可读可写的。
-
-
-###把Block传递给方法或函数
-
-	// 调用带block参数的方法：
-	- (IBAction)fetchRemoteInformation:(id)sender {
-	    [self showProgressIndicator];
-	 
-	    XYZWebTask *task = ...
-	 
-	    [task beginTaskWithCallbackBlock:^{
-	        [self hideProgressIndicator];
-	    }];
-	}
-	
-	// 声明带block参数的方法：
-	- (void)beginTaskWithCallbackBlock:(void (^)(void))callbackBlock;
-	
-	// 方法的具体实现：
-	- (void)beginTaskWithCallbackBlock:(void (^)(void))callbackBlock {
-    	...
-    	callbackBlock();
-	}
-
-苹果的建议是在一个方法中最好只使用一个block变量，并且如果这个方法如果还带有其他非block变量，那么block变量应该放在最后一个。
-
-###使用typedef来简化Block定义
-
-	// typedef一个block
-	typedef void (^XYZSimpleBlock)(void);
-    // 使用1
-	XYZSimpleBlock anotherBlock = ^{
-        ...
-    };
-    // 使用2
-    - (void)beginFetchWithCallbackBlock:(XYZSimpleBlock)callbackBlock {
-    	...
-    	callbackBlock();
-	}
-    
-来看一个用typedef简化复杂Block定义的例子，下面的定义的名为complexBlock的变量是一个block，这个block接受一个block作为参数，并且返回一个block：
-
-	// 简化前：
-	void (^(^complexBlock)(void (^)(void)))(void) = ^ (void (^aBlock)(void)) {
-    	...
-    	return ^{
-        	...
-    	};
-	};
-	// 使用上面typedef的XYZSimpleBlock简化后：
-	XYZSimpleBlock (^betterBlock)(XYZSimpleBlock) = ^ (XYZSimpleBlock aBlock) {
-	    ...
-	    return ^{
-	        ...
-	    };
-	};
-
-###定义属性来持有Block
-使用`copy`，因为Block要持有它原本所在作用域的其他外面的变量：
-
-	@interface XYZObject : NSObject
-	@property (copy) void (^blockProperty)(void);
-	@end
-
-	// setter方法和调用
-	self.blockProperty = ^{
-        ...
-    };
-    self.blockProperty();
-    
-    // 使用typedef简化
-    typedef void (^XYZSimpleBlock)(void);
- 
-	@interface XYZObject : NSObject
-	@property (copy) XYZSimpleBlock blockProperty;
-	@end
-
-##使用Block需要注意的问题
 
 ###避免强引用循环
 每次向 block 里的对象发送消息（方法调用）的时候，将会创建一个 strong 指针指向这个对象，直到 block 结束。所以像下面的代码，self strong 持有 block，而在 block 里又 strong 持有了 self，这样谁也不能被释放：
@@ -331,6 +380,68 @@ TestBlockViewController.m
 * Error handlers (if an error happens while doing this, execute this block)
 * Completion handlers (when you are done doing this, execute this block)
 * Multithreading (With Grand Central Dispatch (GCD) API)
+
+
+##Block的实现
+在前面的内容中，我们知道了 Block 是「能持有作用域变量的匿名函数」，还介绍了使用 Block 的相关内容，那么 Block 究竟是如何实现的呢？我们可以用 clang（LLVM 编译器）把带 Block 语法的源代码代码转换为我们能够理解的源代码来初探一下。这里我们可以使用 `clang -rewrite-objc <source-code-file>` 把含有 Block 语法的源代码转换成 C++ 的源代码（这里其实就是使用了 struct 结构的 C 代码）。 
+
+包含 Block 语法的源代码 test_block.m：
+
+	#include <stdio.h>
+	
+	int main() {
+		void (^blk)(void) = ^{
+			int tag = 8;
+			printf("Block, %d\n", tag);
+		};
+	
+		blk();
+	
+		return 0;
+	}
+	
+	
+使用 `clang -rewrite-objc test_block.m` 编译后得到了 test_block.cpp 代码，从里面截取相关的代码如下：
+
+	struct __block_impl {
+		void *isa;
+		int Flags;
+		int Reserved;
+		void *FuncPtr;
+	};
+
+	struct __main_block_impl_0 {
+		struct __block_impl impl;
+		struct __main_block_desc_0* Desc;
+		__main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, int flags=0) {
+			impl.isa = &_NSConcreteStackBlock;
+			impl.Flags = flags;
+			impl.FuncPtr = fp;
+			Desc = desc;
+		}
+	};
+	
+	static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
+		int tag = 0;
+		printf("Block, %d\n", tag);
+	 }
+	
+	static struct __main_block_desc_0 {
+		size_t reserved;
+		size_t Block_size;
+	} __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0)};
+
+	int main() {
+		void (*blk)(void) = (void (*)())&__main_block_impl_0((void *)__main_block_func_0, &__main_block_desc_0_DATA);
+	
+		((void (*)(__block_impl *))((__block_impl *)blk)->FuncPtr)((__block_impl *)blk);
+	
+		return 0;
+	}
+
+如转换后的代码所示，Block 使用的匿名代码被转换为了简单的 C 语言函数，其函数名则根据 Block 语法所属的函数名（这里是 main）和该 Block 语法在该函数出现的顺序值（这里是 0）来命名。
+
+=== 未完待续 ===
 
 
 [SamirChen]: http://samirchen.com "SamirChen"

@@ -390,6 +390,12 @@ git 采用这样的设计带来了这些好处：
 - 命令：git branch feature, git reset HEAD^ --hard
 - 解释：上面 3 条命令依次执行。第一条命令，先创建一个名为 feature 的分支，但不切换过去，这个分支指向了你最近的提交，保留了你最近的修改；第二条命令，这时你还在 master 上，这条命令撤销了 master 上的上一次提交。接下来，你可以 git checkout feature 将分支切换到 feature 分支上，这个分支保存着你最近的所有工作，你可以接着工作了。
 
+###储藏当前工作
+- 场景：经常有这样的事情发生，当你正在进行项目中某一部分的工作，里面的东西处于一个比较杂乱的状态，而你想转到其他分支上进行一些工作。问题是，你不想提交进行了一半的工作，否则以后你无法回到这个工作点。解决这个问题的办法就是 git stash 命令。
+- 命令：git stash
+- 解释：储藏可以获取你工作目录的中间状态——也就是你修改过的被追踪的文件和暂存的变更——并将它保存到一个未完结变更的堆栈中，随时可以重新应用。你可以使用 git stash list 来看储藏列表，可以用 git stash apply <stash-id> 来把之前储藏的工作拿出来继续。更详细的信息参见 [Git 工具 - 储藏（Stashing）](https://git-scm.com/book/zh/v1/Git-%E5%B7%A5%E5%85%B7-%E5%82%A8%E8%97%8F%EF%BC%88Stashing%EF%BC%89)
+
+
 ###停止跟踪一个已经被跟踪的文件
 - 场景：你意外将 application.log 添加到仓库中，现在你每次运行程序，Git 都提示 application.log 中有 unstaged 的提交。你在 .gitignore 中写上 *.log，但仍旧没用。怎么告诉 Git 停止跟踪这个文件的变化呢？
 - 命令：git rm --cached application.log

@@ -121,21 +121,22 @@ git 采用这样的设计带来了这些好处：
 
 [Git 分支 - 何谓分支](https://git-scm.com/book/zh/v1/Git-%E5%88%86%E6%94%AF-%E4%BD%95%E8%B0%93%E5%88%86%E6%94%AF)
 
-##本地（Local）
+##常用Git命令
+###本地（Local）
 
-##1、初始化
+####1、初始化
 
-###1.1、全局变量
+####1.1、全局变量
 	git config --global user.name "your_name"
 	git config --global user.email "your@email.com"
 	git config --list //列出git在该处找到的所有设置
 	git config --global core.editor vim //设置你的缺省编辑器，Git在需要你输入一些消息时会使用该文本编辑器
 	git config --global merge.tool diffmerge //设置merge工具
 
-###1.2、初始化新版本库
+####1.2、初始化新版本库
 	git init // 只会在根目录下创建 .git 文件夹
 
-###1.3、设置忽略文件
+####1.3、设置忽略文件
 设置每个人都想要忽略的文件：
 
 - 1、在根目录创建一个 `.gitignore` 文件，在里面添加要忽略的文件或文件夹，一个一行；
@@ -145,23 +146,23 @@ git 采用这样的设计带来了这些好处：
 
 - 1、修改 `.git/info/exclude` 文件，可使用正则表达式
 
-###1.4、添加新文件到版本库
+####1.4、添加新文件到版本库
 	git add somefile.txt //添加单个文件
 	git add *.txt //添加所有 txt 文件
 	git add . //添加所有文件，包括子目录，但不包括空目录
 
-###1.5、提交
+####1.5、提交
 	git commit -m "add all txt files"
 
-##2、日常操作
+####2、日常操作
 
-###2.1、提交
+####2.1、提交
 	git commit -m "some msg" -a //提交所有修改
 	git commit -m "add msg to readme.txt" readme.txt //提交单个文件
 	git commit --amend -m "new commit message" // 提交了，发现提交信息写错了，修改上次提交的信息可以用这条命令
 	git commit -C HEAD -a --amend //不会产生新的提交历史记录，复用HEAD留言，增补提交，而不增加提交记录
 
-###2.2、撤销修改
+####2.2、撤销修改
 撤销尚未提交的修改（即没有commit的）：
 
 	git checkout HEAD readme.txt todo.txt //撤销1、2个文件
@@ -178,7 +179,7 @@ git 采用这样的设计带来了这些好处：
 	git reset HEAD <filename> //复位，取消暂存
 	git reset --hard HEAD^ //复位到HEAD之前的那个版本，不会在版本库中留下痕迹
 
-###2.3、分支
+####2.3、分支
 
 	git branch //列出本地分支
 	git branch -a //列出所有分支
@@ -219,7 +220,7 @@ git 采用这样的设计带来了这些好处：
 	git branch -d new2 //如果分支没有被合并会删除失败
 	git branch -D new2 //即使分支没有被合并也照删不误
 
-###2.4、解决冲突
+####2.4、解决冲突
 冲突很少时，直接编辑冲突的文件然后提交即可。
 
 冲突比较复杂时，用 `git mergetool` 调用之前设定的merge工具来处理。
@@ -229,7 +230,7 @@ git 采用这样的设计带来了这些好处：
 - 3、解决之后，关闭工具，BACKUP，BASE，LOCAL和REMOTE四个辅助文件会自动删除，但会同时生成一个 .orig 的文件来保存冲突前的现场。需手动删除这个文件
 - 4、提交
 
-###2.5、标签
+####2.5、标签
 	//创建标签
 	git tag 1.0 //为当前分支最后一次提交创建标签，标签无法重命名
 	git tag contacts_1.1 contacts //为contacts分支最近一次提交创建标签
@@ -244,20 +245,20 @@ git 采用这样的设计带来了这些好处：
 
 	git tag -d 1.0 //删除标签
 
-###2.6、查看状态
+####2.6、查看状态
 	git status // 当前状态
 	git log //历史记录
 	git branch -v //每个分支最后的提交
 
-###2.7、其他
+####2.7、其他
 	//导出版本库
 	git archive --format=zip HEAD>nb.zip
 	git archive --format=zip --prefix=nb1.0/ HEAD>nb.zip
 
-##远端（Remote）
+###远端（Remote）
 
-##1、初始化
-###1.1、克隆版本库和添加远程版本库
+####1、初始化
+####1.1、克隆版本库和添加远程版本库
 1）当已经有一个远程版本库，只需要在本地克隆一份：
 
 	git clone <giturl> //克隆，如：git clone https://github.com/me/test.git
@@ -280,7 +281,7 @@ git 采用这样的设计带来了这些好处：
 	git commit -am "init commit"
 	git push origin master 
 
-###1.2、别名
+####1.2、别名
 	git remote add <别名> <远程版本库URL> //添加远程版本库别名
 	git remote rm <别名> //删除远程库的别名和相关分支
 
@@ -291,12 +292,12 @@ git 采用这样的设计带来了这些好处：
 - remote.origin.url=https://github.com/me/test.git
 - remote.origin.fetch=+refs/HEADs/\*:refs/remotes/origin/\*
 
-###1.3、创建一个无本地分支的库
+####1.3、创建一个无本地分支的库
 	git init --bare //当需要一个公用的中央库时，非常适合把它建成bare库
 
 
-##2、日常操作
-###2.1、分支
+####2、日常操作
+####2.1、分支
 
 	git branch -r //列出远程分支
 	git branch -a //列出所有分支（本地和远程）
@@ -305,7 +306,7 @@ git 采用这样的设计带来了这些好处：
 	git push origin --delete <branchName> //删除远程分支
 	git push origin :<branchName> //推送一个空分支到远程分支，相当于删除远程分支
 
-###2.2、从远程库获取
+####2.2、从远程库获取
 
 	git remote -v //查看远程仓库
 
@@ -329,13 +330,76 @@ git 采用这样的设计带来了这些好处：
 	git merge tmp //合并本地tmp分支到当前分支（一般为本地master分支）
 	//如果这里遇到冲突，则参考“本地（Local） 2.4 解决冲突”来解决冲突
 
-###2.3、推入远程库
+####2.3、推入远程库
 	git push origin master //推入远程库，这里远程库默认别名origin，本地默认分支master
 
 	git push origin test:master //将本地test分支推入远程库，并作为远程库的master分支
 	git push origin test:test //将本地test分支推入远程库，并作为远程库的test分支
 
-	
+
+##几个Git使用场景
+###撤销一次公共提交
+- 场景：你才用 git push 将本地的修改提交到了远程公共库，突然发现提交中有个错误忘了改了，你想撤销这次提交。
+- 命令：git revert <SHA> 或者 git reset HEAD^
+- 解释：详见前文讲「git管理下文件的状态」那节对这两个命令的解释。在本地撤销后，修改了错误后，再做一次新的提交并 git push 到远程公共库即可。
+
+###修改最近一次的提交信息
+- 场景：你用 git commit 命令做了一次提交操作，提交完才想起提交信息没有按规范写，在 git push 之前，你想把提交信息改一改
+- 命令：git commit --amend
+- 解释：上面的命令将使用一个包含了上一次提交所有变更的新提交，来更新并替换这个错误提交。由于这次提交除了修改了 commit message，没有其他 staged 的修改，所以就相当于修正了上一次的提交信息。
+
+###撤销提交后重做
+- 场景：你提交了一些内容，然后又用 git reset HEAD^ --hard 撤销了这些更改，然后纠结的你又发现：我还是得还原这些修改！
+- 命令：git reflog 和 git reset
+- 解释：我们对 git log 命令比较熟悉，它能显示提交列表，而 git reflog 则显示的 HEAD 变更列表。ref log 嘛，字面上也能理解。知道了 HEAD 变更的信息列表，那我们就可以用 git reset 来做我们想重做了。但是需要注意的是：git reflog 不会永远存储，Git 将定期清理那些**不可达(unreachable)**的对象，所以不要期望能在 reflog 里找到数据前的 HEAD 变更记录。
+
+>
+	// 我提交了一些内容
+	$ git commit -m "commit 17"
+>	
+	// 接着我撤销了这些更改
+	$ git reset HEAD^ --hard
+>	
+	// 额，我这时发现我得还原这些更改
+	// Step 1: 用 git reflog 查看
+	$ git reflog
+	2750087 HEAD@{0}: reset: moving to HEAD^
+	ad14ba3 HEAD@{1}: commit: commit 17
+	...
+	// 发现了刚才的那次撤销以及前面那次提交的信息
+	// Step 2: 用 git reset 回到那次提交
+	$ git reset ad14ba3
+	HEAD is now at ad14ba3 commit 17
+	// 打印出来的信息显示，我们做到了，更改被还原过来了
+	// 再看看 reflog 信息和 log 信息
+	$ git reflog
+	ad14ba3 HEAD@{0}: reset: moving to ad14ba3
+	2750087 HEAD@{1}: reset: moving to HEAD^
+	ad14ba3 HEAD@{2}: commit: commit 17
+	...
+	$ git log
+	commit ad14ba39c57b4b43b913ebc273500afa815bb0e3
+	Author: qiufu <qiufu@QiuFu-MacBookPro.local>
+	Date:   Tue Jul 14 22:55:24 2015 +0800
+>	
+	    commit 17
+
+
+###在master做了本该在分支上做的提交
+- 场景：你提交了一些修改，却发现自己是在 master 上，但你本来是期望在 feature 分支上执行这些提交的。
+- 命令：git branch feature, git reset HEAD^ --hard
+- 解释：上面 3 条命令依次执行。第一条命令，先创建一个名为 feature 的分支，但不切换过去，这个分支指向了你最近的提交，保留了你最近的修改；第二条命令，这时你还在 master 上，这条命令撤销了 master 上的上一次提交。接下来，你可以 git checkout feature 将分支切换到 feature 分支上，这个分支保存着你最近的所有工作，你可以接着工作了。
+
+###停止跟踪一个已经被跟踪的文件
+- 场景：你意外将 application.log 添加到仓库中，现在你每次运行程序，Git 都提示 application.log 中有 unstaged 的提交。你在 .gitignore 中写上 *.log，但仍旧没用。怎么告诉 Git 停止跟踪这个文件的变化呢？
+- 命令：git rm --cached application.log
+- 解释：尽管 .gitignore 可以阻止 Git 跟踪所指定的文件的变化甚至让 Git 不去提醒这些文件的存在，但是，一旦文件被 git add 或者 commit，Git 会开始持续跟踪这个文件的变化。如果你希望移除那些应当被忽略的文件，git rm –cached 命令可以帮助你，并将这些文件保留在磁盘上。因为这个文件现在被忽略了，你将不会在 git status 中看到它，也不会再把这个文件 commit 了。
+
+
+
+
+参考：[如何在Git中撤销一切](http://www.jointforce.com/jfperiodical/article/show/796?m=d03)，翻译：李伟，审校：张帆，译自：[How to undo (almost) anything with Git](https://github.com/blog/2019-how-to-undo-almost-anything-with-git)。
+
 
 [SamirChen]: http://samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})

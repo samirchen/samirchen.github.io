@@ -421,6 +421,7 @@ TestBlockViewController.m
 		}
 	};
 	
+	// 这里对应的就是 block 的匿名函数。参数 __cself 为指向 block 值的指针，类似 Objective-C 中实例方法中指向对象自身的变量 self。
 	static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
 		int tag = 0;
 		printf("Block, %d\n", tag);

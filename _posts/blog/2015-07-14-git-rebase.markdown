@@ -59,7 +59,7 @@ tag: git, scm
 
 
 
-在 rebase 的过程中，也许会出现冲突(conflict). 在这种情况，Git 会停止 rebase 并会让你去解决冲突；在解决完冲突后，用 git stage(add) 命令去快照这些内容, 然后，你无需执行 git commit，只要执行:
+在 rebase 的过程中，也许会出现冲突(conflict)，在这种情况，Git 会停止 rebase 并会让你去解决冲突；在解决完冲突后，用 git stage(add) 命令去快照这些内容, 然后，你无需执行 git commit，只要执行:
 
     $ git rebase --continue
 

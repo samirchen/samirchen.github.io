@@ -379,7 +379,7 @@ git 采用这样的设计带来了这些好处：
 	...
 	$ git log
 	commit ad14ba39c57b4b43b913ebc273500afa815bb0e3
-	Author: qiufu <qiufu@QiuFu-MacBookPro.local>
+	Author: sc <sc@sc-MacBookPro.local>
 	Date:   Tue Jul 14 22:55:24 2015 +0800
 >	
 	    commit 17

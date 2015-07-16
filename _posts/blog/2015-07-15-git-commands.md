@@ -1,8 +1,9 @@
 ---
 layout: post
-title: git命令详解
-description: 由于最近团队开发需大量使用git，在这里尽量详尽地介绍一下各种git命令，并总结出常用命令。
+title: Git 命令详解
+description: 由于最近团队开发需大量使用 Git，在这里尽量详尽地介绍一下各种 Git命令，并总结出常用命令。
 category: blog
+tag: Git
 ---
 
 ##git基本概念

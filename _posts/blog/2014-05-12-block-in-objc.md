@@ -1,22 +1,22 @@
 ---
 layout: post
 title: Block
-description: 介绍Objective-C中的block。
+description: 介绍 Objective-C 中的 Block。
 category: blog
 tag: iOS, Objective-C, block
 ---
 
-##Block是什么
-Block是Apple在C语言的基础上添加的扩展功能，由于Ojective-C、C++都是源自于C，所以这三种语言都能够使用。对于Block的功能，可以用一句话概括：**能持有作用域变量的匿名函数。**
+##Block 是什么
+Block 是 Apple 在 C 语言的基础上添加的扩展功能，由于 Ojective-C、C++ 都是源自于 C，所以这三种语言都能够使用。对于 Block 的功能，可以用一句话概括：**能持有作用域变量的匿名函数。**
 
-`匿名函数`就是没有名称的函数，C语言的标准不允许存在这样的函数，而通过Block，源代码中就可以使用匿名函数了。
+`匿名函数`就是没有名称的函数，C 语言的标准不允许存在这样的函数，而通过 Block，源代码中就可以使用匿名函数了。
 
-`能持有作用域变量`就是指Block能够获得其所在作用域的变量。其中其所在作用域的变量就包括：局部变量（自动变量）、函数的参数、静态局部变量、静态全局变量、全局变量。
+`能持有作用域变量`就是指 Block 能够获得其所在作用域的变量。其中其所在作用域的变量就包括：局部变量（自动变量）、函数的参数、静态局部变量、静态全局变量、全局变量。
 
 
-Block能够让我们创建明显的代码片段，并且可以像参数那样传递给方法或函数。在Objective-C中，Block就像对象一样，能够被添加到集合中（比如：NSArray、NSDictionary）。Block能够获得其所在作用域的变量，就如同其他语言里`闭包（Closure）`或者`lambda计算`的概念。
+Block 能够让我们创建明显的代码片段，并且可以像参数那样传递给方法或函数。在 Objective-C 中，Block 就像对象一样，能够被添加到集合中（比如：NSArray、NSDictionary）。Block 能够获得其所在作用域的变量，就如同其他语言里`闭包（Closure）`或者`lambda 计算`的概念。
 
-##Block语法形式
+##Block 语法形式
 Block 的语法遵循如下形式：
 
 - `^` `返回值类型` `参数列表` `表达式`
@@ -385,6 +385,7 @@ TestBlockViewController.m
 ##Block的实现
 在前面的内容中，我们知道了 Block 是「能持有作用域变量的匿名函数」，还介绍了使用 Block 的相关内容，那么 Block 究竟是如何实现的呢？我们可以用 clang（LLVM 编译器）把带 Block 语法的源代码代码转换为我们能够理解的源代码来初探一下。这里我们可以使用 `clang -rewrite-objc <source-code-file>` 把含有 Block 语法的源代码转换成 C++ 的源代码（这里其实就是使用了 struct 结构的 C 代码）。 
 
+###1、最简单的Block
 包含 Block 语法的源代码 test_block.m：
 
 	#include <stdio.h>
@@ -440,9 +441,18 @@ TestBlockViewController.m
 		return 0;
 	}
 
-如转换后的代码所示，Block 使用的匿名代码被转换为了简单的 C 语言函数，其函数名则根据 Block 语法所属的函数名（这里是 main）和该 Block 语法在该函数出现的顺序值（这里是 0）来命名。
+如转换后的代码所示，Block 使用的匿名代码被转换为 C 语言函数，其函数名 __main_block_func_0 则根据 Block 语法所属的函数名（这里是 main）和该 Block 语法在该函数出现的顺序值（这里是 0）来命名。`((void (*)(__block_impl *))((__block_impl *)blk)->FuncPtr)((__block_impl *)blk);` 最终简化后其实就是用函数指针实现对函数的调用。根据 `impl.isa = &_NSConcreteStackBlock;` 这里用 _NSConcreteStackBlock 来初始化 __block_impl 结构体的 isa 成员。
 
-=== 未完待续 ===
+分析这些代码，我们最后能得出的结论是：
+
+- Block 转换后的形式就是简单地使用函数指针来调用函数。
+- Block 其实就是 Objective-C 对象。
+
+###2、Block截获自动变量
+
+
+###3、__block说明符
+
 
 
 [SamirChen]: http://samirchen.com "SamirChen"

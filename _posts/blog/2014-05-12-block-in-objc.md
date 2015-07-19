@@ -202,7 +202,7 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 ##Block的实现
 在前面的内容中，我们知道了 Block 是「能持有作用域变量的匿名函数」，还介绍了使用 Block 的相关内容，那么 Block 究竟是如何实现的呢？我们可以用 clang（LLVM 编译器）把带 Block 语法的源代码代码转换为我们能够理解的源代码来初探一下。这里我们可以使用 `clang -rewrite-objc <source-code-file>` 把含有 Block 语法的源代码转换成 C++ 的源代码（这里其实就是使用了 struct 结构的 C 代码）。 
 
-###1、最简单的Block
+###最简单的Block
 包含 Block 语法的源代码 test_block.m：
 
 	#include <stdio.h>
@@ -265,7 +265,7 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 - Block 转换后的形式就是简单地使用函数指针来调用函数。
 - Block 其实就是 Objective-C 对象。
 
-###2、Block截获自动变量
+###Block截获自动变量
 我们对 test_block.m 代码稍作修改。其中在 Block 中用到了自动变量。
 
 	#include <stdio.h>
@@ -365,7 +365,7 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 而这种赋值方式是不符合 C 语言规范的。而使用指针就没问题了。
 
 
-###3、Block使用静态、全局变量
+###Block使用静态、全局变量
 下面的代码中，用到了静态变量、全局变量、全局静态变量，并在 Block 中改变了他们的值。
 
 	#include <stdio.h>
@@ -441,7 +441,7 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 
 
 
-###4、__block说明符
+###__block说明符
 上面展示了 Block 截获自动变量以及使用静态变量、全局变量和全局静态变量的实现，接下来，再来看看当需要在 Block 里面改变自动变量时的情况，也就是使用 \_\_block 说明符时 Block 的实现。这里需要关注的问题是：**当使用了 \_\_block 说明符后，对变量做了什么处理，才使得不在变量作用域的 Block 可以去访问修改变量呢？**
 
 `__block` 说明符更准确的表述是：**__block 存储域类说明符**。在 C 语言说还有这些存储域类说明符：typedef、extern、static、auto、register。这些说明符用于指定将变量值设置到哪个存储域中。例如，auto 表示作为自动变量存储在栈上，static 表示作为静态变量存储在数据区等。下面来看看 \_\_block。
@@ -541,7 +541,7 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 
 这两个问题是关于 \_\_block 自动变量的，但是我们还要先看看 Block 内存管理相关的知识后再来解答。
 
-###5、Block存储域
+###Block存储域
 Block 有 3 中类型：
 
 - `_NSConcreteStackBlock`，这种类型的 Block 存储在栈上。
@@ -653,7 +653,7 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 所以，**不管 Block 存储在何处，用 copy 方法复制都不会引起任何问题。在不确定时调用 copy 方法即可。**在 ARC 中不能显式的 release，但是即使多次调用了 copy 方法进行复制也不会有问题。
 
-###6、__block变量存储域
+###__block变量存储域
 讲完对 Block 的处理后，接下来，开讲对 \_\_block 变量的处理。使用 \_\_block 变量的 Block 从栈上复制到堆上时，\_\_block 也会受到影响：
 
 | \_\_block 变量原来的存储区域 | Block 从栈复制到堆对其截获的 \_\_block 变量的影响  | 
@@ -902,7 +902,7 @@ TestBlockViewController.m
 总结一下 Block 中使用对象类型的自动变量时，除以下情形外，推荐调用 Block 的 copy 方法：
 
 - Block 作为函数返回值返回时，不需要手动 copy。
-- 将 Block 赋值给类的：`1）\_\_strong 修饰的 id 类型的成员变量；2）Block 类型成员变量`时，不需要手动 copy。
+- 将 Block 赋值给类的：`1）__strong 修饰的 id 类型的成员变量；2）Block 类型成员变量`时，不需要手动 copy。
 - 向方法名中含有 usingBlock 的 Cocoa 框架方法或 GCD 的 API 中传递 Block 时，不需要手动 copy。
 
 其他情况，推荐调用。

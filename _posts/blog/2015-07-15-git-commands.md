@@ -1,4 +1,10 @@
-
+---
+layout: post
+title: Git 初探
+description: Git 基本概念以及常使用命令的介绍。
+category: blog
+tag: Git
+---
 ##Git 基本概念
 [Git][] 最初由 [Linus Torvalds][] 编写，用于 Linux 内核开发的版本控制工具。Git 与常用的版本控制工具 [CVS][]、[Subversion][] 等不同，它采用了分布式版本库的方式，不必服务器端软件支持，使源代码的发布和交流极其方便。
 

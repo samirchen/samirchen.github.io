@@ -6,6 +6,12 @@ category: blog
 tag: iOS, Objective-C, block
 ---
 
+本文的内容大部分是由书本以及网上的资料整理总结而来，包括但不限于：
+
+- [Apple 的官方文档：Working with Blocks][2]
+- [《Objective-C 高级编程：iOS 与 OS X 多线程和内存管理》][3]
+
+
 ##Block 是什么
 Block 是 Apple 在 C 语言的基础上添加的扩展功能，由于 Ojective-C、C++ 都是源自于 C，所以这三种语言都能够使用。对于 Block 的功能，可以用一句话概括：**能持有作用域变量的匿名函数。**
 
@@ -192,6 +198,557 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 	
 可见 Block 类型变量可像 C 语言中其他类型变量一样使用。
 
+
+##Block的实现
+在前面的内容中，我们知道了 Block 是「能持有作用域变量的匿名函数」，还介绍了使用 Block 的相关内容，那么 Block 究竟是如何实现的呢？我们可以用 clang（LLVM 编译器）把带 Block 语法的源代码代码转换为我们能够理解的源代码来初探一下。这里我们可以使用 `clang -rewrite-objc <source-code-file>` 把含有 Block 语法的源代码转换成 C++ 的源代码（这里其实就是使用了 struct 结构的 C 代码）。 
+
+###1、最简单的Block
+包含 Block 语法的源代码 test_block.m：
+
+	#include <stdio.h>
+	
+	int main() {
+		void (^blk)(void) = ^{
+			int tag = 8;
+			printf("Block, %d\n", tag);
+		};
+	
+		blk();
+	
+		return 0;
+	}
+	
+	
+使用 `clang -rewrite-objc test_block.m` 编译后得到了 test_block.cpp 代码，从里面截取相关的代码如下：
+
+	struct __block_impl {
+		void *isa;
+		int Flags;
+		int Reserved;
+		void *FuncPtr;
+	};
+
+	struct __main_block_impl_0 {
+		struct __block_impl impl;
+		struct __main_block_desc_0* Desc;
+		__main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, int flags=0) {
+			impl.isa = &_NSConcreteStackBlock;
+			impl.Flags = flags;
+			impl.FuncPtr = fp;
+			Desc = desc;
+		}
+	};
+	
+	// 这里对应的就是 block 的匿名函数。参数 __cself 为指向 block 值的指针，类似 Objective-C 中实例方法中指向对象自身的变量 self。
+	static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
+		int tag = 0;
+		printf("Block, %d\n", tag);
+	 }
+	
+	static struct __main_block_desc_0 {
+		size_t reserved;
+		size_t Block_size;
+	} __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0)};
+
+	int main() {
+		void (*blk)(void) = (void (*)())&__main_block_impl_0((void *)__main_block_func_0, &__main_block_desc_0_DATA);
+	
+		((void (*)(__block_impl *))((__block_impl *)blk)->FuncPtr)((__block_impl *)blk);
+	
+		return 0;
+	}
+
+如转换后的代码所示，Block 使用的匿名代码被转换为 C 语言函数，其函数名 \_\_main_block_func_0 则根据 Block 语法所属的函数名（这里是 main）和该 Block 语法在该函数出现的顺序值（这里是 0）来命名。`((void (*)(__block_impl *))((__block_impl *)blk)->FuncPtr)((__block_impl *)blk);` 最终简化后其实就是用函数指针实现对函数的调用。根据 `impl.isa = &_NSConcreteStackBlock;` 这里用 _NSConcreteStackBlock 来初始化 \_\_block_impl 结构体的 isa 成员。
+
+分析这些代码，我们最后能得出的结论是：
+
+- Block 转换后的形式就是简单地使用函数指针来调用函数。
+- Block 其实就是 Objective-C 对象。
+
+###2、Block截获自动变量
+我们对 test_block.m 代码稍作修改。其中在 Block 中用到了自动变量。
+
+	#include <stdio.h>
+	
+	int main() {
+		int dummy = 256;
+		int tag = 10;
+		const char *say = "tag = %d\n";
+	
+	    void (^blk)(void) = ^{
+	        printf(say, tag);
+	    };
+	    
+	    blk();
+	    
+	    return 0;
+	}
+
+使用 `clang -rewrite-objc test_block.m` 转换代码后，截取相关片段如下：
+
+	struct __block_impl {
+	    void *isa;
+	    int Flags;
+	    int Reserved;
+	    void *FuncPtr;
+	};
+
+	struct __main_block_impl_0 {
+	    struct __block_impl impl;
+	    struct __main_block_desc_0* Desc;
+	    // 这里可以看到，这里的两个 Block 结构体的成员变量与外面的两个自动变量完全相同，这是等会要来拷贝用的。
+	    const char *say;
+	    int tag;
+	    // 下面是结构体的构造函数。
+	    __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, const char *_say, int _tag, int flags=0) : say(_say), tag(_tag) {
+	        impl.isa = &_NSConcreteStackBlock;
+	        impl.Flags = flags;
+	        impl.FuncPtr = fp;
+	        Desc = desc;
+	    }
+	};
+	// 这里可以看到，只是把自动变量的值拷贝进来了，并且只拷贝了 Block 里用到的自动变量，如：say 和 tag，并没有拷贝 dummy。
+	static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
+	    const char *say = __cself->say; // bound by copy
+	    int tag = __cself->tag; // bound by copy
+	    
+	    printf(say, tag);
+	}
+	
+	static struct __main_block_desc_0 {
+	    size_t reserved;
+	    size_t Block_size;
+	} __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0)};
+	
+	int main() {
+	    int dummy = 256;
+	    int tag = 10;
+	    const char *say = "tag = %d\n";
+	    
+	    void (*blk)(void) = (void (*)())&__main_block_impl_0((void *)__main_block_func_0, &__main_block_desc_0_DATA, say, tag);
+	    
+	    ((void (*)(__block_impl *))((__block_impl *)blk)->FuncPtr)((__block_impl *)blk);
+	    
+	    return 0;
+	}
+
+分析上面的代码，我们可以得到的结论是：
+
+- Block 只会截获它里面使用到的自动变量。
+- Block 被转换后的结构体内声明的成员变量与它将截获的自动变量的类型完全相同。
+- 所谓的「自动变量的截获」就是在执行 Block 时，将 Block 用到的自动变量的值拷贝到 Block 实例对应的成员变量上。
+
+说到这里，我们就能理解为什么使用 C 语言的数组时会有问题了。
+
+	// 这样是有问题的：
+	const char text[] = "hello";
+	void (^blk)(void) = {
+		printf("%c\n", text[2]);
+	}
+	// 这样是没问题的：
+	const char* text = "hello";
+	void (^blk)(void) = {
+		printf("%c\n", text[2]);
+	}
+	
+上面有问题的那种使用方式，可能被转换后得到的代码形式是类似这样的：
+
+	void func(const char text[]) {
+		const char text2[] = text; // 这种赋值方式是不符合 C 语言规范的。
+		printf("%c\n", text[2]);
+	}
+	int main() {
+		cosnt char text[] = "hello";
+		func(text);
+	}
+
+而这种赋值方式是不符合 C 语言规范的。而使用指针就没问题了。
+
+
+###3、Block使用静态、全局变量
+下面的代码中，用到了静态变量、全局变量、全局静态变量，并在 Block 中改变了他们的值。
+
+	#include <stdio.h>
+
+	int global_val = 1;
+	static int static_global_val = 2;
+	
+	int main() {
+		static int static_val = 3;
+	
+	
+	    void (^blk)(void) = ^{
+	        global_val = 100;
+	        static_global_val = 200;
+	        static_val = 300;
+	    };
+	    
+	    blk();
+	    
+	    return 0;
+	}
+
+
+使用 `clang -rewrite-objc test_block.m` 转换代码后，截取相关片段如下：
+
+	struct __block_impl {
+	    void *isa;
+	    int Flags;
+	    int Reserved;
+	    void *FuncPtr;
+	};
+
+	struct __main_block_impl_0 {
+	    struct __block_impl impl;
+	    struct __main_block_desc_0* Desc;
+	    // 可以看到，对于静态变量，在 Block 中是用其指针，所以改变其值也是没问题的。
+	    int *static_val;
+	    __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, int *_static_val, int flags=0) : static_val(_static_val) {
+	        impl.isa = &_NSConcreteStackBlock;
+	        impl.Flags = flags;
+	        impl.FuncPtr = fp;
+	        Desc = desc;
+	    }
+	};
+	static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
+	    int *static_val = __cself->static_val; // bound by copy
+	    // 可以看到，对于全局的变量（静态或非静态），不用截获，直接用就行了。对于局部静态变量，用到了指针，改变其值是没问题的。因为静态变量是存储在静态存储区，生命周期是整体程序运行期间，所以可以这样用。
+	    global_val = 100;
+	    static_global_val = 200;
+	    (*static_val) = 300;
+	}
+	
+	static struct __main_block_desc_0 {
+	    size_t reserved;
+	    size_t Block_size;
+	} __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0)};
+	int main() {
+	    static int static_val = 3;
+	    
+	    
+	    void (*blk)(void) = (void (*)())&__main_block_impl_0((void *)__main_block_func_0, &__main_block_desc_0_DATA, &static_val);
+	    
+	    ((void (*)(__block_impl *))((__block_impl *)blk)->FuncPtr)((__block_impl *)blk);
+	    
+	    return 0;
+	}
+
+分析上面上面的代码，可以得出的结论是：
+
+- 在 Block 中使用全局变量、全局静态变量与 C 语言中无区别，直接使用就好。
+- 在 Block 中使用局部静态变量时，由于转换后的函数 __main_block_func_0 原本就设置在含有 Block 语法的函数(也就是在含有静态变量的函数)之外，所以无法从变量的作用域去访问。这里是通过静态变量的指针来对其进行访问。
+- 按说采用指针的方式也适用于普通自动变量，但是不能这样用，因为转换后的函数 \_\_main_block_func_0 在含有 Block 语法的函数外，变量的作用域结束后，自动变量的生命周期就结束了，不能再使用了。而静态变量的作用域虽然是在函数内，但是它是被存储在静态区域，生命周期是整个程序运行期间，所以可以通过指针去访问，有了指针自然也能修改了。
+
+
+
+###4、__block说明符
+上面展示了 Block 截获自动变量以及使用静态变量、全局变量和全局静态变量的实现，接下来，再来看看当需要在 Block 里面改变自动变量时的情况，也就是使用 \_\_block 说明符时 Block 的实现。这里需要关注的问题是：**当使用了 \_\_block 说明符后，对变量做了什么处理，才使得不在变量作用域的 Block 可以去访问修改变量呢？**
+
+`__block` 说明符更准确的表述是：**__block 存储域类说明符**。在 C 语言说还有这些存储域类说明符：typedef、extern、static、auto、register。这些说明符用于指定将变量值设置到哪个存储域中。例如，auto 表示作为自动变量存储在栈上，static 表示作为静态变量存储在数据区等。下面来看看 \_\_block。
+
+	#include <stdio.h>
+	
+	int main() {
+		__block int val = 3;
+	
+	    void (^blk)(void) = ^{
+			val = 300;
+		};
+	    
+	    blk();
+	    
+	    return 0;
+	}
+
+使用 `clang -rewrite-objc test_block.m` 转换代码后，截取相关片段如下：
+
+
+	struct __block_impl {
+	    void *isa;
+	    int Flags;
+	    int Reserved;
+	    void *FuncPtr;
+	};
+	
+	// 这个结构体是用来定义原来的自动变量 val 的。
+	struct __Block_byref_val_0 {
+	    void *__isa;
+	    __Block_byref_val_0 *__forwarding; // 这个成员变量是一个指向自己实例的指针。
+	    int __flags;
+	    int __size;
+	    int val; // 这个成员变量将用来存原来自动变量的值。
+	};
+	
+	struct __main_block_impl_0 {
+	    struct __block_impl impl;
+	    struct __main_block_desc_0* Desc;
+	    // 原来的自动变量被重新定义成了一个结构体，val 成了指向这个结构体的一个实例的指针。
+	    __Block_byref_val_0 *val; // by ref
+	    __main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, __Block_byref_val_0 *_val, int flags=0) : val(_val->__forwarding) {
+	        impl.isa = &_NSConcreteStackBlock;
+	        impl.Flags = flags;
+	        impl.FuncPtr = fp;
+	        Desc = desc;
+	    }
+	};
+	
+	static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
+	    __Block_byref_val_0 *val = __cself->val; // bound by ref
+	    
+	    // 下面的赋值可以看出，是把原自动变量变成了 __main_block_impl_0 结构体的实例的指针。再通过指针去访问这个实例的成员变量。其中成员变量 __forwarding 指向实例自己，成员变量 __val 存储值。
+	    (val->__forwarding->val) = 300;
+	}
+	
+	static void __main_block_copy_0(struct __main_block_impl_0*dst, struct __main_block_impl_0*src) {_Block_object_assign((void*)&dst->val, (void*)src->val, 8/*BLOCK_FIELD_IS_BYREF*/);}
+	
+	static void __main_block_dispose_0(struct __main_block_impl_0*src) {_Block_object_dispose((void*)src->val, 8/*BLOCK_FIELD_IS_BYREF*/);}
+	
+	static struct __main_block_desc_0 {
+	    size_t reserved;
+	    size_t Block_size;
+	    void (*copy)(struct __main_block_impl_0*, struct __main_block_impl_0*);
+	    void (*dispose)(struct __main_block_impl_0*);
+	} __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0), __main_block_copy_0, __main_block_dispose_0};
+	int main() {
+		// 可以看到，变量 val 竟然成为了结构体 __Block_byref_val_0 的实例。
+	    __attribute__((__blocks__(byref))) __Block_byref_val_0 val = {(void*)0,(__Block_byref_val_0 *)&val, 0, sizeof(__Block_byref_val_0), 3};
+	    
+	    void (*blk)(void) = (void (*)())&__main_block_impl_0((void *)__main_block_func_0, &__main_block_desc_0_DATA, (__Block_byref_val_0 *)&val, 570425344);
+	    
+	    ((void (*)(__block_impl *))((__block_impl *)blk)->FuncPtr)((__block_impl *)blk);
+	    
+	    return 0;
+	}
+	
+	
+上面的代码有两个函数需要说明一下：`_Block_object_assign` 函数实现把 Block 从栈上拷贝到堆上；`_Block_object_dispose` 函数实现把 Block 从堆上释放。
+
+结合上面的代码，我们可以知道这里解答了本节开头的问题：怎么处理使得可以不在变量作用域(Block 被实现为自动变量作用域之外的一个函数了)的 Block 中访问修改 \_\_block 类型的变量？答案简单来说就是用指针，不过做了一些包装：\_\_block 描述的自动变量被重新定义为了结构体 `__Block_byref_val_0`，原自动变量 val 变成了这个结构体的成员变量 val，并且在 Block 中使用的是这个结构体实例的指针 val。但是，用指针，这其实跟前面讲到 Block 修改静态局部变量的方式一样，这并没有展示出 \_\_block 类型变量的真正核心意义。
+
+那 \_\_block 说明符的核心意义究竟是什么呢？这要回到当初设计 Block 的初衷上去看，Block 是「能截获自动变量的匿名函数」，既然是函数，那就有在某处被调用的需求了，比如说自动变量的作用域之外（我们转换代码已经看到，Block 转换后确实是实现成作用域之外的函数）。我们上面也看到了用指针来截获和修改自动变量的手段，但是超过了作用域调用 Block 时，它去修改被它截获的、**过期的**自动变量是会崩溃的，所以 **\_\_block 的核心要解决的是超过自动变量作用域来调用截获并且要修改这个自动变量的 Block 的场景**。解释这个问题需要先了解与 \_\_block 对应的内存管理方式，这个在下节说明。
+
+\_\_block 类型变量被转换后的结构体如下图所示。这里同时引出了一个问题：用指针 val 指向变量转变后的结构体实例就好了，**为什么结构体里还有一个指向自己实例的 \_\_forwarding 指针？**这个问题将放在后面讲解。
+>
+![image](../../images/block-in-objc/block_var.png)
+
+此外，Block 的实现中使用的是 `__Block_byref_val_0` 结构体的实例的指针，这样可以做到在多个 Block 中使用同一个 \_\_block 变量。当然在一个 Block 中使用多个 \_\_block 变量也是可以的，只要增加 Block 结构体的成员变量与构造函数的参数即可。
+
+
+在这节，我们遗留了两个问题：
+
+- 超过自动变量作用域来调用截获并且要修改这个自动变量的 Block 是怎么实现的？
+- \_\_block 变量转变后的结构体中为什么还需要一个 \_\_forwarding 指针指向自己？
+
+这两个问题是关于 \_\_block 自动变量的，但是我们还要先看看 Block 内存管理相关的知识后再来解答。
+
+###5、Block存储域
+Block 有 3 中类型：
+
+- `_NSConcreteStackBlock`，这种类型的 Block 存储在栈上。
+- `_NSConcreteGlobalBlock`，这种类型的 Block 存储在程序的数据区。跟全局变量一样。
+- `_NSConcreteMallocBlock`，这种类型的 Block 存储在堆上。
+
+![image](../../images/block-in-objc/block_memory_segment.png)
+
+在下面两种情况下，我们得到的 Block 是 `_NSConcreteGlobalBlock` 类型的：
+
+- 在记述全局变量的地方有 Block 语法时。
+- Block 语法中不使用任何自动变量时。
+
+除上面两种情况创建的 Block 以外，其他 Block 语法生成的 Block 均为 `_NSConcreteStackBlock` 类型，存储在栈上。
+
+
+下面看几个例子：
+
+	// 此 Block 是 _NSConcreteGlobalBlock 类型的。此 Block 结构体实例的内容不会依赖执行时的状态，所以整个程序中只需要一个实例。因此将其放在与全局变量相同的数据区域即可。
+	void (^blk)(void) = ^{printf("Global Block\n");};
+	int main() {}
+	
+	// 此 Block 需要截获自动变量，截获的自动变量的值会根据执行时的状态变化，下面每次 for 循环 Block 截获的自动变量的值都不一样。所以需要把对应的 Block 结构体的实例放在调用栈中，让其对应不同调用上下文的状态。
+	typedef int (^MyBlock)(int);
+	for (int i = 0; i < 10; i++) {
+		MyBlock blk = ^(int c) {
+			return i * c;
+		};
+	}
+	
+	// 此 Block 虽然不是放在全局代码位置，但是它在实现中没有使用任何自动变量，Block 结构体的实例在每次循环中都是一个。虽然通过 clang 转换代码看到的是 _NSConcreteStackBlock 类型，但实现上却有不同。它还是会被放在全局数据区域。
+	typedef int (^MyBlock)(int);
+	for (int i = 0; i < 10; i++) {
+		MyBlock blk = ^(int c) {
+			return c;
+		};
+	}
+	
+那么问题来了，什么时候会用到存储在堆上的 `_NSConcreteMallocBlock` 类型的 Block 呢？
+
+Block 语法机制提供了将 Block 和 \_\_block 变量从栈上复制到堆上的方法来解决这个问题。将存储在栈上的 Block 复制到堆上，即使 Block 语法记述的变量作用域生命周期结束，堆上的 Block 还是可以继续存在。复制到堆上的 Block 将 `_NSConcreteMallocBlock` 类对象写入 Block 结构体实例的 isa 成员变量，而 \_\_forwarding 成员变量就可以实现无论 \_\_block 变量存储在栈上还是堆上都能准确的被访问。
+
+![image](../../images/block-in-objc/block_copy_to_heap.png)
+
+看到这里，上节遗留的两个问题的答案已经初见端倪，不过，这里还是集中精神先说 Block 的内存管理，还没深入到解答那两个问题，只是突然扯出了答案的尾巴，先不管，还是先关注 Block 吧。
+
+在 ARC 的情况下，编译器在大多时候会做出恰当的判断，自动生成把 Block 从栈上拷贝到堆上的代码。比如：
+
+	typedef int (^blk_t)(int);
+	blk_t func(int rate) {
+	    return ^(int count){return rate * count;};
+	}
+
+上面的代码通过对应 ARC 的编译器可转换如下：
+
+	blk_t func(int rate) {
+	    blk_t tmp = &__func_block_impl_0(__func_block_func_0, &__func_block_desc_0_DATA, rate);
+	    tmp = objc_retainBlock(tmp);
+	    return objc_autoreleaseReturnValue(tmp); 
+	}
+
+其大致意思就是将 Block 作为函数返回值返回时，编译器会自动生成复制到堆上的代码。
+
+但有时候编译器是无法判断的，这时候需要我们手动过调用 Block 的 copy 方法来将 Block 从栈上复制到堆上。比如：
+
+	- (id)getBlockArray {
+	    int val = 10;
+	    return [[NSArray alloc] initWithObjects: 
+	                            ^{NSLog(@"blk0:%d", val);}, 
+	                            ^{NSLog(@"blk1:%d", val);}, nil];
+	}
+	
+	int main() {
+		id obj = getBlockArray();
+		typedef void (^blk_t)(void);
+		blk_t blk = (blk_t)[obj objectAtIndex:0];
+		
+		blk(); // 执行时发生异常。
+	}
+	
+blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束时，栈上的 Block 被废弃的缘故。可惜此时编译器不能判断是否需要自动复制。将代码像下面这样改一下就可以正常运行了：
+	
+	// 将 getBlockArray 改为下面代码即可（手动 copy 数组中的 Block）：
+	- (id)getBlockArray {
+	    int val = 10;
+	    return [[NSArray alloc] initWithObjects: 
+	                            [^{NSLog(@"blk0:%d", val);} copy], 
+	                            [^{NSLog(@"blk1:%d", val);} copy], nil];
+	}
+
+也可以不让编译器判断，在任何时候都使用复制，但是将 Block 从栈上复制到堆上是很消耗 CPU 的，所以我们需要了解哪些时候编译器能判断出来并自动处理，哪些时候不能判断处理需要我们手动 copy。
+
+在下面这些情况下，编译器判断不出究竟是什么情况：
+
+- 向方法或函数的参数中传递 Block 时
+
+但是如果在方法或函数中适当地复制了传递过来的参数，那么就不必在调用该方法或函数前手动复制了。以下方法或函数就不需要手动复制：
+
+- Cocoa 框架的方法且方法名中含有 usingBlock 等时
+- GCD 的 API
+
+关于 Block 的拷贝操作可以用一张表总结下：
+
+| Block 的类              | 副本源的存储域  | copy 效果  |
+| ---------------------- |:-------------:| ---------:|
+| _NSConcreteStackBlock  | 栈            | 从栈复制到堆 |
+| _NSConcreteGlobalBlock | 程序的数据区域  | 什么也不做  |
+| _NSConcreteMallocBlock | 堆            | 引用计数增加 |
+
+所以，**不管 Block 存储在何处，用 copy 方法复制都不会引起任何问题。在不确定时调用 copy 方法即可。**在 ARC 中不能显式的 release，但是即使多次调用了 copy 方法进行复制也不会有问题。
+
+###6、__block变量存储域
+讲完对 Block 的处理后，接下来，开讲对 \_\_block 变量的处理。使用 \_\_block 变量的 Block 从栈上复制到堆上时，\_\_block 也会受到影响：
+
+| \_\_block 变量原来的存储区域 | Block 从栈复制到堆对其截获的 \_\_block 变量的影响  | 
+|:-------------------------:|:----------------------------------------------|
+| 栈                        | 从栈上复制到堆上并被 Block 持有                    | 
+| 堆                        | 被 Block 持有                                   | 
+
+
+接下来看几个具体的场景：
+
+- 在一个 Block 中使用 \_\_block 变量时，当 Block 从栈上复制到堆上，它所使用的 \_\_block 变量也会一起拷贝到堆上，Block 会持有这些变量。值得注意的是，已经拷贝到堆上的 Block 如果再被拷贝，那么此时对 \_\_block 变量已经没有影响了。如下图：
+>
+![image](../../images/block-in-objc/a_block_use_var.png)
+	
+- 在多个 Block 中使用 \_\_block 变量时，当任意一个 Block 从栈复制到堆上时，\_\_block 变量也会一并从栈复制到堆上并被这个 Block 持有。当剩下的 Block 从栈拷贝到堆上时，被复制的 Block 持有已经在堆上的 \_\_block 变量并增加 \_\_block 变量的引用计数。如下图：
+>
+![image](../../images/block-in-objc/mutiple_blocks_use_var.png)
+
+- 当堆上的 Block 被废弃时，那么它所使用的 \_\_block 变量也会被释放。
+>
+![image](../../images/block-in-objc/block_dispose.png)
+
+到这里我们可以看到，上面的内存管理方式跟 Objective-C 引用计数式的内存管理完全相同。
+
+
+回顾一下前面的问题：
+
+- 超过自动变量作用域来调用截获并且要修改这个自动变量的 Block 是怎么实现的？
+- \_\_block 变量转变后的结构体中为什么还需要一个 \_\_forwarding 指针指向自己？
+
+所以这两个问题的答案简单来讲其实就是：把 Block 和 \_\_block 变量拷贝到堆上，来实现在超过自动变量作用域的地方调用 Block 时，不用担心自动变量过期的问题。而 \_\_forwarding 正是用来解决 \_\_block 变量拷贝到堆上还能被正确访问这件事的。这样我们就更能理解，转换代码后显示的，Block 和 \_\_block 变量被搞成了结构体的实例，这也是为了拷贝上堆服务的。 
+
+下面这个例子进一步说明一下 \_\_block 变量转换后要用 \_\_forwarding 指针的原因：
+
+	void func() {
+	    __block int val = 0;
+	    
+	    // Block 从栈上复制到堆上，它使用的 \_\_block 变量 val 也被复制到堆上。
+	    void (^blk)(void) = [^{++val;} copy]; 
+	    NSLog(@"%d", val); // 打印：0
+	    ++val;
+	    NSLog(@"%d", val); // 打印：1
+	    blk();
+	    NSLog(@"%d", val); // 打印：2
+	}
+
+可以看到，`++val;` 这句代码使用的是与 Block 无关的栈上的变量 val。`blk();` 这句代码调用后，其实现 `^{++val;}` 使用的是拷贝到堆上的 \_\_block 变量 val。最后打印出来的结果是我们想要的。其实这两处的 `++val;` 都可以翻译为 `++(val._forwarding->val);` 结合前面转换代码里看到的 \_\_block 变量的结构，可以知道这里的 \_\_block 变量的内存状态大致如图：
+
+![image](../../images/block-in-objc/copy_block_var.png)
+
+这里，\_\_forwarding 指针的意义显而易见了吧。
+
+
+##Block的使用场景
+
+###Block简化枚举
+
+	// NSArray的一个方法，接受一个block作为参数，这个block会在该方法里每枚举一个对象时被调用一次：
+	- (void)enumerateObjectsUsingBlock:(void (^)(id obj, NSUInteger idx, BOOL *stop))block;
+	// 这个block接受三个参数，前两个是当前的对象和其index，后面的BOOL值可以用来控制什么时候停止该枚举。
+	NSArray *array = ...
+    [array enumerateObjectsUsingBlock:^ (id obj, NSUInteger idx, BOOL *stop) {
+        NSLog(@"Object at index %lu is %@", idx, obj);
+    }];
+    [array enumerateObjectsUsingBlock:^ (id obj, NSUInteger idx, BOOL *stop) {
+        if (...) {
+            *stop = YES;
+        }
+    }];
+
+###Block简化并发调用
+####Block和Operation Queue一起用
+
+	NSBlockOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
+	    ...
+	}];
+
+####Block和GCD一起用
+
+	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	dispatch_async(queue, ^{
+	    NSLog(@"Block for asynchronous execution");
+	});
+
+###Block的使用场景小结
+
+* Enumeration (like we saw above with NSArray)
+* View Animations (animations)
+* Sorting (sort this thing using a block as the comparison method)
+* Notification (when something happens, execute this block)
+* Error handlers (if an error happens while doing this, execute this block)
+* Completion handlers (when you are done doing this, execute this block)
+* Multithreading (With Grand Central Dispatch (GCD) API)
+
+
 ##使用Block需要注意的问题
 
 ###Block截获作用域的变量
@@ -340,121 +897,20 @@ TestBlockViewController.m
 	TestBlockViewController dealloc.
 
 
-##Block的使用场景
 
-###Block简化枚举
+###推荐使用Block时手动调用copy的情况
+总结一下 Block 中使用对象类型的自动变量时，除以下情形外，推荐调用 Block 的 copy 方法：
 
-	// NSArray的一个方法，接受一个block作为参数，这个block会在该方法里每枚举一个对象时被调用一次：
-	- (void)enumerateObjectsUsingBlock:(void (^)(id obj, NSUInteger idx, BOOL *stop))block;
-	// 这个block接受三个参数，前两个是当前的对象和其index，后面的BOOL值可以用来控制什么时候停止该枚举。
-	NSArray *array = ...
-    [array enumerateObjectsUsingBlock:^ (id obj, NSUInteger idx, BOOL *stop) {
-        NSLog(@"Object at index %lu is %@", idx, obj);
-    }];
-    [array enumerateObjectsUsingBlock:^ (id obj, NSUInteger idx, BOOL *stop) {
-        if (...) {
-            *stop = YES;
-        }
-    }];
+- Block 作为函数返回值返回时，不需要手动 copy。
+- 将 Block 赋值给类的：`1）\_\_strong 修饰的 id 类型的成员变量；2）Block 类型成员变量`时，不需要手动 copy。
+- 向方法名中含有 usingBlock 的 Cocoa 框架方法或 GCD 的 API 中传递 Block 时，不需要手动 copy。
 
-###Block简化并发调用
-####Block和Operation Queue一起用
+其他情况，推荐调用。
 
-	NSBlockOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
-	    ...
-	}];
-
-####Block和GCD一起用
-
-	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	dispatch_async(queue, ^{
-	    NSLog(@"Block for asynchronous execution");
-	});
-
-###Block的使用场景小结
-
-* Enumeration (like we saw above with NSArray)
-* View Animations (animations)
-* Sorting (sort this thing using a block as the comparison method)
-* Notification (when something happens, execute this block)
-* Error handlers (if an error happens while doing this, execute this block)
-* Completion handlers (when you are done doing this, execute this block)
-* Multithreading (With Grand Central Dispatch (GCD) API)
-
-
-##Block的实现
-在前面的内容中，我们知道了 Block 是「能持有作用域变量的匿名函数」，还介绍了使用 Block 的相关内容，那么 Block 究竟是如何实现的呢？我们可以用 clang（LLVM 编译器）把带 Block 语法的源代码代码转换为我们能够理解的源代码来初探一下。这里我们可以使用 `clang -rewrite-objc <source-code-file>` 把含有 Block 语法的源代码转换成 C++ 的源代码（这里其实就是使用了 struct 结构的 C 代码）。 
-
-###1、最简单的Block
-包含 Block 语法的源代码 test_block.m：
-
-	#include <stdio.h>
-	
-	int main() {
-		void (^blk)(void) = ^{
-			int tag = 8;
-			printf("Block, %d\n", tag);
-		};
-	
-		blk();
-	
-		return 0;
-	}
-	
-	
-使用 `clang -rewrite-objc test_block.m` 编译后得到了 test_block.cpp 代码，从里面截取相关的代码如下：
-
-	struct __block_impl {
-		void *isa;
-		int Flags;
-		int Reserved;
-		void *FuncPtr;
-	};
-
-	struct __main_block_impl_0 {
-		struct __block_impl impl;
-		struct __main_block_desc_0* Desc;
-		__main_block_impl_0(void *fp, struct __main_block_desc_0 *desc, int flags=0) {
-			impl.isa = &_NSConcreteStackBlock;
-			impl.Flags = flags;
-			impl.FuncPtr = fp;
-			Desc = desc;
-		}
-	};
-	
-	// 这里对应的就是 block 的匿名函数。参数 __cself 为指向 block 值的指针，类似 Objective-C 中实例方法中指向对象自身的变量 self。
-	static void __main_block_func_0(struct __main_block_impl_0 *__cself) {
-		int tag = 0;
-		printf("Block, %d\n", tag);
-	 }
-	
-	static struct __main_block_desc_0 {
-		size_t reserved;
-		size_t Block_size;
-	} __main_block_desc_0_DATA = { 0, sizeof(struct __main_block_impl_0)};
-
-	int main() {
-		void (*blk)(void) = (void (*)())&__main_block_impl_0((void *)__main_block_func_0, &__main_block_desc_0_DATA);
-	
-		((void (*)(__block_impl *))((__block_impl *)blk)->FuncPtr)((__block_impl *)blk);
-	
-		return 0;
-	}
-
-如转换后的代码所示，Block 使用的匿名代码被转换为 C 语言函数，其函数名 __main_block_func_0 则根据 Block 语法所属的函数名（这里是 main）和该 Block 语法在该函数出现的顺序值（这里是 0）来命名。`((void (*)(__block_impl *))((__block_impl *)blk)->FuncPtr)((__block_impl *)blk);` 最终简化后其实就是用函数指针实现对函数的调用。根据 `impl.isa = &_NSConcreteStackBlock;` 这里用 _NSConcreteStackBlock 来初始化 __block_impl 结构体的 isa 成员。
-
-分析这些代码，我们最后能得出的结论是：
-
-- Block 转换后的形式就是简单地使用函数指针来调用函数。
-- Block 其实就是 Objective-C 对象。
-
-###2、Block截获自动变量
-
-
-###3、__block说明符
 
 
 
 [SamirChen]: http://samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/WorkingwithBlocks/WorkingwithBlocks.html
+[3]: https://book.douban.com/subject/24720270/

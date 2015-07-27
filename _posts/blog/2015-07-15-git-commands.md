@@ -56,22 +56,22 @@ Git 采用这样的设计带来了这些好处：
 
 当我们从某个地方 git clone 一份代码后，通常这时你的 work directory 是 clean 的，所有代码都是 commited 状态，在图中表示为 `Commited-1` 状态，我们就从这里开始解释接下来文件状态的切换：
 
-- `Commit-1 ===> Modified`，我们拿到代码开始干活，当我们**修改**了文件后，文件状态发生变化，由 Commit-1 变为 Modified。
-- `Modified ===> Commit-1`，发现文件改的不对，一处一处恢复太麻烦，用 **git checkout <f>** 命令便可以把对文件的修改恢复到原 Modified 的状态。
+- `Commited-1 ===> Modified`，我们拿到代码开始干活，当我们**修改**了文件后，文件状态发生变化，由 Commited-1 变为 Modified。
+- `Modified ===> Commited-1`，发现文件改的不对，一处一处恢复太麻烦，用 **git checkout <f>** 命令便可以把对文件的修改恢复到原 Commited-1 的状态。
 - `Modified ===> Staged`，文件修改的差不多了，想提交对这个文件的修改到本地 git 版本库保存起来，在这时你直接用 git commit 是提交不了的，因为 git commit 是对文件暂存区域的文件快照进行提交。所以，你需要先把文件快照一下放到暂存区域，用 **git stage <f>** 命令搞定，另外，用 **git add <f>** 也是一样的。
 - `Staged ===> Modified`，发现目前不想在下次 commit 时提交文件暂存区域的某个文件，还想再改改或再缓缓，这时你需要把它的快照撤回来，用 **git reset <f>** 命令搞定。
 - `Staged ===> 囧`，已经把某个文件快照后放到暂存区域了，但是又对它进行了**修改**。这时文件的状态就很囧了。这时你如果使用 git commit 提交，那么提交的是放在暂存区域的快照，而这之后的修改是不会提交的。
 - `囧 ===> Staged`，当然你可以用 **git checkout <f>** 命令从这种比较囧的状态撤销修改，这时文件状态就又回到了 Staged。这里多说一句，看了上节介绍的 Git 总是保存文件更新时的快照，这里就可以这样理解：Git 管理下的文件在我们的折腾下，不停的在各种状态下流转，在不同的情况下，我们使用一些 Git 命令时会对文件拍快照，Git 就可以操作文件的快照了，这些快照对应的是一个文件的不同时刻的照片，文件是流动的，而快照则是某一时刻的永恒。
-- `Staged ===> Commit-2`，使用 **git commit** 命令就可以把暂存区域的文件快照提交到 Git 版本库永久存储了，这时文件状态转变为 Commit-2。记得养成写 commit message 的良好习惯。
-- `Modified ===> Commit-2`，看了上面的流程，有人会问了，我每次改了都要先 stage 才能提交还麻烦啊，有没有便捷点的方法？答案是：有。用 **git commit -a** 就可以把 Git 管理下的文件的修改都提交了。这里要注意的是，新增的文件是不在 Git 管理下的，需要 git add(stage) 一下才行。
+- `Staged ===> Commited-2`，使用 **git commit** 命令就可以把暂存区域的文件快照提交到 Git 版本库永久存储了，这时文件状态转变为 Commited-2。记得养成写 commit message 的良好习惯。
+- `Modified ===> Commited-2`，看了上面的流程，有人会问了，我每次改了都要先 stage 才能提交还麻烦啊，有没有便捷点的方法？答案是：有。用 **git commit -a** 就可以把 Git 管理下的文件的修改都提交了。这里要注意的是，新增的文件是不在 Git 管理下的，需要 git add(stage) 一下才行。
 - 撤回提交。上面一切进行的还算顺利，各种状态跳来跳去都能搞定了，现在问题来了：我已经 commit 了后才发现，天啊，提交错了，我要撤回！别急，这也是可以搞定的，而且这里有两种选择，但是需要搞清楚它们的区别。另外，这两种撤回提交都可以指定撤回几次，感兴趣的可以再深入研究。
 	- 用 **reset** 撤销提交。用 reset 撤销就是真的删除了提交信息，回退到之前的状态了。不过有下面几种情况：
-		- `Commit-2 ===> Staged`，从这次提交回到上次提交后的 Stage 状态用 **git reset HEAD^ --soft** 命令。
-		- `Commit-2 ===> Modified`，从这次提交回到上次提交后的 Modified 状态用 **git reset HEAD^ --mix** 命令。上次提交后的修改都还在。--mix 是默认选项。
-		- `Commit-2 ===> Commit-1`，从这次提交回到上次提交后的 Commit-1 状态用 **git reset HEAD^ --hard** 命令。注意，所有你上次提交后的修改都没了哦！
+		- `Commited-2 ===> Staged`，从这次提交回到上次提交后的 Stage 状态用 **git reset HEAD^ --soft** 命令。
+		- `Commited-2 ===> Modified`，从这次提交回到上次提交后的 Modified 状态用 **git reset HEAD^ --mix** 命令。上次提交后的修改都还在。--mix 是默认选项。
+		- `Commited-2 ===> Commited-1`，从这次提交回到上次提交后的 Commited-1 状态用 **git reset HEAD^ --hard** 命令。注意，所有你上次提交后的修改都没了哦！
 	- 用 **revert** 反向提交。用 revert 也可以撤销此次提交，但是它跟 reset 是不一样的，revert 本质上也是一次提交，只不过是它是一次与上次提交相逆的提交。
-		1. `Commit-2 ===> Commit-1`，我们在 Commit-2 这个状态使用 **git revert HEAD** 命令，就可以直接回到 Commit-1 状态了。
-		2. `Commit-1 ===> Commit-2`，有意思的是，接着上次的 revert 我们在 Commit-1 这个状态再使用一次 **git revert HEAD** 命令，会发现我们又回到 Commit-2 状态了。这是合理的，逆提交的逆提交就变成正了嘛。
+		1. `Commited-2 ===> Commited-1`，我们在 Commited-2 这个状态使用 **git revert HEAD** 命令，就可以直接回到 Commited-1 状态了。
+		2. `Commited-1 ===> Commited-2`，有意思的是，接着上次的 revert 我们在 Commited-1 这个状态再使用一次 **git revert HEAD** 命令，会发现我们又回到 Commited-2 状态了。这是合理的，逆提交的逆提交就变成正了嘛。
 
 到这里，Git 管理下的文件状态的转变和相关的命令就简要介绍完了，相信理解了这些，对于更好的使用 Git 会有很大的帮助。如果对各种更加细节的信息感兴趣可以去更深入的研究。
 

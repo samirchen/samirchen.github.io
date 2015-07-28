@@ -6,3 +6,10 @@ category: blog
 tag: CocoaPods, Podfile.lock, Git
 ---
 
+
+
+
+
+
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{page.title}})

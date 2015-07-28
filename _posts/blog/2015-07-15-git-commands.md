@@ -400,7 +400,7 @@ Git 采用这样的设计带来了这些好处：
 ###停止跟踪一个已经被跟踪的文件
 - 场景：你意外将 application.log 添加到仓库中，现在你每次运行程序，Git 都提示 application.log 中有 unstaged 的提交。你在 .gitignore 中写上 *.log，但仍旧没用。怎么告诉 Git 停止跟踪这个文件的变化呢？
 - 命令：git rm --cached application.log
-- 解释：尽管 .gitignore 可以阻止 Git 跟踪所指定的文件的变化甚至让 Git 不去提醒这些文件的存在，但是，一旦文件被 git add 或者 commit，Git 会开始持续跟踪这个文件的变化。如果你希望移除那些应当被忽略的文件，git rm –cached 命令可以帮助你，并将这些文件保留在磁盘上，当然你还需要在 .gitignore 中添加它以保证以后都不再跟踪这个文件的变化。因为这个文件现在被忽略了，你将不会在 git status 中看到它，也不会再把这个文件 commit 了。
+- 解释：尽管 .gitignore 可以阻止 Git 跟踪所指定的文件的变化甚至让 Git 不去提醒这些文件的存在，但是，一旦在你把某个文件加入 .gitignore 之前已经把它 git add 和 commit 了，Git 依然会持续跟踪这个文件的变化。如果你希望移除那些应当被忽略的文件，可以先用 git rm –-cached 命令停止对改文件的跟踪，这个命令不会物理删除文件，然后你还需要在 .gitignore 中添加它以保证以后都不再跟踪这个文件的变化。完成这些后，你将不会在 git status 中看到它，也不会再把这个文件 commit 了。
 
 
 

@@ -30,6 +30,7 @@ tag: CocoaPods, Podfile.lock, Git
 
 直到你安装完依赖库后，用 `git status` 命令看了一下本地 git 仓库的状态，发现提示：
 
+	$ git status
 	  (use "git add <file>..." to update what will be committed)
 	  (use "git checkout -- <file>..." to discard changes in working directory)
 

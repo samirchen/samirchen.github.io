@@ -128,7 +128,6 @@ Manifest.lock 是 Podfile.lock 的副本，每次只要生成 Podfile.lock 时�
 	- Server: (Podfile.lock(A), Manifest.lock(无))
 	- Me: (Podfile.lock(A), Manifest.lock(Me))
 - 这时你的 Podfile.lock 文件更新了，但是本地的 Manifest.lock 却没有，二者不一致所以报错了。
-
 - 这里就引出了一个新问题，你们的 Podfile 是同步一致的呀，那为什么你们俩的 Podfile.lock 会不一样呢？
 - 造成这种情况的一个可能性是你们的 Podfile 里的一些 pod 语法并没有指定明确的依赖版本，或者你直接使用的依赖库在它们更深一层的依赖关系链中没有指定明确的版本。而你们俩 `pod install` 安装依赖库是在不同的时间点，这两个时间点的直接依赖库或间接依赖库的最新版本可能发生了变化，所以你们安装了不一样的依赖版本，那么 Podfile.lock 的记录就不一样了。建议可以执行 `pod repo update` 更新一下 spec repo，再 pod install。
 
@@ -136,7 +135,7 @@ Manifest.lock 是 Podfile.lock 的副本，每次只要生成 Podfile.lock 时�
 
 
 ##怎么对待 Podfile.lock
-讲完上面这些，那么究竟该怎样对待 Podfile.lock 呢？以下建议仅供参考：
+讲完上面这些，那么究竟该怎样对待 Podfile.lock 呢？以下建议可供参考：
 
 - Podfile.lock 应该加入版本控制，保证小伙伴们的依赖库版本一致，防止出现难以发现的 bug。另外，在初始创建项目的时候就应该加入版本控制。
 - Podfile 的语法最好能尽量严谨，最好指定明确的依赖库版本。

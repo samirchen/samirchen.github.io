@@ -1,7 +1,7 @@
 ---
 layout: post
 title: 关于 Podfile.lock 带来的痛 
-description: 介绍使用 CocoaPods 时遇到的与 Podfile.lock 相关的一些问题。
+description: 在使用 CocoaPods 管理 iOS 项目的依赖库时，有时候我们会遇到一些跟 Podfile.lock 文件相关的问题，这里从一个常见的场景出发，对相关的问题进行了说明。
 category: blog
 tag: CocoaPods, Podfile.lock, Git
 ---

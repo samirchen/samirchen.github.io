@@ -110,7 +110,7 @@ Manifest.lock 是 Podfile.lock 的副本，每次只要生成 Podfile.lock 时�
 - Server: (Podfile.lock(无), Manifest.lock(无))
 - Me: (Podfile.lock(Me), Manifest.lock(Me))
 
-这些是记录小伙伴 A、代码服务器 Server 和自己本地 Me 这三个地方的 Podfile.lock、Manifest.lock 在不同场景下的版本状态了。
+这些记录是小伙伴 A、代码服务器 Server 和自己本地 Me 这三个地方的 Podfile.lock、Manifest.lock 在不同场景下的版本状态。
 
 第一个问题：
 
@@ -130,7 +130,7 @@ Manifest.lock 是 Podfile.lock 的副本，每次只要生成 Podfile.lock 时�
 	- Me: (Podfile.lock(A), Manifest.lock(Me))
 - 这时你的 Podfile.lock 文件更新了，但是本地的 Manifest.lock 却没有，二者不一致所以报错了。
 - 这里就引出了一个新问题，你们的 Podfile 是同步一致的呀，那为什么你们俩的 Podfile.lock 会不一样呢？
-- 造成这种情况的一个可能性是你们的 Podfile 里的一些 pod 语法并没有指定明确的依赖版本，或者你直接使用的依赖库在它们更深一层的依赖关系链中没有指定明确的版本。而你们俩 `pod install` 安装依赖库是在不同的时间点，这两个时间点的直接依赖库或间接依赖库的最新版本可能发生了变化，所以你们安装了不一样的依赖版本，那么 Podfile.lock 的记录就不一样了。建议可以执行 `pod repo update` 更新一下 spec repo，再 pod install。
+- 造成这种情况的一个可能性是你们的 Podfile 里的一些 pod 语法并没有指定明确的依赖版本，或者你直接使用的依赖库在它们更深层的依赖关系链中没有指定明确的版本。而你们俩 `pod install` 安装依赖库是在不同的时间点，这两个时间点的直接依赖库或间接依赖库的最新版本可能发生了变化，所以你们安装了不一样的依赖版本，那么 Podfile.lock 的记录就不一样了。建议可以执行 `pod repo update` 更新一下 spec repo，再 pod install。
 
 除了上面这些问题，另外再提醒一下：注意 `pod install` 和 `pod update` 的区别。如果不合理的使用 `pod update` 也可能会给你带来一些困惑。
 

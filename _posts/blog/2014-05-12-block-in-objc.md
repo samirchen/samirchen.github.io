@@ -449,7 +449,7 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 	#include <stdio.h>
 	
 	int main() {
-		__block int val = 3;
+		int __block val = 3;
 	
 	    void (^blk)(void) = ^{
 			val = 300;
@@ -550,10 +550,14 @@ Block 有 3 中类型：
 
 ![image](../../images/block-in-objc/block_memory_segment.png)
 
+####1）NSConcreteGlobalBlock
+
 在下面两种情况下，我们得到的 Block 是 `_NSConcreteGlobalBlock` 类型的：
 
 - 在记述全局变量的地方有 Block 语法时。
 - Block 语法中不使用任何自动变量时。
+
+####2）NSConcreteStackBlock
 
 除上面两种情况创建的 Block 以外，其他 Block 语法生成的 Block 均为 `_NSConcreteStackBlock` 类型，存储在栈上。
 
@@ -580,13 +584,20 @@ Block 有 3 中类型：
 		};
 	}
 	
+####3）NSConcreteMallocBlock
+
 那么问题来了，什么时候会用到存储在堆上的 `_NSConcreteMallocBlock` 类型的 Block 呢？
 
 Block 语法机制提供了将 Block 和 \_\_block 变量从栈上复制到堆上的方法来解决这个问题。将存储在栈上的 Block 复制到堆上，即使 Block 语法记述的变量作用域生命周期结束，堆上的 Block 还是可以继续存在。复制到堆上的 Block 将 `_NSConcreteMallocBlock` 类对象写入 Block 结构体实例的 isa 成员变量，而 \_\_forwarding 成员变量就可以实现无论 \_\_block 变量存储在栈上还是堆上都能准确的被访问。
 
 ![image](../../images/block-in-objc/block_copy_to_heap.png)
 
+所以总结起来，NSConcreteGlobalBlock 和 NSConcreteStackBlock 两种类型从语法上就能判断，而 NSConcreteMallocBlock 则更像是一种运行时的类型，在是在程序执行时，当 Block 被 copy 到堆上的时候将 Block 的类型设置为了 NSConcreteMallocBlock 类型。
+
+
 看到这里，上节遗留的两个问题的答案已经初见端倪，不过，这里还是集中精神先说 Block 的内存管理，还没深入到解答那两个问题，只是突然扯出了答案的尾巴，先不管，还是先关注 Block 吧。
+
+####Block 内存管理需要注意的问题
 
 在 ARC 的情况下，编译器在大多时候会做出恰当的判断，自动生成把 Block 从栈上拷贝到堆上的代码。比如：
 
@@ -653,8 +664,16 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 所以，**不管 Block 存储在何处，用 copy 方法复制都不会引起任何问题。在不确定时调用 copy 方法即可。**在 ARC 中不能显式的 release，但是即使多次调用了 copy 方法进行复制也不会有问题。
 
+####小结
+
+- 1）本节讲了 Block 的三种类型：NSConcreteStackBlock、NSConcreteGlobalBlock、NSConcreteMallocBlock。介绍了它们的内存管理方式。Block 的内存管理设计解决了 Block 离开作用域被使用的问题（被 copy 到堆上）。
+- 2）注意使用 Block 时，向方法或函数传递 Block 作为参数时，传的时候调用一下 copy 方法。除非在方法或函数体中，对传进来的 Block 参数做了 copy ，比如 Cocoa 框架中名字含有 usingBlock 的方法和 GCD 的 API。
+
+
 ###__block变量存储域
-讲完对 Block 的处理后，接下来，开讲对 \_\_block 变量的处理。使用 \_\_block 变量的 Block 从栈上复制到堆上时，\_\_block 也会受到影响：
+讲完对 Block 的处理后，我们知道了通过把 Block 拷贝到堆上，使得 Block 离开作用域也可以被使用，**但是，Block 自己还有使用作用域里的自动变量的需求**。所以接下来要解答这个问题，开讲 Block 机制对 \_\_block 变量的处理。
+
+使用 \_\_block 变量的 Block 从栈上复制到堆上时，\_\_block 也会受到影响：
 
 | \_\_block 变量原来的存储区域 | Block 从栈复制到堆对其截获的 \_\_block 变量的影响  | 
 |:-------------------------:|:----------------------------------------------|
@@ -689,7 +708,7 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 下面这个例子进一步说明一下 \_\_block 变量转换后要用 \_\_forwarding 指针的原因：
 
 	void func() {
-	    __block int val = 0;
+	    int __block val = 0;
 	    
 	    // Block 从栈上复制到堆上，它使用的 \_\_block 变量 val 也被复制到堆上。
 	    void (^blk)(void) = [^{++val;} copy]; 
@@ -705,6 +724,28 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 ![image](../../images/block-in-objc/copy_block_var.png)
 
 这里，\_\_forwarding 指针的意义显而易见了吧。
+
+
+###总结
+这节的内容讲的东西还是比较多的，看着看着可能就失去焦点，陷入细节之中了，在这里，我梳理了一下这节内容的逻辑链条以方便理解。
+
+「Block 的实现」这节是在我们明确了「Block 是能持有作用域变量的匿名函数」这个定义后，来探索它究竟是如何实现这个定义的。那么首先我们需要搞清楚的是 Block 这个定义背后的需求，也即是它的设计目标：
+
+- Block 能够持有作用域变量，那必然会有对这些变量进行读写操作的需求，那要采用什么样的机制保证 Block 正确读写所持有的变量呢？
+- Block 是匿名函数，那么作为函数，它就天然带着能够在各个地方被正确调用的属性，那么 Block 的作用域和生命周期机制应该如何设计从而来保证它能在各种地方被正确调用呢？
+- Block 存在作用域和生命周期的问题，那么需要一套怎样的机制来保证 Block 所持有的变量的作用域和生命周期能够与之想匹配，从而保证 Block 的正确使用呢？
+
+以上便是本节需要探讨的问题，我们分为下面几个步骤来探讨：
+
+- 1）我们需要根据变量的不同的**作用域**和**生命周期**来分别讨论，这样就包括了：`全局变量`、`全局静态变量`、`局部静态变量`和`自动变量`。
+	- 对于全局变量、全局静态变量，因为生命周期和作用域是全局的，读写随意。
+	- 对于局部静态变量，生命周期是全局，但是作用域是局部，那么 Block 语法被转换为外部函数时，则需要用指向静态局部变量的指针来对其进行读写操作。
+	- 对于自动变量，生命周期和作用域都是局部的，只读的话，还好办，拷贝一下它的值就行了。但是想修改的话，咋整呢？首先，不能效仿静态变量那样的做法，因为你在外面修改它时，没准它已经被销毁了，这是会闹崩溃的。所以从这就引出了解决方案，用 `__block` 修饰自动变量就能写了，也就是说 `__block` 修饰符使得变量能够超出作用域被读写了。从而引出了问题：其内部实现又是怎样的呢？
+- 2）跟着上面的问题，我们介绍了 \_\_block 说明符的相关知识。它把自动变量进行了一层封装，并且提供了把自动变量拷贝到堆上的机制。这样**\_\_block 自动变量能够超出作用域被读写**这个问题的解决方案初见端倪，但是我们还需要了解一下 Block 本身的内存管理机制，从而更好的区了解 Block 本身和其使用的自动变量在内存管理上的协作。
+- 3）所以接下来，我们开始探讨 Block 存储域相关的知识。介绍了 Block 的三种存储相关类型以及使用时需要注意的问题。
+- 4）介绍完 Block 存储域相关的东西后，就接着说了 \_\_block 变量与 Block 协作时的内存管理机制。从而解释清楚了对「Block 是能持有作用域变量的匿名函数」这个定义的实现方式。
+- 5）理解了 Block 的实现，那么接下来需要搞清楚的就是使用 Block 的相关注意事项了，尤其是什么情况下编译器能帮你自动把 Block 给拷贝到堆上，什么情况下你得手动调用 copy 方法去把 Block 拷贝到堆上的问题。对于这些问题，在本节内容中零零散散的提到了，我会一并总结到后面的「使用Block需要注意的问题」那节。
+
 
 
 ##Block的使用场景
@@ -764,14 +805,14 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
     anInteger = 84;
     testBlock(); // 输出：Integer is: 42
     // 加了 __block 后可以改变局部变量：
-	__block int anInteger = 42;
+	int __block anInteger = 42;
     void (^testBlock)(void) = ^{
         NSLog(@"Integer is: %i", anInteger);
     };
     anInteger = 84;
     testBlock(); // 输出：Integer is: 84
     // 还可以这样：
-	__block int anInteger = 42;
+	int __block anInteger = 42;
     void (^testBlock)(void) = ^{
         NSLog(@"Integer is: %i", anInteger);
         anInteger = 100;
@@ -866,9 +907,9 @@ TestBlockViewController.m
 	    self.tag = @"tag is OK.";
 	    
 	    // Init TestService's block.
-        __weak typeof(self)weakSelf = self;
+        typeof(self) __weak weakSelf = self;
 	    self.myBlock = ^{
-	        __strong typeof(weakSelf)strongSelf = weakSelf;
+	        typeof(weakSelf) __strong strongSelf = weakSelf;
 	        
 	        dispatch_after(dispatch_time(DISPATCH_TIME_NOW, (int64_t)(5 * NSEC_PER_SEC)), dispatch_get_main_queue(), ^{
                 NSLog(@"strongSelf is OK.");
@@ -898,14 +939,16 @@ TestBlockViewController.m
 
 
 
-###推荐使用Block时手动调用copy的情况
-总结一下 Block 中使用对象类型的自动变量时，除以下情形外，推荐调用 Block 的 copy 方法：
+###使用Block时需要手动copy的情况
+总结一下在 ARC 下使用 Block 时需要手动 copy 和不需要手动 copy 的情况：
 
-- Block 作为函数返回值返回时，不需要手动 copy。
-- 将 Block 赋值给类的：`1）__strong 修饰的 id 类型的成员变量；2）Block 类型成员变量`时，不需要手动 copy。
-- 向方法名中含有 usingBlock 的 Cocoa 框架方法或 GCD 的 API 中传递 Block 时，不需要手动 copy。
-
-其他情况，推荐调用。
+- 不需要手动 copy 的情况：
+	1. Block 作为函数返回值返回时，不需要手动 copy。
+	2. 将 Block 赋值给类的：`1）__strong 修饰的 id 类型的成员变量`；`2）Block 类型成员变量`时，不需要手动 copy。
+	3. 向方法名中含有 usingBlock 的 Cocoa 框架方法或 GCD 的 API 中传递 Block 作为参数时，不需要手动 copy。
+- 需要手动 copy 的情况：
+	1. 在向方法或函数传递 Block 作为参数时，传的时候要调用一下 Block 的 copy 方法。除非在方法或函数体中，对传进来的 Block 参数做了 copy 处理（比如不需要手动 copy 的第 3 种的情况，就是那些 API 对传进来的 Block 参数做了 copy 处理）。
+	2. 其他情况，如果不明确情况，也推荐手动调用 copy。
 
 
 

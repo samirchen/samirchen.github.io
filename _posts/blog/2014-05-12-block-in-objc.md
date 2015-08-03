@@ -198,6 +198,48 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 	
 可见 Block 类型变量可像 C 语言中其他类型变量一样使用。
 
+##Block的使用场景
+
+###Block简化枚举
+
+	// NSArray的一个方法，接受一个block作为参数，这个block会在该方法里每枚举一个对象时被调用一次：
+	- (void)enumerateObjectsUsingBlock:(void (^)(id obj, NSUInteger idx, BOOL *stop))block;
+	// 这个block接受三个参数，前两个是当前的对象和其index，后面的BOOL值可以用来控制什么时候停止该枚举。
+	NSArray *array = ...
+    [array enumerateObjectsUsingBlock:^ (id obj, NSUInteger idx, BOOL *stop) {
+        NSLog(@"Object at index %lu is %@", idx, obj);
+    }];
+    [array enumerateObjectsUsingBlock:^ (id obj, NSUInteger idx, BOOL *stop) {
+        if (...) {
+            *stop = YES;
+        }
+    }];
+
+###Block简化并发调用
+####Block和Operation Queue一起用
+
+	NSBlockOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
+	    ...
+	}];
+
+####Block和GCD一起用
+
+	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
+	dispatch_async(queue, ^{
+	    NSLog(@"Block for asynchronous execution");
+	});
+
+###Block的使用场景小结
+
+* Enumeration (like we saw above with NSArray)
+* View Animations (animations)
+* Sorting (sort this thing using a block as the comparison method)
+* Notification (when something happens, execute this block)
+* Error handlers (if an error happens while doing this, execute this block)
+* Completion handlers (when you are done doing this, execute this block)
+* Multithreading (With Grand Central Dispatch (GCD) API)
+
+
 
 ##Block的实现
 在前面的内容中，我们知道了 Block 是「能持有作用域变量的匿名函数」，还介绍了使用 Block 的相关内容，那么 Block 究竟是如何实现的呢？我们可以用 clang（LLVM 编译器）把带 Block 语法的源代码代码转换为我们能够理解的源代码来初探一下。这里我们可以使用 `clang -rewrite-objc <source-code-file>` 把含有 Block 语法的源代码转换成 C++ 的源代码（这里其实就是使用了 struct 结构的 C 代码）。 
@@ -727,74 +769,54 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 
 ###总结
-这节的内容讲的东西还是比较多的，看着看着可能就失去焦点，陷入细节之中了，在这里，我梳理了一下这节内容的逻辑链条以方便理解。
+这节的内容讲的东西还是比较多的，看着看着可能就失去焦点，陷入细节之中了，在这里，我梳理了一下这节内容的逻辑链条以 Why-How-When 的顺序展开以方便理解。
 
-「Block 的实现」这节是在我们明确了「Block 是能持有作用域变量的匿名函数」这个定义后，来探索它究竟是如何实现这个定义的。那么首先我们需要搞清楚的是 Block 这个定义背后的需求，也即是它的设计目标：
+####Why
+「Block 的实现」这节是在我们明确了「Block 是能持有作用域变量的匿名函数」这个定义后，来探索它究竟是如何实现这个定义的。那么首先我们需要搞清楚的是 Block 这个定义背后的设计目标(**Why**)：
 
 - Block 能够持有作用域变量，那必然会有对这些变量进行读写操作的需求，那要采用什么样的机制保证 Block 正确读写所持有的变量呢？
 - Block 是匿名函数，那么作为函数，它就天然带着能够在各个地方被正确调用的属性，那么 Block 的作用域和生命周期机制应该如何设计从而来保证它能在各种地方被正确调用呢？
-- Block 存在作用域和生命周期的问题，那么需要一套怎样的机制来保证 Block 所持有的变量的作用域和生命周期能够与之想匹配，从而保证 Block 的正确使用呢？
+- Block 存在作用域和生命周期的问题，那么需要一套怎样的机制来保证 Block 所持有的变量的作用域和生命周期能够与之相匹配，从而保证 Block 的正确使用呢？
 
-以上便是本节需要探讨的问题，我们分为下面几个步骤来探讨：
+####How
+接下来我们分为下面几个步骤来探讨怎么实现上述的设计目标(**How**)：
 
 - 1）我们需要根据变量的不同的**作用域**和**生命周期**来分别讨论，这样就包括了：`全局变量`、`全局静态变量`、`局部静态变量`和`自动变量`。
 	- 对于全局变量、全局静态变量，因为生命周期和作用域是全局的，读写随意。
 	- 对于局部静态变量，生命周期是全局，但是作用域是局部，那么 Block 语法被转换为外部函数时，则需要用指向静态局部变量的指针来对其进行读写操作。
 	- 对于自动变量，生命周期和作用域都是局部的，只读的话，还好办，拷贝一下它的值就行了。但是想修改的话，咋整呢？首先，不能效仿静态变量那样的做法，因为你在外面修改它时，没准它已经被销毁了，这是会闹崩溃的。所以从这就引出了解决方案，用 `__block` 修饰自动变量就能写了，也就是说 `__block` 修饰符使得变量能够超出作用域被读写了。从而引出了问题：其内部实现又是怎样的呢？
-- 2）跟着上面的问题，我们介绍了 \_\_block 说明符的相关知识。它把自动变量进行了一层封装，并且提供了把自动变量拷贝到堆上的机制。这样**\_\_block 自动变量能够超出作用域被读写**这个问题的解决方案初见端倪，但是我们还需要了解一下 Block 本身的内存管理机制，从而更好的区了解 Block 本身和其使用的自动变量在内存管理上的协作。
+- 2）跟着上面的问题，我们介绍了 \_\_block 说明符的相关知识。它把自动变量进行了一层封装，并且提供了把自动变量拷贝到堆上的机制。这样**\_\_block 自动变量能够超出作用域被读写**这个问题的解决方案初见端倪，但是我们还需要了解一下 Block 本身的内存管理机制，从而更好的去了解 Block 本身和其使用的自动变量在内存管理上的协作。
 - 3）所以接下来，我们开始探讨 Block 存储域相关的知识。介绍了 Block 的三种存储相关类型以及使用时需要注意的问题。
 - 4）介绍完 Block 存储域相关的东西后，就接着说了 \_\_block 变量与 Block 协作时的内存管理机制。从而解释清楚了对「Block 是能持有作用域变量的匿名函数」这个定义的实现方式。
-- 5）理解了 Block 的实现，那么接下来需要搞清楚的就是使用 Block 的相关注意事项了，尤其是什么情况下编译器能帮你自动把 Block 给拷贝到堆上，什么情况下你得手动调用 copy 方法去把 Block 拷贝到堆上的问题。对于这些问题，在本节内容中零零散散的提到了，我会一并总结到后面的「使用Block需要注意的问题」那节。
 
+####When
+通过上面的内容，我们可以理解 Block 的能力的实现机制，但是在具体使用时**在怎样的场景下会触发这些机制**是我们接下来需要搞清楚的(**When**)：
 
+- 首先是 Block 自身的内存管理的情况。比如什么场景下编译器能帮你自动把 Block 给拷贝到堆上，什么情况下你得手动调用 copy 方法去把 Block 拷贝到堆上的问题。对于这些问题，在本节内容中零零散散的提到了，我会一并总结到后面的「使用Block需要注意的问题」那节。
+- 其次是 Block 与其使用的变量的协作。上面我们基本上都是以基本类型的的自动变量来举例说明 Block 以及 \_\_block 变量的内存管理，已经比较清晰了。但是当对象掺活进来，事情又变得不一样了，因为对象本身的存储域、生命周期和作用域涉及到 Objective-C 的内存管理机制，比如：weak、strong 等修饰的对象在 Block 中是如何工作的这些内容也会在后面「使用Block需要注意的问题」那节总结。
 
-##Block的使用场景
-
-###Block简化枚举
-
-	// NSArray的一个方法，接受一个block作为参数，这个block会在该方法里每枚举一个对象时被调用一次：
-	- (void)enumerateObjectsUsingBlock:(void (^)(id obj, NSUInteger idx, BOOL *stop))block;
-	// 这个block接受三个参数，前两个是当前的对象和其index，后面的BOOL值可以用来控制什么时候停止该枚举。
-	NSArray *array = ...
-    [array enumerateObjectsUsingBlock:^ (id obj, NSUInteger idx, BOOL *stop) {
-        NSLog(@"Object at index %lu is %@", idx, obj);
-    }];
-    [array enumerateObjectsUsingBlock:^ (id obj, NSUInteger idx, BOOL *stop) {
-        if (...) {
-            *stop = YES;
-        }
-    }];
-
-###Block简化并发调用
-####Block和Operation Queue一起用
-
-	NSBlockOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
-	    ...
-	}];
-
-####Block和GCD一起用
-
-	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
-	dispatch_async(queue, ^{
-	    NSLog(@"Block for asynchronous execution");
-	});
-
-###Block的使用场景小结
-
-* Enumeration (like we saw above with NSArray)
-* View Animations (animations)
-* Sorting (sort this thing using a block as the comparison method)
-* Notification (when something happens, execute this block)
-* Error handlers (if an error happens while doing this, execute this block)
-* Completion handlers (when you are done doing this, execute this block)
-* Multithreading (With Grand Central Dispatch (GCD) API)
 
 
 ##使用Block需要注意的问题
 
-###Block截获作用域的变量
+###使用Block时需要手动copy的情况
+总结一下在 ARC 下使用 Block 时需要手动 copy 和不需要手动 copy 的情况：
 
-- 局部变量（local varible）在 block 里是只读的。如果想在 block 中读写局部变量，那么需要在局部变量前加 `__block`。`__block` 修饰的局部变量在 block 中会被编译器从栈上传递到堆上，这样 block 就能使用它改变它，当 block 代码结束，block 会再把这个变量值拷贝回堆，再拷贝回栈上。
+- 不需要手动 copy 的情况：
+	1. Block 作为函数返回值返回时，不需要手动 copy。
+	2. 将 Block 赋值给类的：`1）__strong 修饰的 id 类型的成员变量`；`2）Block 类型成员变量`时，不需要手动 copy。
+	3. 向方法名中含有 usingBlock 的 Cocoa 框架方法或 GCD 的 API 中传递 Block 作为参数时，不需要手动 copy。
+- 需要手动 copy 的情况：
+	1. 在向方法或函数传递 Block 作为参数时，传的时候要调用一下 Block 的 copy 方法。除非在方法或函数体中，对传进来的 Block 参数做了 copy 处理（比如不需要手动 copy 的第 3 种的情况，就是那些 API 对传进来的 Block 参数做了 copy 处理）。
+	2. 其他情况，如果不明确情况，也推荐手动调用 copy。
+
+
+
+
+###Block截获作用域变量的行为
+
+####基本类型变量
+- 局部变量（local varible）在 block 里是只读的。如果想在 block 中读写局部变量，那么需要在局部变量前加 `__block`。
 
 >
 	// 不能改变局部变量：
@@ -851,10 +873,193 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 
 - 实例变量 instance varible，在 block 里是可读可写的。
-
 - 静态变量在 block 里是可读可写的。
-
 - 全局变量在 block 里是可读可写的。
+
+####对象
+在 ARC 环境下，我们来讨论下 Block 对 `__weak`、`__strong`、`__block` 修饰的对象的截获行为。
+
+为了测试，先自定义一个类 MyObject，含一个属性 text，重写 description 方法。如下：
+
+	// MyObject.h
+	#import <Foundation/Foundation.h>
+	@interface MyObject : NSObject
+	@property (nonatomic, strong) NSString *text;
+	@end
+
+	// MyObject.m
+	#import "MyObject.h"
+	@implementation MyObject
+	#pragma mark - Property
+	- (NSString *)description {
+	    return _text;
+	}
+	@end
+
+
+1）先来看看 `__weak` 指针：
+
+	// ViewController.m
+	#define PrintObject(prefix, obj) { NSLog(@"%@: (指针内存地址: %p, 指针值: %p, 指向的对象值: %@)", prefix, &obj, obj, obj); }
+
+	- (void)viewDidAppear:(BOOL)animated {
+	    [super viewDidAppear:animated];
+	    
+	    typedef void (^MyBlock)();
+	    
+	    MyBlock blk;
+	    
+	    {
+	        MyObject *obj = [[MyObject alloc] init];
+	        obj.text = @"I-am-an-obj.";
+	        PrintObject(@"obj", obj);
+	        
+	        typeof(obj) __weak weakObj = obj;
+	        PrintObject(@"weakObj", weakObj);
+	        
+	        blk = ^() {
+	            PrintObject(@"weakObj in Block", weakObj);
+	        };
+	        
+	        blk();
+	    } // obj、weakObj 的作用域结束。
+	    
+	    blk();	    
+	}
+
+程序的打印信息如下：
+
+	obj: (指针的内存地址: 0x7fff5e514120, 指针值: 0x7ff56c1003e0, 指向的对象值: I-am-an-obj.)
+	weakObj: (指针的内存地址: 0x7fff5e514118, 指针值: 0x7ff56c1003e0, 指向的对象值: I-weakObj in Block: (指针的内存地址: 0x7ff56bf1cce0, 指针值: 0x7ff56c1003e0, 指向的对象值: I-am-an-obj.)
+	weakObj in Block: (指针的内存地址: 0x7ff56bf1cce0, 指针值: 0x0, 指向的对象值: (null))
+
+结论：
+
+- `obj`、`Block 外部的 weakObj`、`Block 内部的 weakObj` 是 3 个不同的指针变量，但它们都指向了同样的对象。
+- Block 捕获 `weakObj` 指向的对象时是对其进行**弱引用持有**，这是因为 `weakObj` 是用 `__weak` 修饰的。当 `obj` 的作用域结束时，它指向的对象没有被其他强引用持有，所以立即被释放，这时 Block 内部持有的弱引用 `weakObj` 也被设置为 nil。
+
+
+2）再来看看 `__strong` 指针：
+
+	- (void)viewDidAppear:(BOOL)animated {
+	    [super viewDidAppear:animated];
+	    typedef void (^MyBlock)();
+	    
+	    MyBlock blk;
+	    
+	    {
+	        MyObject *obj = [[MyObject alloc] init];
+	        obj.text = @"I-am-an-obj.";
+	        PrintObject(@"obj", obj);
+	        
+	        typeof(obj) __strong strongObj = obj;
+	        PrintObject(@"strongObj", strongObj);
+	        
+	        blk = ^() {
+	            PrintObject(@"strongObj in Block", strongObj);	        };
+	        
+	        blk();
+	    } // obj、strongObj 的作用域结束。
+	    
+	    blk();
+    }
+
+程序打印的信息如下：
+
+	obj: (指针的内存地址: 0x7fff54284120, 指针值: 0x7f9012c23e70, 指向的对象值: I-am-an-obj.)
+	strongObj: (指针的内存地址: 0x7fff54284118, 指针值: 0x7f9012c23e70, 指向的对象值: I-am-an-obj.)
+	strongObj in Block: (指针的内存地址: 0x7f9012d1cc20, 指针值: 0x7f9012c23e70, 指向的对象值: I-am-an-obj.)
+	strongObj in Block: (指针的内存地址: 0x7f9012d1cc20, 指针值: 0x7f9012c23e70, 指向的对象值: I-am-an-obj.)
+	
+结论：
+
+- `obj`、`Block 外部的 strongObj`、`Block 内部的 strongObj` 是 3 个不同的指针变量，但它们都指向了同样的对象。
+- Block 捕获 `strongObj` 指向的对象时是对其进行**强引用持有**，这是因为 `strongObj` 是用 `__strong` 修饰的。当 `obj`、`Block 外部的 strongObj` 的作用域结束时，它们指向的对象依然被 Block 强引用持有了，所以不会立即释放。
+
+
+3）接着看 `__block`：
+
+	- (void)viewDidAppear:(BOOL)animated {
+	    [super viewDidAppear:animated];
+	    
+	    typedef void (^MyBlock)();
+
+	    MyBlock blk;
+	    
+	    {
+	        MyObject *obj = [[MyObject alloc] init];
+	        obj.text = @"I-am-an-obj.";
+	        PrintObject(@"obj", obj);
+	        
+	        typeof(obj) __block blockObj = obj;
+	        PrintObject(@"blockObj", blockObj);
+	        
+	        blk = ^() {
+	            PrintObject(@"blockObj in Block", blockObj);
+	        };
+	        
+	        blk();
+	    } // obj、blockObj 的作用域结束。
+	    
+	    blk();
+	    
+	    
+	}
+
+程序打印的信息：
+	
+	obj: (指针的内存地址: 0x7fff57581120, 指针值: 0x7f9eac800440, 指向的对象值: I-am-an-obj.)
+	blockObj: (指针的内存地址: 0x7fff57581118, 指针值: 0x7f9eac800440, 指向的对象值: I-am-an-obj.)
+	blockObj in Block: (指针的内存地址: 0x7f9eac800e28, 指针值: 0x7f9eac800440, 指向的对象值: I-am-an-obj.)
+	blockObj in Block: (指针的内存地址: 0x7f9eac800e28, 指针值: 0x7f9eac800440, 指向的对象值: I-am-an-obj.)
+
+结论：
+
+- 在 ARC 环境下，`__block` 的表现看起来跟 `__strong` 没有什么区别，在 Block 中都对对象做了**强引用持有**。但是需要注意的是在 MRC 环境下，`__block` 的表现是不一样的，在 Block 中不会对对象进行 retain。
+
+4）来看一种有意思的混搭，在 Block 内部使用 \_\_strong 类型的引用持有外部的 \_\_weak 对象：
+
+	- (void)viewDidAppear:(BOOL)animated {
+	    [super viewDidAppear:animated];
+
+	    typedef void (^MyBlock)();
+	    
+	    MyBlock blk;
+	    
+	    {
+	        MyObject *obj = [[MyObject alloc] init];
+	        obj.text = @"I-am-an-obj.";
+	        PrintObject(@"obj", obj);
+	        
+	        typeof(obj) __weak weakObj = obj;
+	        PrintObject(@"weakObj", weakObj);
+	        
+	        blk = ^() {
+	            typeof(weakObj) __strong strongObj = weakObj;
+	            PrintObject(@"weakObj in Block", weakObj);
+	            PrintObject(@"strongObj in Block", strongObj);
+	        };
+	        
+	        blk();
+	    } // obj、weakObj 的作用域结束。
+	    
+	    blk();
+	}
+
+程序打印的信息：
+
+	obj: (指针的内存地址: 0x7fff54625120, 指针值: 0x7fb832210110, 指向的对象值: I-am-an-obj.)
+	weakObj: (指针的内存地址: 0x7fff54625118, 指针值: 0x7fb832210110, 指向的对象值: I-am-an-obj.)
+	weakObj in Block: (指针的内存地址: 0x7fb832210010, 指针值: 0x7fb832210110, 指向的对象值: I-am-an-obj.)
+	strongObj in Block: (指针的内存地址: 0x7fff54625048, 指针值: 0x7fb832210110, 指向的对象值: I-am-an-obj.)
+	weakObj in Block: (指针的内存地址: 0x7fb832210010, 指针值: 0x0, 指向的对象值: (null))
+	strongObj in Block: (指针的内存地址: 0x7fff54625048, 指针值: 0x0, 指向的对象值: (null))
+
+结论：
+
+- `obj`、`Block 外部的 weakObj`、`Block 内部的 weakObj`、`Block 内部的 strongObj` 是 4 个不同的指针变量，但它们都指向了同样的对象。
+- Block 捕获 `weakObj` 指向的对象时是对其进行**弱引用持有**，这是因为 `weakObj` 是用 `__weak` 修饰的。这与上面第 1） 种情况是一样的，但是这里在 Block 的实现中，又通过 `typeof(weakObj) __strong strongObj = weakObj;` 这句代码想要去强引用持有 `weakObj` 指向的对象，但是在执行这句代码之前，如果 `weakObj` 已经被置为 nil，那么这里的 `strongObj` 也并不能强引用持有住对象而延长对象的生命周期。这里很有意思的一点是，这句代码在 `weakObj` 这个中间人的作用下并没有一开始就强引用持有 `obj` 指向的对象，而是等到代码执行到这句才开始，并且这里是通过一个**局部变量** `strongObje` 来强引用持有对象，当局部变量作用域结束，它和它所持有的对象就都会被释放，不会造成内存泄露的问题。这点非常有用，即它不会造成强引用循环，这在后面「避免Block使用的对象被提前释放」那节会有用到。
+
 
 ###避免强引用循环
 每次向 block 里的对象发送消息（方法调用）的时候，将会创建一个 strong 指针指向这个对象，直到 block 结束。所以像下面的代码，self strong 持有 block，而在 block 里又 strong 持有了 self，这样谁也不能被释放：
@@ -885,8 +1090,16 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 	}
 
 
+为了解决强引用循环的问题，上面我们用到了 `__weak`，但是为了考虑对于早期版本的兼容以及 ARC 和 MRC 环境下的使用，我们还需要了解：
+
+- **在 ARC 环境下且 iOS 5.0 以上的版本**，用 `__weak` 解决强引用循环的问题。\_\_weak 修饰的变量在被释放时，对应的指针会被自动设为 nil。这点很好，所以推荐使用。
+- **在 ARC 环境下但是要兼容 iOS 4.x 的版本**，用 `__unsafe_unretained` 解决强引用循环的问题。\_\_unsafe_unretained 修饰的变量就相当于一个普通的指针，但是需要注意的是它指向的对象被释放时，这个指针不会被设置 nil，就成了野指针，就不能再用它了，会崩溃的。所以，除非是要兼容 4.x 系统，否则就别用了。
+- **在 MRC 环境下**，用 `__block` 解决强引用循环的问题。因为在 ARC 下，\_\_block 修饰的变量在 Block 块中会被 retain，而在 MRC 下，不会 retain。
+
+
+
 ###避免Block使用的对象被提前释放
-上面提到了使用 weak 引用的方式解决 retain cycle 的方案，但随着应用场景的改变，又会带来新的问题，比如：在 block 中用异步的方式使用了外部对象，当对象被释放后，异步方法回调时访问该对象则会为空，这时就可能造成程序崩溃了。解决这个问题的方式则是 weak/strong 化，示例代码如下：
+上面提到了使用 weak 引用的方式解决 retain cycle 的方案，但随着应用场景的改变，又会带来新的问题，比如：在 Block 中用异步的方式使用了外部对象，当对象被释放后，异步方法回调时访问该对象则会为空，这时就可能造成程序崩溃了。解决这个问题的方式则是 weak/strong 化，示例代码如下：
 
 TestBlockViewController.m
 
@@ -938,17 +1151,10 @@ TestBlockViewController.m
 	TestBlockViewController dealloc.
 
 
+我们在前面「Block截获作用域变量的行为」那节已经提到过这种用法，这里我们看到了具体的实例了。这里需要关注的是两点：
 
-###使用Block时需要手动copy的情况
-总结一下在 ARC 下使用 Block 时需要手动 copy 和不需要手动 copy 的情况：
-
-- 不需要手动 copy 的情况：
-	1. Block 作为函数返回值返回时，不需要手动 copy。
-	2. 将 Block 赋值给类的：`1）__strong 修饰的 id 类型的成员变量`；`2）Block 类型成员变量`时，不需要手动 copy。
-	3. 向方法名中含有 usingBlock 的 Cocoa 框架方法或 GCD 的 API 中传递 Block 作为参数时，不需要手动 copy。
-- 需要手动 copy 的情况：
-	1. 在向方法或函数传递 Block 作为参数时，传的时候要调用一下 Block 的 copy 方法。除非在方法或函数体中，对传进来的 Block 参数做了 copy 处理（比如不需要手动 copy 的第 3 种的情况，就是那些 API 对传进来的 Block 参数做了 copy 处理）。
-	2. 其他情况，如果不明确情况，也推荐手动调用 copy。
+- 这种用法不会造成强引用循环。在 self.myBlock 中，是通过**弱引用持有**的方式截获 `weakSelf`，所以 self.myBlock 不会阻碍 `weakSelf` 指向的对象的释放。所以，虽然这里 `weakSelf` 指向的对象(self)强引用持有着 self.myBlock，但是 self.myBlock 中并没有强引用持有这个对象(self)。
+- 这种用法可以延长 Block 中使用的对象的生命周期来保证回调时访问对象的合法性。在 self.myBlock 中，通过 `typeof(weakSelf) __strong strongSelf = weakSelf;` 去用一个**局部变量** `strongSelf` 强引用持有对象(self)，如果这时候对象还没释放，那么就局部变量 `strongSelf` 就可以延长对象的生命周期直到局部变量的作用域结束，那时候局部变量被释放，对象也相应被释放。一切都很完美。
 
 
 

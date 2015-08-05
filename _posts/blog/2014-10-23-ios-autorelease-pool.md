@@ -86,13 +86,99 @@ Cocoa中总是会期望代码在一个Autorelease Pool Block中运行，否则�
 
 
 
+##autorelease的实现
+
+既然说到 Autorelease Pool，这里就多说一下在 MRC 时代 autorelease 的实现机制，了解这个机制对于我们理解 Objective-C 的内存管理是很有帮助的。
+
+在讨论实现之前，我们首先来看个问题，我们都知道 autorelease 机制的一个典型的应用场景就是参数传递返回值。那为什么方法返回值的时候需要用到 autorelease 特性呢？这是因为你在方法中创建了一个对象，在返回之前你总不能把它释放了吧，这样你返回的就是 nil 了，而返回后，方法都调用结束了。参数值 return 出去后，外面接收它的要使用它就要强引用它，给它 retainCount +1，不用了就清理，retainCount -1，这是方法外面的事，但对于你这个方法来说你创建了它却没清理它，这是不负责任地搞内存泄露啊！所以得有一套机制保证创建这个对象的方法能在方法调用结束后清理掉这个对象，这就是 autorelease 机制。
+
+在 Objective-C 中编程人员可以通过 autorelease 机制设定变量的作用域，这其中就离不开 Autorelease Pool。结合 Autorelease Pool 来使用 autorelease 的方法大致如下：
+
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];  
+	id obj = [[NSObject alloc] init];  
+	[obj autorelease];  
+	// Do something...
+	[pool drain]; 
+
+上面的代码最后一行执行的时候就会自动调用 `[obj release];`。
+
+这个过程中调用 `[obj autorelease]` 究竟发生了什么呢？我们可以查看 GNUstep 的源代码来看看：
+
+	// GNUstep/modules/core/base/Source/NSObject.m autorelease
+	- (id)autorelease {  
+		[NSAutoreleasePool addObject:self];  
+	}
+
+autorelease 实例方法的本质就是调用 NSAutoreleasePool 对象的 addObject 类方法。下面来看看这个类方法的实现，由于源码比较复杂，下面对代码进行了简化，大致如下：
+
+	// GNUstep/modules/core/base/Source/NSAutoreleasePool.m addObject
+	+ (void)addObject:(id)anObj {  
+		NSAutoreleasePool *pool = 取得正在使用的 NSAutoreleasePool 对象;  
+		if (pool != nil) {  
+			[pool addObject:anObj];  
+		} else {  
+			NSLog(@"NSAutoreleasePool 对象非存在状态下调用 autorelease");  
+		}  
+	}
+
+什么叫`正在使用的 NSAutoreleasePool 的对象`呢？比如下面：
+
+	NSAutoreleasePool *pool = [[NSAutoreleasePool alloc] init];  
+	id obj = [[NSObject alloc] init];  
+	[obj autorelease]; 
+
+被赋值的 pool 变量就是。
+
+而这个例子里面：
+
+	NSAutoreleasePool *pool0 = [[NSAutoreleasePool alloc] init];  
+	NSAutoreleasePool *pool1 = [[NSAutoreleasePool alloc] init];  
+			NSAutoreleasePool *pool2 = [[NSAutoreleasePool alloc] init];  
+				id obj = [[NSObject alloc] init];  
+				[obj autorelease];  
+			[pool2 drain];  
+		[pool1 drain];  
+	[pool0 drain];
+
+则是最内侧的 pools。
+
+下面看看实例方法的实现：
+
+	// GNUstep/modules/core/base/Source/NSAutoreleasePool.m addObject
+	- (void)addObject:(id)anObj   {  
+		[array addObject:anObj];  
+	} 
+
+实际的 GNUstep 实现使用的是链表结构，这跟在 NSMutableArray 中添加对象是一样的。如果调用 NSObject 类的 autorelease 实例方法，该对象将被追加到正在使用的 NSAutoreleasePool 对象中的数组里。
+
+再看看看 `[pool drain];` 的实现。
+
+	//GNUstep/modules/core/base/Source/NSAutoreleasePool.m drain
+	- (void)drain {  
+		[self dealloc];  
+	}  
+	- (void)dealloc {  
+		[self emptyPool];  
+		[array release];  
+	}  
+	- (void)emptyPool {  
+		for (id obj in array) {  
+			[obj release];  
+		}  
+	} 
+
+调用了好几个方法，最终是对于 Autorelease Pool 的数组里的对象都调用了 release 方法。
 
 
 
+##NSThread、NSRunLoop 和 NSAutoreleasePool
+根据苹果官方文档中对 NSRunLoop 的描述，我们可以知道每一个线程，包括主线程，都会拥有一个专属的 NSRunLoop 对象，并且会在有需要的时候自动创建。
 
+在主线程的 [NSRunLoop][5] 对象（在系统级别的其他线程中应该也是如此，比如通过 dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) 获取到的线程）的每个 event loop 开始前，系统会自动创建一个 Autorelease Pool ，并在 event loop 结束时 drain 。我们上面提到的场景 1 中创建的 autoreleased 对象就是被系统添加到了这个自动创建的 Autorelease Pool 中，并在这个 Autorelease Pool 被 drain 时得到释放。
 
+另外，[NSAutoreleasePool][6] 中还提到，每一个线程都会维护自己的 Autorelease Pool 堆栈。换句话说 Autorelease Pool 是与线程紧密相关的，每一个 Autorelease Pool 只对应一个线程。
 
-
+弄清楚 NSThread、NSRunLoop 和 NSAutoreleasePool 三者之间的关系可以帮助我们从整体上了解 Objective-C 的内存管理机制
 
 
 
@@ -101,3 +187,5 @@ Cocoa中总是会期望代码在一个Autorelease Pool Block中运行，否则�
 [2]: http://samirchen.com/ios-autorelease-pool/
 [3]: https://developer.apple.com/library/ios/documentation/cocoa/conceptual/memorymgmt/Articles/mmAutoreleasePools.html#//apple_ref/doc/uid/20000047-CJBFBEDI
 [4]: http://www.galloway.me.uk/2012/02/a-look-under-arcs-hood-episode-3/
+[5]: https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSRunLoop_Class/index.html#//apple_ref/doc/constant_group/Run_Loop_Modes
+[6]: https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Classes/NSRunLoop_Class/index.html#//apple_ref/doc/constant_group/Run_Loop_Modes

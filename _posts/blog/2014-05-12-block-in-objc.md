@@ -708,8 +708,36 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 ####小结
 
-- 1）本节讲了 Block 的三种类型：NSConcreteStackBlock、NSConcreteGlobalBlock、NSConcreteMallocBlock。介绍了它们的内存管理方式。Block 的内存管理设计解决了 Block 离开作用域被使用的问题（被 copy 到堆上）。
-- 2）注意使用 Block 时，向方法或函数传递 Block 作为参数时，传的时候调用一下 copy 方法。除非在方法或函数体中，对传进来的 Block 参数做了 copy ，比如 Cocoa 框架中名字含有 usingBlock 的方法和 GCD 的 API。
+- 1）本节讲了 Block 的 3 种类型：NSConcreteStackBlock、NSConcreteGlobalBlock、NSConcreteMallocBlock。介绍了它们的内存管理方式。Block 的内存管理设计解决了 Block 离开作用域被使用的问题（被 copy 到堆上）。
+- 2）在 ARC 特性下，在方法中返回 Block 时将不再需要手动调用 copy 了。
+>Blocks “just work” when you pass blocks up the stack in ARC mode, such as in a return. You don’t have to call Block Copy any more.
+
+- 3）注意使用 Block 时，向方法或函数传递 Block 作为参数时，传的时候调用一下 copy 方法。除非在方法或函数体中，对传进来的 Block 参数做了 copy ，比如 Cocoa 框架中名字含有 usingBlock 的方法和 GCD 的 API。
+
+>
+	- (void)testBlock {
+	    NSArray *blkArray = [self getBlockArray];
+	    typedef void (^blk_t)(void);
+	    for (blk_t blk in blkArray) {
+	        blk();
+	    }
+	    blk_t singleBlk = [self getBlock];
+	    singleBlk();
+	}
+	// 在方法中返回 Block 不需要 copy 了。
+	- (id)getBlock {
+	    int val = 88;
+	    return ^{NSLog(@"blk:%d", val);};
+	}
+	// 在方法中传递 Block 作为参数时，还是需要 copy 的。
+	- (NSArray *)getBlockArray {
+	    int val = 10;
+	    return [[NSArray alloc] initWithObjects:
+	            [^{NSLog(@"blk0:%d", val);} copy],
+	            [^{NSLog(@"blk1:%d", val);} copy], nil];
+	}
+	
+
 
 
 ###__block变量存储域

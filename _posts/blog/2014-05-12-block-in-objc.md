@@ -1191,3 +1191,4 @@ TestBlockViewController.m
 [1]: {{ page.url }} ({{ page.title }})
 [2]: https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/WorkingwithBlocks/WorkingwithBlocks.html
 [3]: https://book.douban.com/subject/24720270/
+[4]: http://samirchen.com/block-in-objc/

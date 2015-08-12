@@ -7,17 +7,17 @@ tag: iOS, Objective-C, performance
 ---
 
 ##前言
-程序性能优化，不应该是一件放在赶完工程之后的事，而应该从我们一开始写代码时就萦绕在我们脑子里。所以，了解 iOS 程序性能优化的相关知识点，从一开始就把它们落实到代码中是一种好的习惯。
+程序性能优化不应该是一件放在功能完成之后的事，对性能的概念应该从我们一开始写代码时就萦绕在我们脑子里。了解 iOS 程序性能优化的相关知识点，从一开始就把它们落实到代码中是一种好的习惯。
 
 
 ##初级技巧
 
 ###使用复用机制
-在我们使用 UITableView 和 UICollectionView 时我们通常会遇到「复用 Cell」这个提法，所谓「复用 Cell」就是指当需要展示的数据条目较多时，只创建较少数量的 Cell 对象（一般是屏幕可显示的 Cell 数再加一）通过复用这些 Cell 对象的方式来展示数据的机制。这种机制不会为每一条数据都创建一个 Cell，所以可以节省内存，提升程序的效率和交互流畅性。
+在我们使用 UITableView 和 UICollectionView 时我们通常会遇到「复用 Cell」这个提法，所谓「复用 Cell」就是指当需要展示的数据条目较多时，只创建较少数量的 Cell 对象（一般是屏幕可显示的 Cell 数再加一）并通过复用它们的方式来展示数据的机制。这种机制不会为每一条数据都创建一个 Cell，所以可以节省内存，提升程序的效率和交互流畅性。
 
 从 iOS 6 以后，我们在 UITableView 和 UICollectionView 中不光可以复用 Cell，还可以复用各个 Section 的 Header 和 Footer。
 
-下面拿 UITableView 复用 Cell 来举例，在复用的时候，会用到的 API：
+在 UITableView 做复用的时候，会用到的 API：
 	
 	// 复用 Cell：
 	- [UITableView dequeueReusableCellWithIdentifier:];
@@ -30,7 +30,7 @@ tag: iOS, Objective-C, performance
 	- [UITableView registerClass:forHeaderFooterViewReuseIdentifier:];
 	- [UITableView dequeueReusableHeaderFooterViewWithIdentifier:];
 
-复用机制是一个很好的机制，但是不正确的使用却会给我们的程序带来很多问题。比如下面这个场景：
+复用机制是一个很好的机制，但是不正确的使用却会给我们的程序带来很多问题。下面拿 UITableView 复用 Cell 来举例：
 
 	- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
 	    static NSString *CellIdentifier = nil;
@@ -47,7 +47,7 @@ tag: iOS, Objective-C, performance
 	    }
 	    
 	    cell.textLabel.text = @"Title";
-	    // 偶数行 Cell 显示 Detail 文字。
+	    // 偶数行 Cell 的 detailTextLabel 显示 Detail 文字。
 	    if (indexPath.row % 2 == 0) {
 	        cell.detailTextLabel.text = @"Detail";
 	    }
@@ -216,7 +216,7 @@ UIView 有一个 `opaque` 属性，在你不需要透明效果时，你应该尽
 
 
 ###缓存
-在开发我们的程序时，一个很重要的经验法则就是：对那些更新频度低，但是需要经常访问的内容做缓存。
+在开发我们的程序时，一个很重要的经验法则就是：对那些更新频度低，访问频度高的内容做缓存。
 
 有哪些东西使我们可以缓存的呢？比如下面这些：
 
@@ -245,7 +245,7 @@ NSURLConnection 可以根据 HTTP 头部的设置来决定把资源内容缓存�
 
 当然，不同的方案的编码复杂度不一样，性能也不一样。关于图形绘制的不同方案的性能问题，可以看看：[Designing for iOS: Graphics Performance](https://robots.thoughtbot.com/designing-for-ios-graphics-performance)
 
-简而言之，使用 pre-rendered 的图片会更快，因为这样就不需要在程序中去创建一个图像，并在上面绘制各种形状了（Offscreen drawing，离屏渲染）。但是缺点是你必须把这些图片资源打包到代码包，从而需要增加程序包的体积。这就是为什么 resizable images 是一个很棒的选择：不需要全尺寸图，让 iOS 为你绘制图片中那些可以拉伸的部分，从而减小了图片体积；并且你不需要为不同大小的控件准备不同尺寸的图片。比如两个按钮的大小不一样，但是他们的背景图样式是一样的，你只需要准备一个对应样式的 resizable image，然后在设置这两个按钮的背景图的时候分别做拉伸就可以了。
+简而言之，使用 pre-rendered 的图片会更快，因为这样就不需要在程序中去创建一个图像，并在上面绘制各种形状了（Offscreen Rendering，离屏渲染）。但是缺点是你必须把这些图片资源打包到代码包，从而需要增加程序包的体积。这就是为什么 resizable images 是一个很棒的选择：不需要全尺寸图，让 iOS 为你绘制图片中那些可以拉伸的部分，从而减小了图片体积；并且你不需要为不同大小的控件准备不同尺寸的图片。比如两个按钮的大小不一样，但是他们的背景图样式是一样的，你只需要准备一个对应样式的 resizable image，然后在设置这两个按钮的背景图的时候分别做拉伸就可以了。
 
 但是一味的使用使用预置的图片也会有一些缺点，比如你做一些简单的动画的时候各个帧都用图片叠加，这样就可能要使用大量图片。
 
@@ -363,26 +363,35 @@ UIWebView 在我们的应用程序中非常有用，它可以便捷的展示 Web
 优化第三步，总是关注你在页面中所使用的图片，根据具体的场景来显示正确尺寸的图片，同时也可以使用上面提到的「使用 Sprites Sheets」的方案来在某些地方减少内存消耗和提高速度。
 
 ###减少离屏渲染
-在 iOS 开发中要给一个 View 添加阴影效果，有很简单快捷的做法：
+什么是「离屏渲染」？离屏渲染，即 Off-Screen Rendering。与之相对的是 On-Screen Rendering，即在当前屏幕渲染，意思是渲染操作是用于在当前屏幕显示的缓冲区进行。那么离屏渲染则是指图层在被显示之前是在当前屏幕缓冲区以外开辟的一个缓冲区进行渲染操作。
 
-	#import <QuartzCore/QuartzCore.h>
+离屏渲染需要多次切换上下文环境：先是从当前屏幕（On-Screen）切换到离屏（Off-Screen）；等到离屏渲染结束以后，将离屏缓冲区的渲染结果显示到屏幕上又需要将上下文环境从离屏切换到当前屏幕，而上下文环境的切换是一项高开销的动作。
+
+
+提到离屏渲染，与之相关最常见的就是：阴影、圆角等图形效果的绘制。
+
+在 iOS 开发中要给一个 View 添加阴影效果，有很简单快捷的做法：
  
-	// Somewhere later ...
-	UIView *view = [[UIView alloc] init];
+	UIImageView *imageView = [[UIImageView alloc] initWithFrame:...];
 	 
 	// Setup the shadow ...
-	view.layer.shadowOffset = CGSizeMake(-1.0f, 1.0f);
-	view.layer.shadowRadius = 5.0f;
-	view.layer.shadowOpacity = 0.6;
+	imageView.layer.shadowOffset = CGSizeMake(5.0f, 5.0f);
+	imageView.layer.shadowRadius = 5.0f;
+	imageView.layer.shadowOpacity = 0.6;
 	
 
-但是上面这样的做法有一个坏处是：Core Animation 将不得不做离屏渲染，离屏渲染一般需要创建新的缓冲区，并且需要多次切换上下文环境（先是从当前屏幕（On-Screen）切换到离屏（Off-Screen）；等到离屏渲染结束以后，将离屏缓冲区的渲染结果显示到屏幕上有需要将上下文环境从离屏切换到当前屏幕），而上下文环境的切换是一项高开销的动作。
+但是上面这样的做法有一个坏处是：将触发 Core Animation 做离屏渲染造成开销。
 
 那要做到阴影图层效果，又想减少离屏渲染、提高性能的话要怎么做呢？一个好的建议是：设置 ShadowPath 属性。
 
-	view.layer.shadowPath = [[UIBezierPath bezierPathWithRect:view.bounds] CGPath];
+	UIImageView *imageView = [[UIImageView alloc] initFrame:...];
+	 
+	// Setup the shadow ...
+	imageView.layer.shadowPath = [[UIBezierPath bezierPathWithRect:CGRectMake(imageView.bounds.origin.x+5, imageView.bounds.origin.y+5, imageView.bounds.size.width, imageView.bounds.size.height)] CGPath];
+	imageView.layer.shadowOpacity = 0.6;
 
-如果图层是一个简单几何图形如矩形或者圆角矩形（假设不包含任何透明部分或者子图层），通过设置 ShadowPath 属性来创建出一个对应形状的阴影路径就比较容易，而且 Core Animation 绘制这个阴影也相当简单，避免了屏幕外的图层部分的预排版需求。这对性能来说很有帮助。如果你的图层是一个更复杂的图形，生成正确的阴影路径可能就比较难了，这样子的话你可以考虑用绘图软件预先生成一个阴影背景图。
+如果图层是一个简单几何图形如矩形或者圆角矩形（假设不包含任何透明部分或者子图层），通过设置 ShadowPath 属性来创建出一个对应形状的阴影路径就比较容易，而且 Core Animation 绘制这个阴影也相当简单，不会触发离屏渲染，这对性能来说很有帮助。如果你的图层是一个更复杂的图形，生成正确的阴影路径可能就比较难了，这样子的话你可以考虑用绘图软件预先生成一个阴影背景图。
+
 
 
 ###优化 UITableView
@@ -456,7 +465,7 @@ NSAutoreleasePool 是用来管理一个自动释放内存池的机制。在我�
 
 
 ###避免使用 NSDateFormatter
-在前文中，我们已经讲到了通过复用或者单例来提高 NSDateFormatter 这个高开销对象的使用效率。但是如果你要追求更快的速度，你可以直接使用 C 语言替代 NSDateFormatter 来解析 date，你可以看看这篇文章：[link](http://blog.soff.es/how-to-drastically-improve-your-app-with-an-afternoon-and-instruments)，其中展示了解析 ISO-8601 date string 的代码，你可以根据你的需求改写。
+在前文中，我们已经讲到了通过复用或者单例来提高 NSDateFormatter 这个高开销对象的使用效率。但是如果你要追求更快的速度，你可以直接使用 C 语言替代 NSDateFormatter 来解析 date，你可以看看这篇文章：[link](http://blog.soff.es/how-to-drastically-improve-your-app-with-an-afternoon-and-instruments)，其中展示了解析 ISO-8601 date string 的代码，你可以根据你的需求改写。完成的代码见：[SSToolkit/NSDate+SSToolkitAdditions.m](https://github.com/samsoffes/sstoolkit/blob/master/SSToolkit/NSDate%2BSSToolkitAdditions.m)。
 
 当然，如果你能够控制你接受到的 date 的参数的格式，你一定要尽量选择 `Unix timestamps` 格式，这样你可以使用：
 

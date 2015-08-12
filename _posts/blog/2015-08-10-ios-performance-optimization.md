@@ -155,6 +155,12 @@ UIView 有一个 `opaque` 属性，在你不需要透明效果时，你应该尽
 关于 GCD 更多的知识，你可以看看这篇文章：[GCD](http://www.samirchen.com/ios-gcd/)。
 
 
+###图片尺寸匹配 UIImageView
+当你从 App bundle 中加载图片到 UIImageView 中显示时，最好确保图片的尺寸能够和 UIImageView 的尺寸想匹配（当然，需要考虑 @2x @3x 的情况），否则会使得 UIImageView 在显示图片时需要做拉伸，这样会影响性能，尤其是在一个  UIScrollView 的容器里。
+
+有时候，你的图片是从网络加载的，这时候你并不能控制图片的尺寸，不过你可以在图片下载下来后去手动 scale 一下它，当然，最好是在一个后台线程做这件事，然后在 UIImageView 中使用 resize 后的图片。
+
+
 ###选择合适的容器
 我们经常需要用到容器来转载多个对象，我们通常用到的包括：NSArray、NSDictionary、NSSet，它们的特性如下：
 
@@ -367,8 +373,12 @@ UIWebView 在我们的应用程序中非常有用，它可以便捷的展示 Web
 
 离屏渲染需要多次切换上下文环境：先是从当前屏幕（On-Screen）切换到离屏（Off-Screen）；等到离屏渲染结束以后，将离屏缓冲区的渲染结果显示到屏幕上又需要将上下文环境从离屏切换到当前屏幕，而上下文环境的切换是一项高开销的动作。
 
+通常图层的以下属性将会触发离屏渲染：
 
-提到离屏渲染，与之相关最常见的就是：阴影、圆角等图形效果的绘制。
+- 阴影（UIView.layer.shadowOffset/shadowRadius/...）
+- 圆角（当 UIView.layer.cornerRadius 和 UIView.layer.maskToBounds 一起使用时）
+- 图层蒙板
+
 
 在 iOS 开发中要给一个 View 添加阴影效果，有很简单快捷的做法：
  
@@ -392,6 +402,20 @@ UIWebView 在我们的应用程序中非常有用，它可以便捷的展示 Web
 
 如果图层是一个简单几何图形如矩形或者圆角矩形（假设不包含任何透明部分或者子图层），通过设置 ShadowPath 属性来创建出一个对应形状的阴影路径就比较容易，而且 Core Animation 绘制这个阴影也相当简单，不会触发离屏渲染，这对性能来说很有帮助。如果你的图层是一个更复杂的图形，生成正确的阴影路径可能就比较难了，这样子的话你可以考虑用绘图软件预先生成一个阴影背景图。
 
+
+###光栅化
+CALayer 有一个属性是 `shouldRasterize` 通过设置这个属性为 YES 可以将图层绘制到一个屏幕外的图像，然后这个图像将会被缓存起来并绘制到实际图层的 contents 和子图层，如果很很多的子图层或者有复杂的效果应用，这样做就会比重绘所有事务的所有帧来更加高效。但是光栅化原始图像需要时间，而且会消耗额外的内存。这是需要根据实际场景权衡的地方。
+
+当我们使用得当时，光栅化可以提供很大的性能优势，但是一定要避免在内容不断变动的图层上使用，否则它缓存方面的好处就会消失，而且会让性能变的更糟。
+
+为了检测你是否正确地使用了光栅化方式，可以用 Instrument 的 Core Animation Template 查看一下 `Color Hits Green and Misses Red` 项目，看看是否已光栅化图像被频繁地刷新（这样就说明图层并不是光栅化的好选择，或则你无意间触发了不必要的改变导致了重绘行为）。
+
+如果你最后设置了 shouldRasterize 为 YES，那也要记住设置 rasterizationScale 为合适的值。在我们使用 UITableView 和 UICollectionView 时经常会遇到各个 Cell 的样式是一样的，这时候我们可以使用这个属性提高性能：
+
+	cell.layer.shouldRasterize = YES;
+	cell.layer.rasterizationScale = [[UIScreen mainScreen] scale];
+
+但是，如果你的 Cell 是样式不一样，比如高度不定，排版多变，那就要慎重了。
 
 
 ###优化 UITableView

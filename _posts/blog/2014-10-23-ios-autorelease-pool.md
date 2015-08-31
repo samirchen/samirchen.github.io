@@ -132,7 +132,7 @@ autorelease 实例方法的本质就是调用 NSAutoreleasePool 对象的 addObj
 而这个例子里面：
 
 	NSAutoreleasePool *pool0 = [[NSAutoreleasePool alloc] init];  
-	NSAutoreleasePool *pool1 = [[NSAutoreleasePool alloc] init];  
+		NSAutoreleasePool *pool1 = [[NSAutoreleasePool alloc] init];  
 			NSAutoreleasePool *pool2 = [[NSAutoreleasePool alloc] init];  
 				id obj = [[NSObject alloc] init];  
 				[obj autorelease];  

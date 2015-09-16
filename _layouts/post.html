@@ -71,13 +71,17 @@ layout: default
     <div class="sidenav">
         <h2>Blog</h2>
         <ul class="artical-list">
-        {% for index in 0..site.categories.blog.size - 1 %}
-            {% if site.categories.blog.at(index).url == page.url %}
-                {% for post in site.categories.blog[index-2>0?index-2:0..index+2<site.categories.blog.size-1?index+2:site.categories.blog.size-1] %}
-                    <li><a href="{{ post.url }}">{{ post.title }}</a></li>
-                {% endfor %}
-            {% endif %}
-        {% endfor %}
+        {% for index in 0..site.categories.blog.size - 1 
+            post = site.categories.blog[index]
+            if post.url == page.url
+                beginIndex = index - 2 > 0 ? index - 2 : 0
+                endIndex = index + 2 < site.categories.blog.size - 1 ? index + 2 : site.categories.blog.size - 1
+                for index in beginIndex..endIndex
+                    post = site.categories.blog.at(index) %}
+                    <li><a href="{{ $post.url }}">{{ $post.title }}</a></li>
+                {% endfor
+            endif
+        endfor %}
         </ul>
 
         <h2>Opinion</h2>

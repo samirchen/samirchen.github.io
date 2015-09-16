@@ -71,8 +71,24 @@ layout: default
     <div class="sidenav">
         <h2>Blog</h2>
         <ul class="artical-list">
-        {% for index in 0..site.categories.blog.size - 1 %}
-            {% $post = site.categories.blog.at(index) %}
+        <!-- {% for post in site.categories.blog limit:5 %}
+            <li><a href="{{ post.url }}">{{ post.title }}</a></li>
+        {% endfor %} -->
+        {% if page.previous.previous %}
+            <li><a href="{{ page.previous.previous.url }}">{{ page.previous.previous.title }}</a></li>
+        {% endif %}
+        {% if page.previous %}
+            <li><a href="{{ page.previous.url }}">{{ page.previous.title }}</a></li>
+        {% endif %}
+        <li><a href="{{ page.url }}">{{ page.title }}</a></li>
+        {% if page.next %}
+            <li><a href="{{ page.next.url }}">{{ page.next.title }}</a></li>
+        {% endif %}
+        {% if page.next.next %}
+            <li><a href="{{ page.next.next.url }}">{{ page.next.next.title }}</a></li>
+        {% endif %}
+        <!-- {% for index in 0..site.categories.blog.size - 1 %}
+            {% $post = site.categories.blog[index] %}
             {% if $post.url == page.url %}
                 {% beginIndex = index - 2 > 0 ? index - 2 : 0 %}
                 {% endIndex = index + 2 < site.categories.blog.size - 1 ? index + 2 : site.categories.blog.size - 1 %}
@@ -81,7 +97,7 @@ layout: default
                     <li><a href="{{ $post.url }}">{{ $post.title }}</a></li>
                 {% endfor %}
             {% endif %}
-        {% endfor %}
+        {% endfor %} -->
         </ul>
 
         <h2>Opinion</h2>

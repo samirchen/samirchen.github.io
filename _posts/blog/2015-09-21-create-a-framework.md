@@ -55,27 +55,183 @@ Framework 是 Mac OS/iOS 平台用来打包代码的一种方式，它可以将�
 
 ##创建一个测试 Framework 的 Demo 项目
 
-1) 在 Xcode 中，File -> New -> Project -> Application -> Single View Application 创建一个测试 Framework 的 Demo App：CXUIKitDemo。将上一节中创建的 Framework 项目的 CXUIKit.xcodeproj 文件拖到 CXUIKitDemo 中，位置如图所示。
+1) 在 Xcode 中，File -> New -> Project -> Application -> Single View Application 创建一个测试 Framework 的 Demo App：CXUIKitDemo。将上一节中创建的 Framework 项目的 CXUIKit.xcodeproj 文件拖到 CXUIKitDemo 中，位置如图所示。在拖之前，需要注意的是，你需要先关掉 CXUIKit 项目，因为 Xcode 不允许在两个不同的窗口打开同一个项目。
 
 ![image](../../images/create-a-framework/demo-project.png)
+
+通过这种方式你能够同时开发 CXUIKit Framework 项目和测试它。
 
 2) 在 CXUIKitDemo 项目的 Targets -> Build Phases -> Target Dependencies 中添加 CXUIKit Framework。
 
 ![image](../../images/create-a-framework/demo-project-build-phases.png)
 
-##在 App 项目中使用 Framework
+接下来，你就可以在 CXUIKitDemo 项目中使用 CXUIKit 提供的 CXTextField 等代码了，并且应该能正确编译执行。如果你修改了 CXUIKit Framework 项目中的代码，直接运行 CXUIKitDemo App 项目就能看到效果。
 
 
 
+##在 App 项目中使用独立的 Framework
+
+在上节我们通过添加子项目的方式实现能够同时开发和测试 CXUIKit Framework 的目的，但是在实际使用中，Framework 通常是单独拿出来提供给其他开发者使用的，所以这里讲讲这种方式。
+
+1）在 Xcode 中，File -> New -> Project -> Application -> Single View Application 再创建一个测试 Framework 的 Test App：TestCXUIKit。
+
+2）在 CXUIKit 项目中，Product -> CXUIKit.framework -> Show in finder 来找到打包好的 CXUIKit.framework 文件。
+
+![image](../../images/create-a-framework/get-framework.png)
+
+由于我们的测试项目 TestCXUIKit 是运行在模拟器上，所以我们选择 Debug-iphonesimulator 目录下面的 CXUIKit.framework 文件。
+
+![image](../../images/create-a-framework/get-framework-2.png)
+
+3）把 CXUIKit.framework 拷贝和添加到 TestCXUIKit 项目中。确保如图在 Targets -> TestUIKit -> General -> Embedded Binaries & Linked Frameworks and Libraries 中都添加了 CXUIKit.framework。
+
+![image](../../images/create-a-framework/test-framework-add.png)
+
+在代码中使用 CXUIKit：
+
+	#import "CXViewController.h"
+	#import <CXUIKit/CXUIKit.h>
+	
+	@interface CXViewController ()
+	
+	@end
+	
+	@implementation CXViewController
+	
+	#pragma mark - Lifecycle
+	- (void)viewDidLoad {
+	    [super viewDidLoad];
+	    
+	    // Text field.
+	    CXTextField *textField = [[CXTextField alloc] initWithFrame:CGRectMake(10, 100, self.view.bounds.size.width-10*2, 40)];
+	    textField.leftTitleText = @"名字";
+	    textField.placeholder = @"请输入你的名字";
+	    [self.view addSubview:textField];
+	}
+	
+	- (void)didReceiveMemoryWarning {
+	    [super didReceiveMemoryWarning];
+	}
+	@end
 
 
+需要注意：如果 Embedded Binaries 中没添加 CXUIKit.framework，你在项目中使用 CXUIKit 时会遇到报错：
 
 
+	dyld: Library not loaded: @rpath/CXUIKit.framework/CXUIKit
+	  Referenced from: .../TestBlock.app/TestBlock
+	  Reason: image not found
+
+Embedded Binaries 的含义可以这样理解：在 Build 时需要拷贝进 App Bundle 里的库。这时相对 Apple 官方提供的那些 Cocoa Framework(Foundation.framework, UIKit.framework) 而言的，官方提供的 Framework 是在系统中就包含的，不需要我们拷贝到 App Bundle 里，而我们自己开发的 Framework 则需要，即通过在 Embedded Binaries 添加它们来实现。
 
 
+##编译各架构通用的 Framework
+
+在上面一节中，我们已经看到了如何在一个测试项目中使用独立的 Framework 的流程。但现在出现了一个问题：当我们在 TestCXUIKit 项目中把程序的编译目标改为 iOS Device 时，报错了。
+
+![image](../../images/create-a-framework/test-framework-platform-error.png)
+
+报错信息：
+
+	Undefined symbols for architecture armv7:
+	  "_OBJC_CLASS_$_CXTextField", referenced from:
+	      objc-class-ref in CXViewController.o
+	ld: symbol(s) not found for architecture armv7
+	clang: error: linker command failed with exit code 1 (use -v to see invocation)
+
+这是因为我们之前拷贝过来的 CXUIKit.framework 文件是编译给模拟器用的，只支持模拟器所在的 PC 的架构 x86_64，而不针对所有平台。
+
+这里插入一点小知识：如何查看 Framework 支持哪些平台？方式如下：
+
+	$ lipo -info CXUIKit.framework/CXUIKit 
+	Architectures in the fat file: CXUIKit.framework/CXUIKit are: x86_64
+
+Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支持的平台自然不一样。
+
+那现在要在真机设备上运行 TestCXUIKit 程序要怎么办呢？一个办法是把编译给真机用的 CXUIKit.framework 文件拿过来替换掉当前的这个，但是这样一来，当在不同平台之间切换时就太麻烦了。另外一个办法就是我们接下来要讲的**编译各架构通用的 Framework**。
+
+1）在 CXUIKit 项目中创建 Aggregate Target，路径为 File -> New -> Targets... -> Aggregate。命名 CXUIKit-Universal。
+
+2）在 Targets -> CXUIKit-Universal -> Target Dependencies 中添加 CXUIKit 依赖项，这样使得在编译 CXUIKit-Universal 的时候会先走正常流程编译 CXUIKit.framework。
+
+3）在 Targets -> CXUIKit-Universal -> Run Script 中添加执行脚本的命令 `/${PROJECT_DIR}/CXUIKit/ios-build-framework-script.sh`。效果如图：
+
+![image](../../images/create-a-framework/add-aggregate.png)
+
+对应的 ios-build-framework-script.sh 脚本内容为：
+
+	set -e
+	set +u
+	
+	# Avoid recursively calling this script.
+	if [[ $SF_MASTER_SCRIPT_RUNNING ]]
+	then
+	exit 0
+	fi
+	set -u
+	export SF_MASTER_SCRIPT_RUNNING=1
+	
+	# Constants.
+	SF_TARGET_NAME=${PROJECT_NAME}
+	UNIVERSAL_OUTPUTFOLDER=${BUILD_DIR}/${CONFIGURATION}-universal
+	
+	# Take build target.
+	if [[ "$SDK_NAME" =~ ([A-Za-z]+) ]]
+	then
+	SF_SDK_PLATFORM=${BASH_REMATCH[1]}
+	else
+	echo "Could not find platform name from SDK_NAME: $SDK_NAME"
+	exit 1
+	fi
+	
+	if [[ "$SF_SDK_PLATFORM" = "iphoneos" ]]
+	then
+	echo "Please choose iPhone simulator as the build target."
+	exit 1
+	fi
+	
+	IPHONE_DEVICE_BUILD_DIR=${BUILD_DIR}/${CONFIGURATION}-iphoneos
+	
+	# Build the other (non-simulator) platform.
+	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}" CONFIGURATION_BUILD_DIR="${IPHONE_DEVICE_BUILD_DIR}/arm64" SYMROOT="${SYMROOT}" ARCHS='arm64' VALID_ARCHS='arm64' $ACTION
+	
+	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}"  CONFIGURATION_BUILD_DIR="${IPHONE_DEVICE_BUILD_DIR}/armv7" SYMROOT="${SYMROOT}" ARCHS='armv7 armv7s' VALID_ARCHS='armv7 armv7s' $ACTION
+	
+	# Copy the framework structure to the universal folder (clean it first).
+	rm -rf "${UNIVERSAL_OUTPUTFOLDER}"
+	mkdir -p "${UNIVERSAL_OUTPUTFOLDER}"
+	cp -R "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${PROJECT_NAME}.framework" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework"
+	
+	# Smash them together to combine all architectures.
+	lipo -create  "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/arm64/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/armv7/${PROJECT_NAME}.framework/${PROJECT_NAME}" -output "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/${PROJECT_NAME}"
+	
+	# Open the universal folder.
+	open "${UNIVERSAL_OUTPUTFOLDER}"
 
 
+这个脚本大致的意思是：首先，需要你设置 Framework 项目的编译目标为模拟器，否则脚本不能成功执行完，这样是为了先走正常流程先编译出支持模拟器的包。脚本执行的过程中，会根据情况再编译出支持其他平台(non-simulator: arm64, armv7, armv7s)的包，然后把这些包和支持模拟器的包(正常编译的过程中打出来的)用 lipo 工具合并起来，从而打出一个支持各个平台的通用的 Framwork。最后会弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
 
+以上便是编译各架构通用的 Framework 的流程。
+
+这里回顾上面提到的把 CXUIKit Framework 项目作为子项目的 CXUIKitDemo App 项目。上面的这个编译通用 Framework 的流程对于 CXUIKitDemo App 项目是没有影响的，CXUIKitDemo App 项目的 Target Dependencies 仍然是 CXUIKit Framework 项目的 CXUIKit 这个 target，跟 CXUIKit-Universal 这个 Aggregate Target 是无关的。并且，CXUIKitDemo App 在编译执行时选择目标为模拟器或者 iOS 设备，CXUIKit Framework 都会为其编译出对应架构的 Framework 从而保证其引用正确的 CXUIKit.framework。
+
+
+##编译静态库
+
+动态 Framework 毫无疑问是我们优先考虑的代码打包方式，但是为了兼容一些低版本系统对动态库的限制，我们有时候还是需要打包静态库来使用，我们可以通过下面几步来实现：
+
+1）在 Xcode 中 Targets -> CXUIKit -> Build Settings 下设置 Mach-O Type 值为 Static Library。这样你就可以编译出静态库了。你可以比较一下动态方式和静态方式编译出来的二进制文件的大小，它们是不一样的。
+
+![image](../../images/create-a-framework/framework-static.png)
+
+2）此外，在使用 CXUIKit 库的测试项目 TestCXUIKit App 中的 Targets -> TestUIKit -> General -> Embedded Binaries 中就可以去掉 CXUIKit.framework 了。
+
+
+##参考
+
+- [Framework vs Library (Cocoa, iOS)][3]
+- [iOS 静态库、动态库与 Framework][4]
+- [How to Create a Framework for iOS 8 on Xcode 6][5]
 
 
 
@@ -83,3 +239,5 @@ Framework 是 Mac OS/iOS 平台用来打包代码的一种方式，它可以将�
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/create-a-framework/
 [3]: http://www.knowstack.com/framework-vs-library-cocoa-ios/
+[4]: http://skyline75489.github.io/post/2015-8-14_ios_static_dynamic_framework_learning.html
+[5]: http://insert.io/framework-ios8-xcode6/

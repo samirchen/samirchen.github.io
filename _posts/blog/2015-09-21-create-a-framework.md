@@ -73,17 +73,17 @@ Framework 是 Mac OS/iOS 平台用来打包代码的一种方式，它可以将�
 
 在上节我们通过添加子项目的方式实现能够同时开发和测试 CXUIKit Framework 的目的，但是在实际使用中，Framework 通常是单独拿出来提供给其他开发者使用的，所以这里讲讲这种方式。
 
-1）在 Xcode 中，File -> New -> Project -> Application -> Single View Application 再创建一个测试 Framework 的 Test App：TestCXUIKit。
+1）在 Xcode 中，File -> New -> Project -> Application -> Single View Application 再创建一个测试 Framework 的 Test App：TestUIKit。
 
 2）在 CXUIKit 项目中，Product -> CXUIKit.framework -> Show in finder 来找到打包好的 CXUIKit.framework 文件。
 
 ![image](../../images/create-a-framework/get-framework.png)
 
-由于我们的测试项目 TestCXUIKit 是运行在模拟器上，所以我们选择 Debug-iphonesimulator 目录下面的 CXUIKit.framework 文件。
+由于我们的测试项目 TestUIKit 是运行在模拟器上，所以我们选择 Debug-iphonesimulator 目录下面的 CXUIKit.framework 文件。
 
 ![image](../../images/create-a-framework/get-framework-2.png)
 
-3）把 CXUIKit.framework 拷贝和添加到 TestCXUIKit 项目中。确保如图在 Targets -> TestUIKit -> General -> Embedded Binaries & Linked Frameworks and Libraries 中都添加了 CXUIKit.framework。
+3）把 CXUIKit.framework 拷贝和添加到 TestUIKit 项目中。确保如图在 Targets -> TestUIKit -> General -> Embedded Binaries & Linked Frameworks and Libraries 中都添加了 CXUIKit.framework。
 
 ![image](../../images/create-a-framework/test-framework-add.png)
 
@@ -127,7 +127,7 @@ Embedded Binaries 的含义可以这样理解：在 Build 时需要拷贝进 App
 
 ##编译各架构通用的 Framework
 
-在上面一节中，我们已经看到了如何在一个测试项目中使用独立的 Framework 的流程。但现在出现了一个问题：当我们在 TestCXUIKit 项目中把程序的编译目标改为 iOS Device 时，报错了。
+在上面一节中，我们已经看到了如何在一个测试项目中使用独立的 Framework 的流程。但现在出现了一个问题：当我们在 TestUIKit 项目中把程序的编译目标改为 iOS Device 时，报错了。
 
 ![image](../../images/create-a-framework/test-framework-platform-error.png)
 
@@ -148,7 +148,7 @@ Embedded Binaries 的含义可以这样理解：在 Build 时需要拷贝进 App
 
 Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支持的平台自然不一样。
 
-那现在要在真机设备上运行 TestCXUIKit 程序要怎么办呢？一个办法是把编译给真机用的 CXUIKit.framework 文件拿过来替换掉当前的这个，但是这样一来，当在不同平台之间切换时就太麻烦了。另外一个办法就是我们接下来要讲的**编译各架构通用的 Framework**。
+那现在要在真机设备上运行 TestUIKit 程序要怎么办呢？一个办法是把编译给真机用的 CXUIKit.framework 文件拿过来替换掉当前的这个，但是这样一来，当在不同平台之间切换时就太麻烦了。另外一个办法就是我们接下来要讲的**编译各架构通用的 Framework**。
 
 1）在 CXUIKit 项目中创建 Aggregate Target，路径为 File -> New -> Targets... -> Aggregate。命名 CXUIKit-Universal。
 
@@ -226,7 +226,7 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 
 ![image](../../images/create-a-framework/framework-static.png)
 
-2）此外，在使用 CXUIKit 库的测试项目 TestCXUIKit App 中的 Targets -> TestUIKit -> General -> Embedded Binaries 中就可以去掉 CXUIKit.framework 了。
+2）此外，在使用 CXUIKit 库的测试项目 TestUIKit App 中的 Targets -> TestUIKit -> General -> Embedded Binaries 中就可以去掉 CXUIKit.framework 了。
 
 
 ##参考

@@ -211,9 +211,11 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 
 这个脚本大致的意思是：首先，需要你设置 Framework 项目的编译目标为模拟器，否则脚本不能成功执行完，这样是为了先走正常流程先编译出支持模拟器的包。脚本执行的过程中，会根据情况再编译出支持其他平台(non-simulator: arm64, armv7, armv7s)的包，然后把这些包和支持模拟器的包(正常编译的过程中打出来的)用 lipo 工具合并起来，从而打出一个支持各个平台的通用的 Framwork。最后会弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
 
-以上便是编译各架构通用的 Framework 的流程。
+以上便是编译各架构通用的 Framework 的流程。当你需要提供出一个独立的并且通用的 CXUIKit.framework 时，在 CXUIKit 这个 Framework 项目中选择 CXUIKit-Universal -> iPhone Simulator 编译即可。
 
-这里回顾上面提到的把 CXUIKit Framework 项目作为子项目的 CXUIKitDemo App 项目。上面的这个编译通用 Framework 的流程对于 CXUIKitDemo App 项目是没有影响的，CXUIKitDemo App 项目的 Target Dependencies 仍然是 CXUIKit Framework 项目的 CXUIKit 这个 target，跟 CXUIKit-Universal 这个 Aggregate Target 是无关的。并且，CXUIKitDemo App 在编译执行时选择目标为模拟器或者 iOS 设备，CXUIKit Framework 都会为其编译出对应架构的 Framework 从而保证其引用正确的 CXUIKit.framework。
+![image](../../images/create-a-framework/build-universal-framework.png)
+
+接下来回顾一下上面提到的把 CXUIKit Framework 项目作为子项目的 CXUIKitDemo App 项目。上面的这个编译通用 Framework 的流程对于 CXUIKitDemo App 项目是没有影响的，CXUIKitDemo App 项目的 Target Dependencies 仍然是 CXUIKit Framework 项目的 CXUIKit 这个 target，跟 CXUIKit-Universal 这个 Aggregate Target 是无关的。并且，CXUIKitDemo App 在编译执行时选择目标为模拟器或者 iOS 设备，CXUIKit Framework 都会为其编译出对应架构的 Framework 从而保证其引用正确的 CXUIKit.framework。
 
 
 ##编译静态库

@@ -218,6 +218,56 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 接下来回顾一下上面提到的把 CXUIKit Framework 项目作为子项目的 CXUIKitDemo App 项目。上面的这个编译通用 Framework 的流程对于 CXUIKitDemo App 项目是没有影响的，CXUIKitDemo App 项目的 Target Dependencies 仍然是 CXUIKit Framework 项目的 CXUIKit 这个 target，跟 CXUIKit-Universal 这个 Aggregate Target 是无关的。并且，CXUIKitDemo App 在编译执行时选择目标为模拟器或者 iOS 设备，CXUIKit Framework 都会为其编译出对应架构的 Framework 从而保证其引用正确的 CXUIKit.framework。
 
 
+###更新打包脚本
+更新后的打包脚本不再依赖编译时选中的 Target，并支持所有平台（i386/x86_64/armv7/armv7s/arm64)。也就是说，不管你编译时选中 Device 还是 Simulator，都会为你编译出支持所有平台的包。
+
+	set -e
+	set +u
+
+	### Avoid recursively calling this script.
+	if [[ $SF_MASTER_SCRIPT_RUNNING ]]
+	then
+	exit 0
+	fi
+	set -u
+	export SF_MASTER_SCRIPT_RUNNING=1
+
+	### Constants.
+	SF_TARGET_NAME=${PROJECT_NAME}
+	UNIVERSAL_OUTPUTFOLDER=${BUILD_DIR}/${CONFIGURATION}-universal
+	IPHONE_DEVICE_BUILD_DIR=${BUILD_DIR}/${CONFIGURATION}-iphoneos
+	IPHONE_SIMULATOR_BUILD_DIR=${BUILD_DIR}/${CONFIGURATION}-iphonesimulator
+
+	### Take build target.
+	if [[ "$SDK_NAME" =~ ([A-Za-z]+) ]]
+	then
+	SF_SDK_PLATFORM=${BASH_REMATCH[1]} # iphoneos or iphonesimulator.
+	else
+	echo "Could not find platform name from SDK_NAME: $SDK_NAME"
+	exit 1
+	fi
+
+	### Build simulator platform. (i386, x86_64)
+	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphonesimulator BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}" CONFIGURATION_BUILD_DIR="${IPHONE_SIMULATOR_BUILD_DIR}/i386" SYMROOT="${SYMROOT}" ARCHS='i386' VALID_ARCHS='i386' $ACTION
+
+	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphonesimulator BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}" CONFIGURATION_BUILD_DIR="${IPHONE_SIMULATOR_BUILD_DIR}/x86_64" SYMROOT="${SYMROOT}" ARCHS='x86_64' VALID_ARCHS='x86_64' $ACTION
+
+	### Build device platform. (arm64, armv7)
+	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}" CONFIGURATION_BUILD_DIR="${IPHONE_DEVICE_BUILD_DIR}/arm64" SYMROOT="${SYMROOT}" ARCHS='arm64' VALID_ARCHS='arm64' $ACTION
+
+	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}"  CONFIGURATION_BUILD_DIR="${IPHONE_DEVICE_BUILD_DIR}/armv7" SYMROOT="${SYMROOT}" ARCHS='armv7 armv7s' VALID_ARCHS='armv7 armv7s' $ACTION
+
+	### Copy the framework structure to the universal folder (clean it first).
+	rm -rf "${UNIVERSAL_OUTPUTFOLDER}"
+	mkdir -p "${UNIVERSAL_OUTPUTFOLDER}"
+	cp -R "${BUILD_DIR}/${CONFIGURATION}-${SF_SDK_PLATFORM}/${PROJECT_NAME}.framework" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework"
+
+	### Smash them together to combine all architectures.
+	lipo -create  "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/i386/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/x86_64/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/arm64/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/armv7/${PROJECT_NAME}.framework/${PROJECT_NAME}" -output "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/${PROJECT_NAME}"
+
+	### Open the universal folder.
+	open "${UNIVERSAL_OUTPUTFOLDER}"
+
 ##编译静态库
 
 动态 Framework 毫无疑问是我们优先考虑的代码打包方式，但是为了兼容一些低版本系统对动态库的限制，我们有时候还是需要打包静态库来使用，我们可以通过下面几步来实现：

@@ -16,7 +16,7 @@ Framework 是 Mac OS/iOS 平台用来打包代码的一种方式，它可以将�
 
 动态库的常见形式包括：Windows 下的 `.dll` 文件，Linux 下的 `.so` 文件，Mac 下的 `.dylib` 文件。与静态库不同，动态库在编译时并不会被拷贝到目标程序中，目标程序中只会存储指向动态库的引用。等到程序运行时，动态库才会被真正加载进来。这样做的**好处**是不需要拷贝库代码到目标程序中，不会增大目标程序的体积，而且同一份库可以被多个程序使用（因此动态库也被叫做共享库）。此外，运行时才载入的特征也使得我们可以随时对动态库进行替换，而不需要重新编译代码，这点对开发者来说具有很大的吸引力。动态库的**缺点**主要是在载入时会需要一些性能消耗，而且动态库也使得目标程序需要依赖于外部环境，当目标程序依赖的动态库在外部环境中缺失或版本不符时，就会导致程序执行出错。
 
-回过头来再说 Framework，它其实就是一种动态链接库，只不过它除了打包代码外还能打包资源文件。在 iOS 8 发布时，苹果开放了对动态 Framework 的支持，这应该是苹果为支持 Extension 这一特性而做出的选择（Extension 和 App 是两个分开的可执行文件，它们之间共享代码，所以需要 Framework 支持）。但是这种动态 Framework 和系统自带的 Framework 还是有区别的，系统的 Framework 是不需要我们拷贝到 App 里的，但是我们自己的 Framework 还是需要拷贝到 App 里的。此外，虽然可以使用动态 Framework 了，但是从服务器动态更新动态库的做法在 iOS 上是不被苹果支持的，所以是无法实现的，因为 Sandbox 会验证动态库的签名，是从服务器加载的动态库是无法签名的。
+回过头来再说 Framework，它其实就是一种动态链接库，只不过它除了打包代码外还能打包资源文件。在 iOS 8 发布时，苹果开放了对动态 Framework 的支持，这应该是苹果为支持 Extension 这一特性而做出的选择（Extension 和 App 是两个分开的可执行文件，它们之间共享代码，所以需要 Framework 支持）。但是这种动态 Framework 和系统自带的 Framework 还是有区别的，系统的 Framework 是不需要我们拷贝到 App 里的，但是我们自己的 Framework 还是需要拷贝到 App 里的，因此这种 Framework 也叫做 Embedded Framework。可以使用动态 Framework 了，从服务器动态更新动态库的想法就显得自然而然了，但是在 iOS 上这样的做法是不被苹果支持的，会有被拒的风险。
 
 如我们所知，跟着 iOS 8 和 Xcode 6 一起发布的还有 Swift，现在 Swift 是不支持静态库的，只能支持动态 Framework。造成这个问题的原因主要是 Swift 的 Runtime 没有被包含在 iOS 系统中，而是会打包进 App 中（这也是造成 Swift App 体积大的原因），静态库会导致最终的目标程序中包含重复的 Runtime。同时拷贝 Runtime 这种做法也会导致在纯 Objective-C 的项目中使用 Swift 库出现问题。苹果声称等到 Swift 的 Runtime 稳定之后会被加入到系统当中，到时候这个限制就会被去除了。
 
@@ -162,67 +162,6 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 
 	set -e
 	set +u
-	
-	# Avoid recursively calling this script.
-	if [[ $SF_MASTER_SCRIPT_RUNNING ]]
-	then
-	exit 0
-	fi
-	set -u
-	export SF_MASTER_SCRIPT_RUNNING=1
-	
-	# Constants.
-	SF_TARGET_NAME=${PROJECT_NAME}
-	UNIVERSAL_OUTPUTFOLDER=${BUILD_DIR}/${CONFIGURATION}-universal
-	
-	# Take build target.
-	if [[ "$SDK_NAME" =~ ([A-Za-z]+) ]]
-	then
-	SF_SDK_PLATFORM=${BASH_REMATCH[1]}
-	else
-	echo "Could not find platform name from SDK_NAME: $SDK_NAME"
-	exit 1
-	fi
-	
-	if [[ "$SF_SDK_PLATFORM" = "iphoneos" ]]
-	then
-	echo "Please choose iPhone simulator as the build target."
-	exit 1
-	fi
-	
-	IPHONE_DEVICE_BUILD_DIR=${BUILD_DIR}/${CONFIGURATION}-iphoneos
-	
-	# Build the other (non-simulator) platform.
-	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}" CONFIGURATION_BUILD_DIR="${IPHONE_DEVICE_BUILD_DIR}/arm64" SYMROOT="${SYMROOT}" ARCHS='arm64' VALID_ARCHS='arm64' $ACTION
-	
-	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}"  CONFIGURATION_BUILD_DIR="${IPHONE_DEVICE_BUILD_DIR}/armv7" SYMROOT="${SYMROOT}" ARCHS='armv7 armv7s' VALID_ARCHS='armv7 armv7s' $ACTION
-	
-	# Copy the framework structure to the universal folder (clean it first).
-	rm -rf "${UNIVERSAL_OUTPUTFOLDER}"
-	mkdir -p "${UNIVERSAL_OUTPUTFOLDER}"
-	cp -R "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${PROJECT_NAME}.framework" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework"
-	
-	# Smash them together to combine all architectures.
-	lipo -create  "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/arm64/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/armv7/${PROJECT_NAME}.framework/${PROJECT_NAME}" -output "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/${PROJECT_NAME}"
-	
-	# Open the universal folder.
-	open "${UNIVERSAL_OUTPUTFOLDER}"
-
-
-这个脚本大致的意思是：首先，需要你设置 Framework 项目的编译目标为模拟器，否则脚本不能成功执行完，这样是为了先走正常流程先编译出支持模拟器的包。脚本执行的过程中，会根据情况再编译出支持其他平台(non-simulator: arm64, armv7, armv7s)的包，然后把这些包和支持模拟器的包(正常编译的过程中打出来的)用 lipo 工具合并起来，从而打出一个支持各个平台的通用的 Framwork。最后会弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
-
-以上便是编译各架构通用的 Framework 的流程。当你需要提供出一个独立的并且通用的 CXUIKit.framework 时，在 CXUIKit 这个 Framework 项目中选择 CXUIKit-Universal -> iPhone Simulator 编译即可。
-
-![image](../../images/create-a-framework/build-universal-framework.png)
-
-接下来回顾一下上面提到的把 CXUIKit Framework 项目作为子项目的 CXUIKitDemo App 项目。上面的这个编译通用 Framework 的流程对于 CXUIKitDemo App 项目是没有影响的，CXUIKitDemo App 项目的 Target Dependencies 仍然是 CXUIKit Framework 项目的 CXUIKit 这个 target，跟 CXUIKit-Universal 这个 Aggregate Target 是无关的。并且，CXUIKitDemo App 在编译执行时选择目标为模拟器或者 iOS 设备，CXUIKit Framework 都会为其编译出对应架构的 Framework 从而保证其引用正确的 CXUIKit.framework。
-
-
-###更新打包脚本
-更新后的打包脚本不再依赖编译时选中的 Target，并支持所有平台（i386/x86_64/armv7/armv7s/arm64)。也就是说，不管你编译时选中 Device 还是 Simulator，都会为你编译出支持所有平台的包。
-
-	set -e
-	set +u
 
 	### Avoid recursively calling this script.
 	if [[ $SF_MASTER_SCRIPT_RUNNING ]]
@@ -267,6 +206,21 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 
 	### Open the universal folder.
 	open "${UNIVERSAL_OUTPUTFOLDER}"
+
+
+这个脚本大致的意思是：首先，Xcode 会根据选中的 Target 编译出对应的包。在脚本执行的过程中，会依次编译出支持 i386、x86_64、arm64、armv7、armv7s 的包，然后基于 Xcode 打出的包把它们用 lipo 工具合并起来，从而打出一个支持各个平台的通用的 Framwork。最后会弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
+
+以上便是编译各架构通用的 Framework 的流程。当你需要提供出一个独立的并且通用的 CXUIKit.framework 时，在 CXUIKit 这个 Framework 项目中选择 CXUIKit-Universal -> iPhone Simulator 编译即可。
+
+![image](../../images/create-a-framework/build-universal-framework.png)
+
+接下来回顾一下上面提到的把 CXUIKit Framework 项目作为子项目的 CXUIKitDemo App 项目。上面的这个编译通用 Framework 的流程对于 CXUIKitDemo App 项目是没有影响的，CXUIKitDemo App 项目的 Target Dependencies 仍然是 CXUIKit Framework 项目的 CXUIKit 这个 target，跟 CXUIKit-Universal 这个 Aggregate Target 是无关的。并且，CXUIKitDemo App 在编译执行时选择目标为模拟器或者 iOS 设备，CXUIKit Framework 都会为其编译出对应架构的 Framework 从而保证其引用正确的 CXUIKit.framework。
+
+
+###更新打包脚本
+更新后的打包脚本不再依赖编译时选中的 Target，并支持所有平台（i386/x86_64/armv7/armv7s/arm64)。也就是说，不管你编译时选中 Device 还是 Simulator，都会为你编译出支持所有平台的包。
+
+
 
 ##编译静态库
 

@@ -217,9 +217,6 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 接下来回顾一下上面提到的把 CXUIKit Framework 项目作为子项目的 CXUIKitDemo App 项目。上面的这个编译通用 Framework 的流程对于 CXUIKitDemo App 项目是没有影响的，CXUIKitDemo App 项目的 Target Dependencies 仍然是 CXUIKit Framework 项目的 CXUIKit 这个 target，跟 CXUIKit-Universal 这个 Aggregate Target 是无关的。并且，CXUIKitDemo App 在编译执行时选择目标为模拟器或者 iOS 设备，CXUIKit Framework 都会为其编译出对应架构的 Framework 从而保证其引用正确的 CXUIKit.framework。
 
 
-###更新打包脚本
-更新后的打包脚本不再依赖编译时选中的 Target，并支持所有平台（i386/x86_64/armv7/armv7s/arm64)。也就是说，不管你编译时选中 Device 还是 Simulator，都会为你编译出支持所有平台的包。
-
 
 
 ##编译静态库

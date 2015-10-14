@@ -289,7 +289,7 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 
 在实际操作的过程中我遇到了一些问题，小结一下：
 
-- 对于一种 SDK (iphonesimulator 或 iphoneos)，连续调用 xcodebuild 时，后面的 build 过程中会删除前面 build 过程中生成的 Headers、Modules 等目录及文件。这个可以在 Xcode 的 Report Navigator 里看 Build Log 里的 Remove stale build products 后面的内容可知. 所以这里拷贝最后一个 build 的 arm64/CXUIKit.framework 的结构。
+- 对于一种 SDK (iphonesimulator 或 iphoneos)，连续调用 xcodebuild 时，后面的 build 过程中会删除前面 build 过程中生成的 Headers、Modules 等目录及文件。这个可以在 Xcode 的 Report Navigator 里看 Build Log 里的 Remove stale build products 后面的内容可知。所以这里拷贝最后一个 build 的 arm64/CXUIKit.framework 的结构。
 - 在调整 CXUIKit.framework 的包结构为常见的标准结构的过程中，需要增加有一个 Symbolic Link：`Info.plist -> Versions/Current/Resources/Info.plist`，否则在提供给其他项目使用时会遇到错误：`The operation couldn’t be completed. (LaunchServicesError error 0.)`。参考：[Application with private framework “could not inspect application package” in Xcode 6. Missing framework info.plist](http://stackoverflow.com/questions/26001321/application-with-private-framework-could-not-inspect-application-package-in-xc)。
 
 以上便是编译各架构通用的 Framework 的流程。当你需要提供出一个独立的并且通用的 CXUIKit.framework 时，在 CXUIKit 这个 Framework 项目中选择 CXUIKit-Universal -> iPhone Simulator 编译即可。

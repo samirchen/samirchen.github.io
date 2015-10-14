@@ -421,7 +421,7 @@ CALayer 有一个属性是 `shouldRasterize` 通过设置这个属性为 YES 可
 ###优化 UITableView
 UITableView 是我们最常用来展示数据的控件之一，并且通常需要 UITableView 在承载较多内容的同时保证交互的流畅性，对 UITableView 的性能优化是我们开发应用程序必备的技巧之一。
 
-在前文「使用复用机制」一节，已经提到了 UITableView 的复用机制。现在就来看看 UITableView 在复用时最主要的两个回调方法：`- [UITableView tableView:cellForRowAtIndexPath:]` 和 `- [UITableView tableView:heightForRowAtIndexPath:]`。UITableView 是继承自 UIScrollView，所以在渲染的过程中它会先确定它的 contentSize 及每个 Cell 的位置，然后才会把复用的 Cell 放置到对应的位置。比如现在一共有 50 个 Cell，当前屏幕上显示 5 个。那么在第一次创建或 reloadData 的时候， UITableView 会先调用 50 次 `- [UITableView tableView:cellForRowAtIndexPath:]` 确定 contentSize 及每个 Cell 的位置，然后再调用 5 次 `- [UITableView tableView:heightForRowAtIndexPath:]` 来渲染当前屏幕的 Cell。在滑动屏幕的时候，每当一个 Cell 进入屏幕时，都需要调用一次 `- [UITableView tableView:cellForRowAtIndexPath:]` 和 `- [UITableView tableView:heightForRowAtIndexPath:]` 方法。
+在前文「使用复用机制」一节，已经提到了 UITableView 的复用机制。现在就来看看 UITableView 在复用时最主要的两个回调方法：`- [UITableView tableView:cellForRowAtIndexPath:]` 和 `- [UITableView tableView:heightForRowAtIndexPath:]`。UITableView 是继承自 UIScrollView，所以在渲染的过程中它会先确定它的 contentSize 及每个 Cell 的位置，然后才会把复用的 Cell 放置到对应的位置。比如现在一共有 50 个 Cell，当前屏幕上显示 5 个。那么在第一次创建或 reloadData 的时候， UITableView 会先调用 50 次 `- [UITableView tableView:heightForRowAtIndexPath:]` 确定 contentSize 及每个 Cell 的位置，然后再调用 5 次 `- [UITableView tableView:cellForRowAtIndexPath:]` 来渲染当前屏幕的 Cell。在滑动屏幕的时候，每当一个 Cell 进入屏幕时，都需要调用一次 `- [UITableView tableView:cellForRowAtIndexPath:]` 和 `- [UITableView tableView:heightForRowAtIndexPath:]` 方法。
 
 了解了 UITableView 的复用机制以及相关回调方法的调用次序，这里就对 UITableView 的性能优化方案做一个总结：
 

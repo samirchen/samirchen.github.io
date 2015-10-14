@@ -164,51 +164,127 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 	set +u
 
 	### Avoid recursively calling this script.
-	if [[ $SF_MASTER_SCRIPT_RUNNING ]]
+	if [[ $UF_MASTER_SCRIPT_RUNNING ]]
 	then
 	exit 0
 	fi
 	set -u
-	export SF_MASTER_SCRIPT_RUNNING=1
+	export UF_MASTER_SCRIPT_RUNNING=1
 
 	### Constants.
-	SF_TARGET_NAME=${PROJECT_NAME}
+	UF_TARGET_NAME=${PROJECT_NAME}
+	FRAMEWORK_VERSION="A"
 	UNIVERSAL_OUTPUTFOLDER=${BUILD_DIR}/${CONFIGURATION}-universal
 	IPHONE_DEVICE_BUILD_DIR=${BUILD_DIR}/${CONFIGURATION}-iphoneos
 	IPHONE_SIMULATOR_BUILD_DIR=${BUILD_DIR}/${CONFIGURATION}-iphonesimulator
 
+
+	### Functions
+
+	## List files in the specified directory, storing to the specified array.
+	#
+	# @param $1 The path to list
+	# @param $2 The name of the array to fill
+	#
+	##
+	list_files ()
+	{
+	    filelist=$(ls "$1")
+	    while read line
+	    do
+	        eval "$2[\${#$2[*]}]=\"\$line\""
+	    done <<< "$filelist"
+	}
+
 	### Take build target.
 	if [[ "$SDK_NAME" =~ ([A-Za-z]+) ]]
 	then
-	SF_SDK_PLATFORM=${BASH_REMATCH[1]} # iphoneos or iphonesimulator.
+	SF_SDK_PLATFORM=${BASH_REMATCH[1]} # "iphoneos" or "iphonesimulator".
 	else
 	echo "Could not find platform name from SDK_NAME: $SDK_NAME"
 	exit 1
 	fi
 
+
 	### Build simulator platform. (i386, x86_64)
+	echo "========== Build Simulator Platform =========="
+	echo "===== Build Simulator Platform: i386 ====="
 	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphonesimulator BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}" CONFIGURATION_BUILD_DIR="${IPHONE_SIMULATOR_BUILD_DIR}/i386" SYMROOT="${SYMROOT}" ARCHS='i386' VALID_ARCHS='i386' $ACTION
 
+	echo "===== Build Simulator Platform: x86_64 ====="
 	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphonesimulator BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}" CONFIGURATION_BUILD_DIR="${IPHONE_SIMULATOR_BUILD_DIR}/x86_64" SYMROOT="${SYMROOT}" ARCHS='x86_64' VALID_ARCHS='x86_64' $ACTION
 
-	### Build device platform. (arm64, armv7)
-	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}" CONFIGURATION_BUILD_DIR="${IPHONE_DEVICE_BUILD_DIR}/arm64" SYMROOT="${SYMROOT}" ARCHS='arm64' VALID_ARCHS='arm64' $ACTION
 
+	### Build device platform. (armv7, arm64)
+	echo "========== Build Device Platform =========="
+	echo "===== Build Device Platform: armv7 ====="
 	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}"  CONFIGURATION_BUILD_DIR="${IPHONE_DEVICE_BUILD_DIR}/armv7" SYMROOT="${SYMROOT}" ARCHS='armv7 armv7s' VALID_ARCHS='armv7 armv7s' $ACTION
 
-	### Copy the framework structure to the universal folder (clean it first).
+	echo "===== Build Device Platform: arm64 ====="
+	xcodebuild -project "${PROJECT_FILE_PATH}" -target "${TARGET_NAME}" -configuration "${CONFIGURATION}" -sdk iphoneos BUILD_DIR="${BUILD_DIR}" OBJROOT="${OBJROOT}" BUILD_ROOT="${BUILD_ROOT}" CONFIGURATION_BUILD_DIR="${IPHONE_DEVICE_BUILD_DIR}/arm64" SYMROOT="${SYMROOT}" ARCHS='arm64' VALID_ARCHS='arm64' $ACTION
+
+
+
+
+	### Build device platform. (arm64, armv7)
+	echo "========== Build Universal Platform =========="
+	## Copy the framework structure to the universal folder (clean it first).
 	rm -rf "${UNIVERSAL_OUTPUTFOLDER}"
 	mkdir -p "${UNIVERSAL_OUTPUTFOLDER}"
-	cp -R "${BUILD_DIR}/${CONFIGURATION}-${SF_SDK_PLATFORM}/${PROJECT_NAME}.framework" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework"
+	## 对于一种 SDK (iphonesimulator 或 iphoneos)，连续调用 xcodebuild 时，后面的 build 过程中会删除前面 build 过程中生成的 Headers、Modules 等目录及文件。这个可以看 Build Log 里的 Remove stale build products. 所以这里拷贝最后一个 build 的 arm64 Framework 的结构。
+	# cp -R "${BUILD_DIR}/${CONFIGURATION}-${SF_SDK_PLATFORM}/${PROJECT_NAME}.framework" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework"
+	cp -R "${IPHONE_DEVICE_BUILD_DIR}/arm64/${PROJECT_NAME}.framework" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework"
 
 	### Smash them together to combine all architectures.
-	lipo -create  "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/i386/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/x86_64/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/arm64/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/armv7/${PROJECT_NAME}.framework/${PROJECT_NAME}" -output "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/${PROJECT_NAME}"
+	lipo -create  "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/i386/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphonesimulator/x86_64/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/armv7/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${BUILD_DIR}/${CONFIGURATION}-iphoneos/arm64/${PROJECT_NAME}.framework/${PROJECT_NAME}" -output "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/${PROJECT_NAME}"
+
+
+	### Create standard structure for framework.
+	#
+	# MyFramework.framework
+	# |-- MyFramework -> Versions/Current/MyFramework
+	# |-- Headers -> Versions/Current/Headers
+	# |-- Resources -> Versions/Current/Resources
+	# |-- Info.plist -> Versions/Current/Resources/Info.plist
+	# `-- Versions
+	#     |-- A
+	#     |   |-- MyFramework
+	#     |   |-- Headers
+	#     |   |   `-- MyFramework.h
+	#     |   `-- Resources
+	#     |       |-- Info.plist
+	#     |       |-- MyViewController.nib
+	#     |       `-- en.lproj
+	#     |           `-- InfoPlist.strings
+	#     `-- Current -> A
+	#
+	echo "========== Create Standard Structure =========="
+	mkdir -p "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Versions/${FRAMEWORK_VERSION}/"
+	mv "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/${PROJECT_NAME}" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Versions/${FRAMEWORK_VERSION}/"
+	mv "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Headers" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Versions/${FRAMEWORK_VERSION}/"
+	mkdir -p "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Resources"
+	declare -a UF_FILE_LIST
+	list_files "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/" UF_FILE_LIST
+	for file_name in "${UF_FILE_LIST}"
+	do
+		if [[ "${file_name}" == "Info.plist" ]] || [[ "${file_name}" =~ .*\.lproj$ ]]
+		then
+			mv "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/${file_name}" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Resources/"
+		fi
+	done
+	mv "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Resources" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Versions/${FRAMEWORK_VERSION}/"
+	ln -sfh "Versions/Current/Resources/Info.plist" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Info.plist"
+	ln -sfh "${FRAMEWORK_VERSION}" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Versions/Current"
+	ln -sfh "Versions/Current/${PROJECT_NAME}" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/${PROJECT_NAME}"
+	ln -sfh "Versions/Current/Headers" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Headers"
+	ln -sfh "Versions/Current/Resources" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Resources"
+
 
 	### Open the universal folder.
 	open "${UNIVERSAL_OUTPUTFOLDER}"
 
 
-这个脚本大致的意思是：首先，Xcode 会根据选中的 Target 编译出对应的包；接着，在脚本执行的过程中，会依次编译出支持 i386、x86_64、arm64、armv7、armv7s 的包，然后把各个包中的库文件通过 lipo 工具合并为一个支持各平台的通用库文件，再基于 Xcode 打出的包的结构和这个通用库文件生成一个支持各个平台的通用 Framwork；最后弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
+这个脚本大致的意思是：首先，Xcode 会根据选中的 Target 编译出对应的包；接着，在脚本执行的过程中，会依次编译出支持 i386、x86_64、arm64、armv7、armv7s 的包，然后把各个包中的库文件通过 lipo 工具合并为一个支持各平台的通用库文件，再基于 Xcode 打出的包的结构和这个通用库文件生成一个支持各个平台的通用 Framwork；然后，脚本尝试把通用 Framework 的文件结构调整为比较常见的标注 Framework 结构；最后弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
 
 以上便是编译各架构通用的 Framework 的流程。当你需要提供出一个独立的并且通用的 CXUIKit.framework 时，在 CXUIKit 这个 Framework 项目中选择 CXUIKit-Universal -> iPhone Simulator 编译即可。
 

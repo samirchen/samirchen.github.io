@@ -231,8 +231,7 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 	## Copy the framework structure to the universal folder (clean it first).
 	rm -rf "${UNIVERSAL_OUTPUTFOLDER}"
 	mkdir -p "${UNIVERSAL_OUTPUTFOLDER}"
-	## 对于一种 SDK (iphonesimulator 或 iphoneos)，连续调用 xcodebuild 时，后面的 build 过程中会删除前面 build 过程中生成的 Headers、Modules 等目录及文件。这个可以看 Build Log 里的 Remove stale build products. 所以这里拷贝最后一个 build 的 arm64 Framework 的结构。
-	# cp -R "${BUILD_DIR}/${CONFIGURATION}-${SF_SDK_PLATFORM}/${PROJECT_NAME}.framework" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework"
+	## Copy the last product files of xcodebuild command.
 	cp -R "${IPHONE_DEVICE_BUILD_DIR}/arm64/${PROJECT_NAME}.framework" "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework"
 
 	### Smash them together to combine all architectures.
@@ -240,6 +239,8 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 
 
 	### Create standard structure for framework.
+	#
+	# If we don't have "Info.plist -> Versions/Current/Resources/Info.plist", we may get error when use this framework.
 	#
 	# MyFramework.framework
 	# |-- MyFramework -> Versions/Current/MyFramework
@@ -284,7 +285,12 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 	open "${UNIVERSAL_OUTPUTFOLDER}"
 
 
-这个脚本大致的意思是：首先，Xcode 会根据选中的 Target 编译出对应的包；接着，在脚本执行的过程中，会依次编译出支持 i386、x86_64、arm64、armv7、armv7s 的包，然后把各个包中的库文件通过 lipo 工具合并为一个支持各平台的通用库文件，再基于 Xcode 打出的包的结构和这个通用库文件生成一个支持各个平台的通用 Framwork；然后，脚本尝试把通用 Framework 的文件结构调整为比较常见的标注 Framework 结构；最后弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
+这个脚本大致的意思是：首先，Xcode 会根据选中的 Target 编译出对应的包；接着，在脚本执行的过程中，会依次编译出支持 i386、x86_64、arm64、armv7、armv7s 的包，然后把各个包中的库文件通过 lipo 工具合并为一个支持各平台的通用库文件，再基于最后一个 xcodebuild 命令打出的包的结构(arm64/CXUIKit.framework)和这个通用库文件生成一个支持各个平台的通用 Framwork；然后，脚本尝试把通用 Framework 的文件结构调整为比较常见的标注 Framework 结构；最后弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
+
+在实际操作的过程中我遇到了一些问题，小结一下：
+
+- 对于一种 SDK (iphonesimulator 或 iphoneos)，连续调用 xcodebuild 时，后面的 build 过程中会删除前面 build 过程中生成的 Headers、Modules 等目录及文件。这个可以在 Xcode 的 Report Navigator 里看 Build Log 里的 Remove stale build products 后面的内容可知. 所以这里拷贝最后一个 build 的 arm64/CXUIKit.framework 的结构。
+- 在调整 CXUIKit.framework 的包结构为常见的标准结构的过程中，需要增加有一个 Symbolic Link：`Info.plist -> Versions/Current/Resources/Info.plist`，否则在提供给其他项目使用时会遇到错误：`The operation couldn’t be completed. (LaunchServicesError error 0.)`。参考：[Application with private framework “could not inspect application package” in Xcode 6. Missing framework info.plist](http://stackoverflow.com/questions/26001321/application-with-private-framework-could-not-inspect-application-package-in-xc)。
 
 以上便是编译各架构通用的 Framework 的流程。当你需要提供出一个独立的并且通用的 CXUIKit.framework 时，在 CXUIKit 这个 Framework 项目中选择 CXUIKit-Universal -> iPhone Simulator 编译即可。
 

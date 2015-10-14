@@ -208,7 +208,7 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 	open "${UNIVERSAL_OUTPUTFOLDER}"
 
 
-这个脚本大致的意思是：首先，Xcode 会根据选中的 Target 编译出对应的包。在脚本执行的过程中，会依次编译出支持 i386、x86_64、arm64、armv7、armv7s 的包，然后基于 Xcode 打出的包把它们用 lipo 工具合并起来，从而打出一个支持各个平台的通用的 Framwork。最后会弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
+这个脚本大致的意思是：首先，Xcode 会根据选中的 Target 编译出对应的包；接着，在脚本执行的过程中，会依次编译出支持 i386、x86_64、arm64、armv7、armv7s 的包，然后把各个包中的库文件通过 lipo 工具合并为一个支持各平台的通用库文件，再基于 Xcode 打出的包的结构和这个通用库文件生成一个支持各个平台的通用 Framwork；最后弹出存放这个通用 Framework 的文件夹。在我们这个 CXUIKit 项目中把打出来的通用的 CXUIKit.framework 文件拖到我们之前的 TestUIKit App 项目中发现不论在模拟器还是在 iOS 设备都可以正确执行了。
 
 以上便是编译各架构通用的 Framework 的流程。当你需要提供出一个独立的并且通用的 CXUIKit.framework 时，在 CXUIKit 这个 Framework 项目中选择 CXUIKit-Universal -> iPhone Simulator 编译即可。
 

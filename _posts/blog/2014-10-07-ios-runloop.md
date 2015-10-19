@@ -9,7 +9,7 @@ tag: iOS, runloop, input source, timer, NSPort
 文章的主要内容源自苹果的官方文档：[Run Loops][3]
 
 ##Run Loop概念
-Run Loop是和线程相关的基础框架的一部分。一个Run Loop就是一个**事件处理的循环**，用来不停地调度和协调接收到的各种事件。使用Run Loop的目的就是调度好线程让其有活干活，没活休息。
+通过某种设计设计，使得当一个线程运行的同时，还可以从其它线程里往它里面随意增加或去掉不同的计算任务，这就是 NSRunLoop 的初衷。Run Loop是和线程相关的基础框架的一部分。一个Run Loop就是一个**事件处理的循环**，用来不停地调度和协调接收到的各种事件。使用Run Loop的目的就是调度好线程让其有活干活，没活休息。
 
 Run Loop的管理**不是完全自动的**，所以需要我们自己设计线程代码在合适的时候去启动它并正确地响应输入事件。为此，Cocoa和Core Foundation提供了Run Loop Objects来帮助我们配置和管理线程的Run Loop，每个线程都有对应的Run Loop Objects。通常，在我们的代码里需要**提供while或for循环这些控制语句来驱动Run Loop**，在我们的循环中，我们使用Run Loop Objects来运行事件处理代码，它们响应接收到的事件并运行对应的处理代码。
 

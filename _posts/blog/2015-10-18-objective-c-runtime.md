@@ -1,7 +1,7 @@
 ---
 layout: post
 title: Objective-C 的 Runtime
-description: 介绍 Objective-C 中的 Runtime。
+description: 从类、对象、实例变量、属性、消息、方法等角度介绍了 Objective-C 中的 Runtime，并提供了实验代码和分析。
 category: blog
 tag: iOS, Objective-C, runtime
 ---
@@ -52,7 +52,7 @@ Objective-C 的 Runtime 为我们提供了很多运行时状态下跟类与对�
 - `void objc_disposeClassPair(Class cls)`，销毁类和对应的元类。
 
 
-上面罗列的函数只是一部分，在使用这些函数时，有时候需要注意一些细节信息和使用规范，这个可以查阅 [Objective-C Runtime Reference][5]。
+上面罗列的函数只是一部分，在使用这些函数时，有时候需要注意一些细节信息和使用规范，具体可以查阅 [Objective-C Runtime Reference][5]。
 
 ###类的数据结构
 上面的函数非常丰富，我们可以看出这些函数为我们提供了在运行时改变一个类的结构、属性、方法、协议等信息的能力。那这些函数背后所操作的数据结构是什么样的呢？这个其实可以在 `objc/runtime.h` 的源码中查到：
@@ -589,9 +589,9 @@ Objective-C 中的消息是直到运行时才绑定到具体的方法实现上�
 
 
 
-##运行时消息分发的代码示例
+###运行时消息分发的代码示例
 
-###Method Swizzling
+####Method Swizzling
 
 在前文中讲 Method 的数据结构时我们说到过，方法的数据结构中包含了 SEL 和 IMP。selector 相当于一个方法的 id；IMP 是方法的实现。这样分开的一个便利之处是 selector 和 IMP 之间的对应关系可以被改变。比如一个 IMP 可以有多个 selectors 指向它。而本节所讲的 Method Swizzling 的概念则是交换两个方法的实现，从而「狸猫换太子」。
 
@@ -675,7 +675,7 @@ ViewController.m
 ![image](../../images/objective-c-runtime/method-swizzling.png)
 
 
-###消息转发
+####消息转发
 
 当一个对象能接收一个消息时，就会走正常的方法调用流程。但如果一个对象无法接收指定消息时，又会发生什么事呢？默认情况下，如果是以 `[receiver message]` 的方式调用方法，如果 receiver 无法响应 message 消息时，编译器会报错。但如果是以 `performSelector…` 的形式来调用，则需要等到运行时才能确定 receiver 是否能接收 message 消息。如果不能，则程序崩溃。
 
@@ -698,7 +698,7 @@ ViewController.m
 - 第二步：备用接收者。
 - 第三步：完整转发。
 
-####第一步：动态方法解析
+#####第一步：动态方法解析
 
 对象在接收到未知的消息时，首先会调用所属类的类方法 `+resolveInstanceMethod:` 或者 `+resolveClassMethod:`，前者处理实例方法调用，后者处理类方法调用。我们可以它们里面用 `class_addMethod()` 加入异常处理的方法，不过前提是我们以及实现了处理方法。示例代码如下：
 
@@ -734,7 +734,7 @@ ViewController.m
 
 
 
-####第二步：备用接收者
+#####第二步：备用接收者
 
 如果在第一步还是无法处理消息，则 Runtime 会继续调以下方法：
 
@@ -807,7 +807,7 @@ ViewController.m
 
 这一步适用于当我们只想将消息转发到另一个能处理该消息的对象上的情况，它无法进一步对消息进行处理，比如：操作消息的参数和返回值。
 
-####第三步：完整转发
+#####第三步：完整转发
 
 如果`第二步：备用接收者`还是未能处理好消息，那么接下来只有启用完整的消息转发机制了，这时候会调用以下方法：
 
@@ -942,7 +942,7 @@ NSObject 的 `-forwardInvocation:` 方法实现只是简单调用了 `-doesNotRe
 	}
 
 
-##参考：
+##参考
 
 - [Objective-C Runtime Reference][5]
 - [Classes and Metaclasses][3]

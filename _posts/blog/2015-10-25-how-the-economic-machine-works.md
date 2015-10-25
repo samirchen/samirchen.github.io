@@ -36,7 +36,7 @@ tag: ecomomic, Ray Dalio
 
 这三股动力组合在一起即构成了作者所提出的一种经济模型。大致样子如图：
 
-![image](../../images/how-the-economic-machine-works/ecomonic-model.jpg
+![image](../../images/how-the-economic-machine-works/ecomonic-model.jpg)
 
 
 
@@ -125,7 +125,7 @@ tag: ecomomic, Ray Dalio
 - 经济缓慢恢复，长期债务周期进入通货再膨胀阶段。
 
 
-##三条经验法则：
+##三条经验法则
 
 - 不要让债务的增长速度超过收入。因为债务负担最重将把你压垮。
 - 不要让收入的增长速度超过生产率。因为这最终将使你失去竞争力。

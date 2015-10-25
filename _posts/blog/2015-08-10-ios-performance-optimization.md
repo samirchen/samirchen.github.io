@@ -505,6 +505,69 @@ NSAutoreleasePool 是用来管理一个自动释放内存池的机制。在我�
 需要注意的是，很多 web API 返回的时间戳是以**毫秒**为单位的，因为这更利于 Javascript 去处理，但是上面代码用到的方法中 NSTimeInterval 的单位是**秒**，所以当你传参的时候，记得先除以 1000。
 
 
+###IMP Caching
+在 Objective-C 的消息分发过程中，所有 `[receiver message:…]` 形式的方法调用最终都会被编译器转化为 `obj_msgSend(recevier, @selector(message), …)` 的形式调用。在运行时，Runtime 会去根据 selector 到对应方法列表中查找相应的 IMP 来调用，这是一个动态绑定的过程。为了加速消息的处理，Runtime 系统会缓存使用过的 selector 对应的 IMP 以便后面直接调用，这就是 IMP Caching。通过 IMP Caching 的方式，Rumtime 能够跳过 obj_msgSend 的过程直接调用方法的实现，从而提高方法调用效率。
+
+
+
+下面看段示例代码：
+
+	#define LOOP 1000000
+	#define START { clock_t start, end; start = clock();
+	#define END end = clock(); printf("Cost: %f ms\n", (double)(end - start) / CLOCKS_PER_SEC * 1000); }
+
+	- (NSDateFormatter *)dateFormatter:(NSString *)format {
+	     NSDateFormatter *dateFormatter = [[NSDateFormatter alloc] init];
+	    [dateFormatter setDateFormat:format];
+	    
+	    return dateFormatter;
+	}
+
+
+	- (void)testIMPCaching {
+	    [self normalCall];
+	    
+	    [self impCachingCall];
+	}
+
+	- (void)normalCall {
+	    START
+	   
+	    for (int32_t i = 0; i < LOOP; i++) {
+	        NSDateFormatter *d =[self dateFormatter:@"yyyy-MM-dd a HH:mm:ss EEEE"];
+	        d = nil;
+	    }
+
+	    END
+	    // Print: Cost: 1328.845000 ms
+	}
+
+	- (void)impCachingCall {
+	    START
+	    
+	    SEL sel = @selector(dateFormatter:);
+	    NSDateFormatter *(*imp)(id, SEL, id) = (NSDateFormatter *(*)(id, SEL, id)) [self methodForSelector:sel];
+	    
+	    for (int32_t i = 0; i < LOOP; i++) {
+	        NSDateFormatter *d = imp(self, sel, @"yyyy-MM-dd a HH:mm:ss EEEE");
+	        d = nil;
+	    }
+	    
+	    END
+	    // Print: Cost: 1130.200000 ms
+	}
+
+
+代码打印结果如下：
+
+	Cost: 1328.845000 ms
+	Cost: 1130.200000 ms
+
+可见相差并不太大，在 `impCachingCall` 中是直接手动做 IMP Caching 来跳过 obj_msgSend 调用方法的实现。`normalCall` 则是在 Runtime 通过系统自己的 IMP Caching 机制来运行。通常我们不需要做 IMP Caching，但是如果有时候哪怕一点点的速度提升也是你需要的，你可以考虑考虑这点。
+
+此外关于 Objective 运行时相关的知识，你可以看看这篇：[Objective-C 的 Runtime][4]
+
+
 参考：
 
 - [25 iOS App Performance Tips & Tricks][3]
@@ -517,3 +580,4 @@ NSAutoreleasePool 是用来管理一个自动释放内存池的机制。在我�
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/ios-performance-optimization/
 [3]: http://www.raywenderlich.com/31166/25-ios-app-performance-tips-tricks
+[4]: http://www.samirchen.com/objective-c-runtime

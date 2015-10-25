@@ -534,7 +534,7 @@ Runtime 中与成员变量和属性相关的函数有很多，这里列出一些
 
 	typedef id (*IMP)(id, SEL, ...); 
 
-IMP 其实就是 `implementation` 的缩写，表示方法实现的代码块地址，可以像 C 函数一样直接调用。通常情况下，我们都是通过 `[object method:parameter]` 或 `objc_msgSend()` 的方式调用方法或函数，然后 Runtime 去寻找消息匹配的 IMP 来调用，但有时候我们也可以直接获取 IMP 来调用。通过 IMP，我们可以跳过 Rumtime 的消息分发流程，直接执行 IMP 指向的代码块，这样会比直接向对象发送消息高效一些。
+IMP 其实就是 `implementation` 的缩写，表示方法实现的代码块地址，可以像 C 函数一样直接调用。通常情况下，我们都是通过 `[object method:parameter]` 或 `objc_msgSend()` 的方式调用方法或函数，然后 Runtime 去寻找消息匹配的 IMP 来调用，但有时候我们也可以直接获取 IMP 来调用。通过 IMP，我们可以跳过 Rumtime 的消息分发流程，直接执行 IMP 指向的代码块，这样会比直接向对象发送消息高效一些。这就是 IMP Caching 技术。
 
 
 ####方法

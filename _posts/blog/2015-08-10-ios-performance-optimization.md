@@ -302,8 +302,8 @@ NSURLConnection 可以根据 HTTP 头部的设置来决定把资源内容缓存�
 	    static NSDateFormatter *dateFormatter;
 	    static dispatch_once_t onceToken;
 	    dispatch_once(&onceToken, ^{
-	        _dateFormatter = [[NSDateFormatter alloc] init];
-            [_dateFormatter setDateFormat:@"yyyy-MM-dd a HH:mm:ss EEEE"];
+	        dateFormatter = [[NSDateFormatter alloc] init];
+            [dateFormatter setDateFormat:@"yyyy-MM-dd a HH:mm:ss EEEE"];
 	    });
 	    return dateFormatter;
 	}

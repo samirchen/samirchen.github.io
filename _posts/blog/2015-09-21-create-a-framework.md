@@ -1,9 +1,9 @@
 ---
 layout: post
-title: 创建一个 Framework 项目 
-description: 简单介绍一下创建一个 Framework 项目的流程。
+title: 创建一个 iOS Framework 项目 
+description: 简单介绍一下创建一个 iOS Framework 项目的流程。
 category: blog
-tag: iOS
+tag: iOS, framework
 ---
 
 ##什么是 Framework

@@ -266,7 +266,7 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 	mkdir -p "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/Resources"
 	declare -a UF_FILE_LIST
 	list_files "${UNIVERSAL_OUTPUTFOLDER}/${PROJECT_NAME}.framework/" UF_FILE_LIST
-	for file_name in "${UF_FILE_LIST}"
+	for file_name in "${UF_FILE_LIST[@]}"
 	do
 		if [[ "${file_name}" == "Info.plist" ]] || [[ "${file_name}" =~ .*\.lproj$ ]]
 		then

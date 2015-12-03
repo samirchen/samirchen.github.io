@@ -2,7 +2,7 @@
 layout: post
 title: 应用更新信息这件小事
 description: 每次从 AppStore 更新 App 的时候，都会习惯去看看各个 App 的更新信息，这里说一些我的感受。
-category: blog
+category: opinion
 tag: App Store, App Update
 ---
 

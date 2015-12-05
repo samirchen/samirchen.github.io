@@ -45,7 +45,7 @@ MVVM 的最大作用是为了解决 Massive View Controller 的问题，为 Coco
 
 ReactiveCocoa 是一个具有函数式编程和响应式编程特性的开发框架，它为我们提供了统一的消息传递机制。ReactiveCocoa 中最重要的概念是 **Signal(信号)**，即整个数据流中流动的信号，Signal 需要 **Subcriber(订阅者)** 来订阅它，当信号源对应的数据发生变化，它发出信号，然后信号被发送给对应的订阅者，订阅者获取到信号并获取随之而来的数据。当然，ReactiveCocoa 实现了很多更复杂的机制和能力，这里就不一一介绍了。
 
-ReactiveCocoa 的信号机制正好可以解决我们上文中所说的 MVVM 带来的问题：Model 和 View(ViewController) 直接的数据绑定。
+ReactiveCocoa 的信号机制正好可以解决我们上文中所说的 MVVM 带来的问题：Model 和 View(ViewController) 之间的数据绑定。
 
 
 

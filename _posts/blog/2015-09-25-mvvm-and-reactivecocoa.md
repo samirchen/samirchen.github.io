@@ -52,33 +52,86 @@ ReactiveCocoa 的信号机制正好可以解决我们上文中所说的 MVVM 带
 
 ## MVVM 实践
 
-这里结合对 MVVM 的理解写了一个 Demo，可以到这里下载：[https://github.com/samirchen/MVVMDemo][4]
+我结合对 MVVM 的理解写了一个 Demo，可以到这里下载：[https://github.com/samirchen/MVVMDemo][4]。里面展示了 Model、ViewModel、ViewController、View 各个层次的代码应该如何写。
 
-### Model 与 ViewModel 的区别
+### Model
 
-Model 主要与数据存储映射，比如一个 Model 常常映射着数据库中的一张表。ViewModel 则主要与页面上的控件显示数据映射。比如在下面的代码中：
+如果你想要在你的项目中使用 Model 层的话，这一层的定义通常是这样的：以面向对象的思想抽象出来的实体类的封装。一个 Model 通常映射着数据的一张表。同时，这一层还提供与每个 Model 对应的服务接口，比如：从服务器请求 Model 相关的数据后，将数据处理成 Model 实例返回出去。
 
+比如 Demo 中的 `CXMovie` 这个 Model 实体的代码如下：
+
+	// CXMovie.h
+	#import <Foundation/Foundation.h>
+
+	@interface CXMovie : NSObject
+
+	@property (nonatomic, assign) int64_t rowid;
+	@property (nonatomic, strong) NSString *posterImageURL;
+	@property (nonatomic, strong) NSString *name;
+	@property (nonatomic, strong) NSDate *releaseTime;
+
+	@end
+
+`CXMovieService` 是与 `CXMovie` 相关的数据服务，代码如下：
+
+	// CXMovieService.h
+	@interface CXMovieService : NSObject
+
+	+ (void)requestMovieDataWithParameters:(id)parameters start:(void (^)(void))start success:(void (^)(NSArray *movieList, NSString *successMessage))success failure:(void (^)(NSError *error, NSString *failureMessage))failure;
+	+ (RACSignal *)signalWhenRequstMovieDataWithParameters:(id)parameters;
+
+	@end
+
+可以看到这里，我们提供了两种类型的接口，一种是以 Block 回调的方式供使用方调用，一种则是用了 ReactiveCocoa 的信号。使用信号的流程上面已经介绍过了，在这里大致就是：使用方调用请求数据的接口去得到对应的信号实例，并订阅它，当数据请求成功或失败时，信号实例会发送消息给订阅者，订阅者收到消息后做后续的处理。
+
+
+### ViewModel
+
+一方面 ViewModel 对接 Model 层的作为其数据源，Model 层的实例以及相关数据服务通常的使用方都是 ViewModel；另一方面 ViewModel 提供展示数据的接口来满足 View 或 ViewController 展示数据的需要。
+
+
+比如 Demo 中的 CXMovieCellViewModel 的代码如下：
+
+	// CXMovieCellViewModel.h
 	#import <Foundation/Foundation.h>
 	#import <UIKit/UIKit.h>
 	#import "CXMovie.h"
 
 	@interface CXMovieCellViewModel : NSObject
 
+	// 对接 Model 层的数据源。
 	@property (nonatomic, strong) CXMovie *movie;
 
-	// 直接对接 View(ViewController) 层的展示需求。
+	// 对接 View(ViewController) 层的数据接口，满足展示需求。
 	- (NSURL *)moviePosterURL;
 	- (NSString *)movieNameText;
 	- (NSString *)movieReleaseTimeText;
 
 	@end
 
-`CXMovieCellViewModel` 是一个 ViewModel，其中包括了一个 Model 类的属性 `CXMovie *movie`，可以看到 ViewModel 中对接了 Model 但是它的定位是为 View(ViewController) 的显示数据服务。
+`CXMovieCellViewModel` 是一个 ViewModel，其中包含了一个 Model 类的属性 `CXMovie *movie`，这个其实就是它的数据源，`CXMovieCellViewModel` 基于 `movie` 这个数据源的数据进行一些处理后，再以 `- (NSString *)movieNameText;` 等接口的方式提供给 View(ViewController) 层使用。
 
 
-### ViewModel 细分化
+### View(ViewController)
 
-View(ViewController) 这一层会有很多拆分出来的子 View，这时候我们可以对每个子 View 做一个 ViewModel。比如一个 ViewController 中的包含一个 TableView，TableView 的每个 Cell 是自定义的。这时候 ViewController 和 Cell 各对应一个 ViewModel。
+View(ViewController) 只做展示页面的事情，所有数据处理逻辑都交给 ViewModel 了，在 View(ViewController) 中则根据展示需要向 ViewModel 要数据即可。
+
+比如：
+
+	- (NSInteger)tableView:(UITableView *)tableView numberOfRowsInSection:(NSInteger)section {
+	    return [self.viewModel movieCellCount];
+	}
+
+	- (UITableViewCell *)tableView:(UITableView *)tableView cellForRowAtIndexPath:(NSIndexPath *)indexPath {
+	    CXMovieTableViewCell *cell = [tableView dequeueReusableCellWithIdentifier:CXMovieCellIdentifier forIndexPath:indexPath];
+	    
+	    CXMovieCellViewModel *cellViewModel = [self.viewModel movieCellViewModelAtIndexPath:indexPath];
+	    cell.viewModel = cellViewModel;
+	    
+	    return cell;
+	}
+
+通常在一个 ViewController 里使用的一些模块化的 View 可以拆出来单独封装，这时候我们在 ViewModel 层可以对每个子 View 做一个对应的 ViewModel。比如一个 ViewController 中的包含一个 TableView，TableView 的每个 Cell 是自定义的。这时候 ViewController 和 Cell 各对应一个 ViewModel。在我们的 Demo 中我们就有体现这一点，具体的代码请去下载查阅。
 
 
 

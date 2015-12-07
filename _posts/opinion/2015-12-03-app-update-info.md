@@ -56,7 +56,9 @@ tag: App Store, App Update
 总之，节制、不自嗨，再多点用户同理心，应该能写好。
 
 
-
+[SamirChen]: http://samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{ page.title }})
+[2]: http://www.samirchen.com/app-update-info/
 
 
 

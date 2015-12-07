@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 关于坚持的技巧
+title: 坚持的技巧
 description: 有心想养成健康的习惯，坚持却是一件不易的事，怎么办？这里有点小技巧。
 category: opinion
 tag: persistence, health

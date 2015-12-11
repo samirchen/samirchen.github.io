@@ -67,6 +67,25 @@ layout: default
         <iframe width="100%" height="75" class="share_self"  frameborder="0" scrolling="no" src="http://widget.weibo.com/weiboshow/index.php?language=&width=0&height=75&fansRow=2&ptype=1&speed=0&skin=5&isTitle=0&noborder=0&isWeibo=0&isFans=0&uid=1237474277&verifier=cf457b4a&dpc=1"></iframe>
     </div>
 
+    <div id='ibb-widget-root'></div>
+    <script>
+        (
+            function(t,e,i,d){
+                var ran = Math.floor(Math.random() * 3) + 1;
+                if (ran == 2) {
+                    return;
+                };
+                
+                var o=t.getElementById(i),n=t.createElement(e);
+                o.style.height=90;
+                o.style.width=728;
+                o.style.display='inline-block';
+                n.id='ibb-widget',n.setAttribute('src',('https:'===t.location.protocol?'https://':'http://')+d),n.setAttribute('width','728'),n.setAttribute('height','90'),n.setAttribute('frameborder','0'),n.setAttribute('scrolling','no'),
+                o.appendChild(n)
+            }
+        )(document,'iframe','ibb-widget-root',"banners.itunes.apple.com/banner.html?partnerId=&aId=&bt=genre&t=genre_matrix_white&ft=topfreeapplications&st=apps&s=36&p=27&c=cn&l=zh-CHS&w=728&h=90");
+    </script>
+
     <div class="sidenav">
         <a href="/"><h2>Blog</h2></a>
         <ul class="artical-list">

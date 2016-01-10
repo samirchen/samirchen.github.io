@@ -14,7 +14,7 @@ tag: AppStore, Rank
 
 「免费应用排行榜」如下：
 
-| Top 50 | |
+| Top 50 | 中国区 |
 |---|---|
 | 1. 乐视视频 | 2. 百度云 |
 | 3. Traffic Rider | 4. QQ |

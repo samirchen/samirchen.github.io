@@ -10,7 +10,7 @@ tag: AppStore, Rank, Top free, Top paid, Top grossing
 
 本周：2015/01/04 - 2016/01/10
 
-### 免费应用排行榜
+## 免费应用排行榜
 
 
 | Top 50 | 中国区 |
@@ -56,7 +56,7 @@ tag: AppStore, Rank, Top free, Top paid, Top grossing
 
 
 
-### 付费应用排行榜
+## 付费应用排行榜
 
 | Top 50 | 中国区 |
 |---|---|
@@ -97,7 +97,7 @@ tag: AppStore, Rank, Top free, Top paid, Top grossing
 - 里奥的财富
 
 
-### 畅销应用排行榜
+## 畅销应用排行榜
 
 | Top 50 | 中国区 |
 |---|---|

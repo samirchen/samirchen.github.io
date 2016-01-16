@@ -1,7 +1,7 @@
 ---
 layout: post
 title: AppStore 每周排行榜 - 第 2 期
-description: 那些自千军万马杀出重围的应用，有的也许你还不曾知道。本周：2015/01/04-2016/01/10。
+description: 那些自千军万马杀出重围的应用，有的也许你还不曾知道。本周：2016/01/04-2016/01/10。
 category: project
 tag: AppStore, Rank, Top free, Top paid, Top grossing
 ---

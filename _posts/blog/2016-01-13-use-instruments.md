@@ -23,13 +23,13 @@ tag: iOS, Objective-C, Instruments, Xcode
 - 保存测试配置模板以供复用。
 
 
-可以看到 Instruments 功能很多，这里先介绍一下我们在开发中常用到的几种：CPU 占用性能测试、图形性能测试、内存性能测试。
+可以看到 Instruments 功能很多，这里先介绍一下我们在开发中常用到的几种：CPU 性能测试、图形性能测试、内存性能测试。
 
 虽然 Instruments 是 Xcode 的一个工具集，但是它是以一个独立的 App 的形式存在的，你可以在 `Xcode -> Open Developer Tool -> Instruments` 中打开它。
 
 
 
-## CPU 占用性能测试
+## CPU 性能
 
 要看程序执行时间性能，主要有下面几步：
 

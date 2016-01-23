@@ -126,7 +126,7 @@ tag: AppStore, Rank, Top free, Top paid, Top grossing
 - 新斗罗大陆
 - 挂机龙珠
 
-付费榜的头把交易看来是最不好坐的。
+付费榜的头把交椅看来是最不好坐的。
 
 
 

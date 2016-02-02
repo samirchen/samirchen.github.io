@@ -156,5 +156,5 @@ Wax 是一个把 Lua 脚本语言与原生 Objective-C 底层 runtime 结合起�
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/use-wax-to-fix-bug/
+[2]: http://www.samirchen.com/use-wax-to-fix-bug
 [3]: https://github.com/alibaba/wax/wiki

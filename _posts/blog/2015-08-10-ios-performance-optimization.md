@@ -578,6 +578,6 @@ NSAutoreleasePool 是用来管理一个自动释放内存池的机制。在我�
 
 [SamirChen]: http://samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://samirchen.com/ios-performance-optimization/
+[2]: http://samirchen.com/ios-performance-optimization
 [3]: http://www.raywenderlich.com/31166/25-ios-app-performance-tips-tricks
 [4]: http://www.samirchen.com/objective-c-runtime

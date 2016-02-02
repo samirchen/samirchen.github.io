@@ -951,7 +951,7 @@ NSObject 的 `-forwardInvocation:` 方法实现只是简单调用了 `-doesNotRe
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/objective-c-runtime/
+[2]: http://www.samirchen.com/objective-c-runtime
 [3]: http://www.sealiesoftware.com/blog/archive/2009/04/14/objc_explain_Classes_and_metaclasses.html
 [4]: http://southpeak.github.io/blog/2014/10/25/objective-c-runtime-yun-xing-shi-zhi-lei-yu-dui-xiang/
 [5]: https://developer.apple.com/library/mac/documentation/Cocoa/Reference/ObjCRuntimeRef/index.html

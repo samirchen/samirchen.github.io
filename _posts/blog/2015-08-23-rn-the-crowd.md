@@ -190,4 +190,4 @@ tag: reading
 
 [SamirChen]: http://samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://samirchen.com/rn-the-crowd/
+[2]: http://samirchen.com/rn-the-crowd

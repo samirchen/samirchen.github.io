@@ -170,6 +170,6 @@ Instruments 可以帮我们了解到应用程序使用内存的几个方面：
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/use-instruments/
+[2]: http://www.samirchen.com/use-instruments
 [3]: https://developer.apple.com/library/ios/documentation/DeveloperTools/Conceptual/InstrumentsUserGuide/index.html
 

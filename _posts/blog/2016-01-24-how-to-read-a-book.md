@@ -230,5 +230,5 @@ tag: Reading
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/how-to-read-a-book/
+[2]: http://www.samirchen.com/how-to-read-a-book
 [3]: http://book.douban.com/subject/1013208/

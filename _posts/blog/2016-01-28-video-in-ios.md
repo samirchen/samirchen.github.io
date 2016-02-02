@@ -109,7 +109,7 @@ tag: iOS, Objective-C, video, ffmpeg, h264
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/video-in-ios/
+[2]: http://www.samirchen.com/video-in-ios
 [3]: https://zh.wikipedia.org/zh/%E8%A7%86%E9%A2%91%E7%BC%96%E8%A7%A3%E7%A0%81%E5%99%A8
 [4]: https://www.zhihu.com/question/20997688
 

@@ -137,4 +137,4 @@ tag: ecomomic, Ray Dalio
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/how-the-economic-machine-works/
+[2]: http://www.samirchen.com/how-the-economic-machine-works

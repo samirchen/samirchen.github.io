@@ -47,5 +47,5 @@ LLDB 是一个有着 REPL 的特性和 C++ ,Python 插件的开源调试器。LL
 
 [SamirChen]: http://samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://samirchen.com/xcode-debug-memory-data/
+[2]: http://samirchen.com/xcode-debug-memory-data
 

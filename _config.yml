@@ -3,7 +3,7 @@ auto: true
 markdown: kramdown
 pygments: true
 paginate: 8
-permalink: /:title
+permalink: /:title/
 
 title: SamirChen
 url: http://www.samirchen.com

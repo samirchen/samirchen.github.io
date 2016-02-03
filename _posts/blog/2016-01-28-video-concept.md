@@ -1,10 +1,11 @@
 ---
 layout: post
 title: 关于视频的一些概念
-description: 关于视频的一些概念的相关笔记。
+description: 关于视频相关概念的整理。
 category: blog
 tag: iOS, Objective-C, video, ffmpeg, h264
 ---
+
 
 
 ## 视频相关概念
@@ -85,45 +86,221 @@ tag: iOS, Objective-C, video, ffmpeg, h264
 
 ## 关于 H.264
 
+
+### 概念
+
 H.264 是现在广泛采用的一种编码方式。关于 H.264 相关的概念，从大到小排序依次是：序列、图像、片组、片、NALU、宏块、亚宏块、块、像素。
 
-![image](../../images/video-concept/bitstream_detailed.png)
 
+我们先来解释几个概念：
 
 - **图像**。H.264 中，「图像」是个集合的概念，帧、顶场、底场都可以称为图像。一帧通常就是一幅完整的图像。当采集视频信号时，如果采用逐行扫描，则每次扫描得到的信号就是一副图像，也就是一帧。当采集视频信号时，如果采用隔行扫描（奇、偶数行），则扫描下来的一帧图像就被分为了两个部分，这每一部分就称为「场」，根据次序分为：「顶场」和「底场」。「帧」和「场」的概念又带来了不同的编码方式：帧编码、场编码。逐行扫描适合于运动图像，所以对于运动图像采用帧编码更好；隔行扫描适合于非运动图像，所以对于非运动图像采用场编码更好。
 
-![image](../../images/video-concept/video-image-scan.jpg)
+![image](../../images/video-concept/video-image-scan.png)
 
-![image](../../images/video-concept/video-image-scan-1.jpg)
+![image](../../images/video-concept/video-image-scan-1.png)
 
-![image](../../images/video-concept/video-image-scan-2.jpg)
+![image](../../images/video-concept/video-image-scan-2.png)
 
 - **片(Slice)**，每一帧图像可以分为多个片。
 
-- **宏块(Macroblock)**，分片是由宏块组成。
-
-![image](../../images/video-concept/macroblock.png)
-
-- **视频编码层(VCL, Video Coding Layer)**，VCL 数据即被压缩编码后的视频数据序列。在 VCL 数据要封装到 NALU 单元中之后，才可以用来传输或存储。
 
 - **网络提取层单元(NALU, Network Abstraction Layer Unit)**，NALU 是用来将编码的数据进行打包的，一个分片(Slice)可以编码到一个 NALU 单元。不过一个 NALU 单元中除了容纳分片(Slice)编码的码流外，还可以容纳其他数据，比如序列参数集 SPS。对于客户端其主要任务则是接收数据包，从数据包中解析出 NALU 单元，然后进行解码播放。
 
 
+- **宏块(Macroblock)**，分片是由宏块组成。
+
+
+
+### 颜色模型
+
+我们听过最多的颜色模型应该就是经典的 RGB 模型了。
+
+![image](../../images/video-concept/rgb.png)
+
+在 RGB 模型中每种颜色需要 3 个数字，分别表示 R、G、B，比如 (255, 0, 0) 表示红色，通常一个数字占用 1 字节，那么表示一种颜色需要 24 bits。那么有没有更高效的颜色模型能够用更少的 bit 来表示颜色呢？
+
+现在我们假设我们定义一个「亮度(Luminance)」的概念来表示颜色的亮度，那它就可以用含 R、G、B 的表达式表示为：
+
+	Y = kr*R + kg*G + kb*B
+
+Y 即「亮度」，kr、kg、kb 即 R、G、B 的权重值。
+
+这时，我们可以定义一个「色度(Chrominance)」的概念来表示颜色的差异：
+
+	Cr = R – Y
+	Cg = G – Y
+	Cb = B – Y
+
+Cr、Cg、Cb 分别表示在 R、G、B 上的色度分量。上述模型就是 YCbCr 颜色模型基本原理。
+
+YCbCr 是属于 YUV 家族的一员，是在计算机系统中应用最为广泛的颜色模型，就比如在本文所讲的视频领域。在 YUV 中 Y 表示的是「亮度」，也就是灰阶值，U 和 V 则是表示「色度」。**YUV 的关键是在于它的亮度信号 Y 和色度信号 U、V 是分离的。那就是说即使只有 Y 信号分量而没有 U、V 分量，我们仍然可以表示出图像，只不过图像是黑白灰度图像。**在YCbCr 中 Y 是指亮度分量，Cb 指蓝色色度分量，而 Cr 指红色色度分量。
+
+现在我们从 ITU-R BT.601-7 标准中拿到推荐的相关系数，就可以得到 YCbCr 与 RGB 相互转换的公式：
+	
+	Y = 0.299R + 0.587G + 0.114B
+	Cb = 0.564(B - Y)
+	Cr = 0.713(R - Y)
+	R = Y + 1.402Cr
+	G = Y - 0.344Cb - 0.714Cr
+	B = Y + 1.772Cb
+
+这样对于 YCbCr 这个颜色模型我们就有个初步认识了，但是我们会发现，这里 YCbCr 也仍然用了 3 个数字来表示颜色啊，有节省 bit 吗？为了回答这个问题，我们来结合视频中的图像和图像中的像素表示来说明。
+
+图片是由类似下面的像素组成：
+
+![image](../../images/video-concept/pixel.png)
+
+一副图片就是一个像素阵列：
+
+![image](../../images/video-concept/4_4_4.png)
+
+上图中，每个像素的 3 个分量的信息是完整的，YCbCr 4:4:4。
+
+
+![image](../../images/video-concept/4_2_2.png)
+
+上图中，对于每个像素点都保留「亮度」值，但是省略每行中偶素位像素点的「色度」值，从而节省了 bit。
+
+![image](../../images/video-concept/4_2_0.png)
+
+上图中，做了更多的省略，但是对图片质量的影响却不会太大。
+
+对于更细节的内容，可以查询与 YCbCr 4:2:0、YCbCr 4:2:2、YCbCr 4:1:1 和 YCbCr 4:4:4 相关的知识。
 
 
 
 
+### 码流格式
+
+在上节中，我们简单的介绍了和 H.264 编码相关的图片、像素以及颜色模型相关的概念，那这一节就接着简要介绍一下 H.264 码流的结构，以及如何从 H.264 的码流中找到那些像素。
+
+对于一个解码器来说，它的工作对象就是从一个特定结构的数据流中去获取有效的 bit 流，而这个数据流则是结构化后分为数据包传输的，其大致结构如下：
+
+![image](../../images/video-concept/nal_stream.png)
+
+我们可以看到，在 NAL 包之间存在着一些间隔标记。
+
+NAL 包的第一个字节是定义包类型的头文件，NAL 包有这样一些类型：
+
+| 类型 | 定义 |
+|---|---|
+| 0 | Undefined |
+| 1 | Slice layer without partitioning non IDR |
+| 2 | Slice data partition A layer |
+| 3 | Slice data partition B layer |
+| 4 | Slice data partition C layer |
+| 5 | Slice layer without partitioning IDR |
+| 6 | Additional information (SEI) |
+| 7 | Sequence parameter set |
+| 8 | Picture parameter set |
+| 9 | Access unit delimiter |
+| 10 | End of sequence |
+| 11 | End of stream |
+| 12 | Filler data |
+| 13..23 | Reserved |
+| 24..31 | Undefined |
+
+
+NAL 的类型说明了当前这个 NAL 包的数据结构和数据含义，它可能是片(Slice)，参数集或者填充数据等等。
+
+![image](../../images/video-concept/NAL_structure.png)
+
+如上图所示，NAL 包将其负载数据存储在 RBSP(Raw Byte Sequence Payload) 中，RBSP 是一系列的 SODB(String Of Data Bits)。
+
+![image](../../images/video-concept/RBSP_SODB.png)
+
+<!-- As can be seen from the figure, the payload of NAL-packet identified as RBSP (Raw Byte Sequence Payload). RBSP describes a row of bits specified order of SODB (String Of Data Bits). 
+So RBSP contains SODB. According to the ITU-T specification if SODB empty (zero bits in length), RBSP is also empty. The first byte of RBSP (most significant, far left) contains the eight bits SODB; next byte of RBSP shall contain the following eight SODB and so on, until there is less than eight bits SODB. This is followed by a stop-bits and equalizing bit. -->
+
+下面，我们来具体看看 H.264 的码流结构：
+
+![image](../../images/video-concept/bitstream_detailed.png)
+
+<!-- Any coded image contains slices, which in turn are divided into macroblocks. Most often, one encoded image corresponds to one slice. Also, one image can have multiple slices. -->
+
+一张图片可以包含一个或多个分片(Slice)，而每一个分片(Slice)又会被分为了若干宏块(Macroblock)。对于分片(Slice)来说，有如下这些类型：
+
+| 类型 | 定义 |
+|---|---|
+| 0 | P-slice. Consists of P-macroblocks (each macro block is predicted using one reference frame) and / or I-macroblocks. |
+| 1 | B-slice. Consists of B-macroblocks (each macroblock is predicted using one or two reference frames) and / or I-macroblocks. |
+| 2 | I-slice. Contains only I-macroblocks. Each macroblock is predicted from previously coded blocks of the same slice. |
+| 3 | SP-slice. Consists of P and / or I-macroblocks and lets you switch between encoded streams. |
+| 4 | SI-slice. It consists of a special type of SI-macroblocks and lets you switch between encoded streams. |
+| 5 | P-slice. |
+| 6 | B-slice. |
+| 7 | I-slice. |
+| 8 | SP-slice. |
+| 9 | SI-slice. |
+
+
+<!-- Types 5 - 9 mean that all other slices of the current image will be the same type.  -->
+
+<!-- As you noticed every slice consists of header and data. Slice header contains the information about the type of slice, the type of macroblocks in the slice, number of the slice frame. Also in the header contains information about the reference frame settings and quantification parameters. And finally the slice data – macroblocks. This is where our pixels are hiding. -->
+
+如我们所见，每个分片也包含着头和数据两部分，分片头中包含着分片类型、分片中的宏块类型、分片帧的数量以及对应的帧的设置和参数等信息，而分片数据中则是宏块，这里就是我们要找的存储像素数据的地方。
+
+
+<!-- Macroblocks are the main carriers of information, because they contain sets of luminance and chrominance components corresponding to individual pixels. Without going into details it can be concluded that the video decoding is ultimately reduced to the search and retrieval of macroblocks out of a bit stream with subsequent restoration of pixels colors with help of luminance and chrominance components. -->
+
+宏块是视频信息的主要承载者，因为它包含着每一个像素的亮度和色度信息。视频解码最主要的工作则是提供高效的方式从码流中获得宏块中的像素阵列。
+
+![image](../../images/video-concept/macroblock.png)
+
+<!-- Here we have macroblock type, prediction type (which is the subject of the next article), Coded Block Pattern, Quantization Parameter (if we have CPB) and finally – data: the sets of luminance and chrominance components. -->
+
+从上图中，可以看到，宏块中包含了宏块类型、预测类型、Coded Block Pattern、Quantization Parameter、像素的亮度和色度数据集等等信息。
+
+至此，我们对 H.264 的码流数据结构应该有了一个大致的了解。
 
 
 
+### 帧内预测和帧间预测
+
+在上一节的末尾，我们介绍了宏块的数据结构，其中提到了「预测类型」这个字段，这里就接着说说「帧内预测」和「帧间预测」这两种在视频编码中常用到的压缩方法，也可以称为「帧内压缩」和「帧间压缩」。
+
+
+帧内压缩类似于图片压缩，跟这一帧的前面（或后面）一帧（或几帧）无关，由当前帧中，已编码的部分来推测当前待编码的这一部分数据是什么。帧间压缩是由这一帧的前（或后）一帧（或几帧）来推测当前待压缩的这一部分数据是什么。
+
+上节中，我们说过图片可以划分为宏块。一般来说，运动多细节多的部分，划分成小块来编码，无变化的大片的部分，划分成大块来编码。其大致效果如下：
+
+![image](../../images/video-concept/macroblocks-in-image.jpg)
+
+#### 帧内预测
+
+对于帧内压缩，我们可以看下图示例：
+
+![image](../../images/video-concept/intra-prediction-example.jpg)
+
+我们可以通过第 1、2、3、4、5 块的编码来推测和计算第 6 块的编码，因此就不需要对第 6 块进行编码了，从而压缩了第 6 块，节省了空间。
+
+帧内预测在 H.264 编码标准里有以下几种预测方法：
+
+![image](../../images/video-concept/intra-prediction.jpg)
+
+#### 帧间预测
+
+对于帧间压缩，可以看下面连续的两帧：
+
+![image](../../images/video-concept/inter-prediction-example-1.jpg)
+
+![image](../../images/video-concept/inter-prediction-example-2.jpg)
+
+可以看到前后两帧的差异其实是很小的，这时候用帧间压缩就很有意义。
+
+做帧间压缩常用的方式就是块匹配(Block Matching)，就是找找看前面已经编码的几帧里面，和我当前这个块最类似的一个块，这样我就不用编码当前块的内容了，只需要编码当前块和我找到的那个块的差异（称为残差）即可。找最像的块的过程叫运动搜索（Motion Search），又叫运动估计（Motion Estimation）。用残差和原来的块就能推算出当前块的过程叫运动补偿（Motion Compensation）。
+
+![image](../../images/video-concept/block-matching.jpg)
 
 
 ## 参考
 
-- [知乎-视频格式相关][4]
-- [维基百科-视频编解码器][3]
-
-
+- [知乎 - 视频格式相关 - 胡虎航的回答][4]
+- [维基百科 - 视频编解码器][3]
+- [Exploring H.264. Part 1: Color models][5]
+- [Exploring H.264. Part 2: H.264 Bitstream format][6]
+- [知乎 - 视频的帧内压缩和帧间压缩 - 王婷婷的回答][7]
 
 
 
@@ -135,6 +312,7 @@ H.264 是现在广泛采用的一种编码方式。关于 H.264 相关的概念�
 [2]: http://www.samirchen.com/video-concept
 [3]: https://zh.wikipedia.org/zh/%E8%A7%86%E9%A2%91%E7%BC%96%E8%A7%A3%E7%A0%81%E5%99%A8
 [4]: https://www.zhihu.com/question/20997688
-
-
+[5]: http://gentlelogic.blogspot.com/2011/11/exploring-h264-part-1-color-models.html
+[6]: http://gentlelogic.blogspot.com/2011/11/exploring-h264-part-2-h264-bitstream.html
+[7]: https://www.zhihu.com/question/20237091
 

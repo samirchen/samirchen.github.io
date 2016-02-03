@@ -140,7 +140,7 @@ View(ViewController) 只做展示页面的事情，所有数据处理逻辑都�
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://samirchen.com/mvvm-and-reactivecocoa
+[2]: http://www.samirchen.com/mvvm-and-reactivecocoa
 [3]: https://www.objc.io/issues/13-architecture/mvvm/
 [4]: https://github.com/samirchen/MVVMDemo
 

@@ -150,3 +150,5 @@ Manifest.lock 是 Podfile.lock 的副本，每次只要生成 Podfile.lock 时�
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})
+[2]: http://www.samirchen.com/about-podfile-lock
+

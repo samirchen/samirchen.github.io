@@ -322,7 +322,7 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://samirchen.com/create-a-framework
+[2]: http://www.samirchen.com/create-a-framework
 [3]: http://www.knowstack.com/framework-vs-library-cocoa-ios/
 [4]: http://skyline75489.github.io/post/2015-8-14_ios_static_dynamic_framework_learning.html
 [5]: http://insert.io/framework-ios8-xcode6/

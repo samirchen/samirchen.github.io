@@ -277,4 +277,5 @@ SubNavigationVC.VCN5->VCN4 的跳转代码：
 [6]: https://developer.apple.com/library/ios/documentation/uikit/reference/UIStoryboardSegue_Class/Reference/Reference.html
 [7]: https://developer.apple.com/library/ios/Documentation/UIKit/Reference/UINavigationController_Class/Reference/Reference.html
 [8]: https://developer.apple.com/library/ios/featuredarticles/ViewControllerPGforiPhoneOS/ModalViewControllers/ModalViewControllers.html
+[9]: http://www.samirchen.com/view-controller-flow-in-ios
 [9]: https://developer.apple.com/library/ios/documentation/UIKit/Reference/UIViewController_Class/Reference/Reference.html#//apple_ref/occ/instp/UIViewController/presentedViewController

@@ -5,12 +5,12 @@ description: 简要介绍了一下iOS开发中的Delegate模式使用的简单�
 category: blog
 ---
 
-##1、Delegate模式介绍：
+## 1、Delegate模式介绍：
 delegation，委托模式（另外有个常用的proxy模式，二者的区别是代理模式一般要更严格，实现相同的接口，委托只是引用被委托对象），是简单的强大的模式，可让一个对象扮演另外对象的行为。委托对象保持到另外对象的引用，并在适当的时候发消息给另外对象。委托对象可以在发送消息的时候做一些额外的事情。
 
 在cocoa框架中的委托模式，委托对象往往是框架中的对象，被委托对象是自定义的controller对象。委托对象保持一个到被委托对象的弱引用。
 
-##2、示例：
+## 2、示例：
 
 2.1）代码：`CPPropOperationView.h`
 
@@ -148,5 +148,5 @@ delegation，委托模式（另外有个常用的proxy模式，二者的区别�
 	@end
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})

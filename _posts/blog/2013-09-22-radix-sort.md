@@ -70,5 +70,5 @@ category: blog
 通常结合基数排序和计数排序，把计数排序作为基数排序的子排序，是一种不错的选择。这样可以用来对时间、数字等等数据进行排序。可以实现时间复杂度为 `O(N)`，空间复杂度为 `O(N)` 的排序算法。
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})

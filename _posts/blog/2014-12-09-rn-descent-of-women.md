@@ -9,7 +9,8 @@ tag: reading, women, requirement, Elaine Morgan, humanity
 我是看了网上盛传的张小龙的《微信背后的产品观》中的推荐而看的这本书，试图去领悟领悟所谓的人性。
 
 
-##泰山派
+## 泰山派
+
 对于人类的起源，我们普遍接受到的观念是人类起源于丛林并进化为以狩猎为生的肉食动物的泰山派学说。伊莲·摩根在《女人的起源》中这样描述泰山学说对各种关键问题的解答：
 
 > 我们直立行走，是因为勇敢的猎人当时要站得高一些，以便巡视更远处的猎物；我们住在山洞里，是因为猎人需要一个落脚的地方以便外出后返回；我们现在用语言交流，是因为当初他们要计划下一次远行，要吹嘘上一次的战果；我们变得浑身没毛，是因为在打猎的时候身体会感到非常热，没有体毛对快速运动非常有好处...
@@ -30,7 +31,8 @@ tag: reading, women, requirement, Elaine Morgan, humanity
 
 可以明显感觉到，这种推理结果，充满了男权主义的味道。而在伊莲·摩根看来，我们对人类起源的想象力正是被这种大男子主义意淫所扼杀。
 
-##水生派
+## 水生派
+
 伊莲·摩根在《女人的起源》中指出了泰山派学说的种种经不起推敲的漏洞，并从阿里斯特·哈代的水生理论出发，提出了自己对人类进化的思考以及在此过程中女性身体变化的原因及证据。
 
 > 人类直立行走，是因为要在水里站起来获得垂直面上的高度增加，以便呼吸空气；我们褪去毛发，是因为毛发在水中成了累赘，也无法起到在陆地上的保温作用；我们长出皮下脂肪，是位了保证身体在水中的温度，这也为后来人类身体其他地方脂肪的囤积提供了必要条件，比如女性的乳房；并且，性感的女猿人的身材并非是顺应男猿人的喜好而发展出来的...
@@ -50,7 +52,8 @@ tag: reading, women, requirement, Elaine Morgan, humanity
 我还找到了伊莲·摩根在TED上的演讲，老太太语言犀利，诙谐幽默，很值得一看：[Elaine Morgan: I believe we evolved from aquatic apes][3]
 
 
-##书中关于人的种种
+## 书中关于人的种种
+
 
 
 1、人的很多行为背后的本质的原因：它能给我带来快乐。
@@ -121,7 +124,7 @@ tag: reading, women, requirement, Elaine Morgan, humanity
 - [失语•断裂•完善——《女人的起源》与人类进化史的演进][5]
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/rn-descent-of-women/
 [3]: http://www.ted.com/talks/elaine_morgan_says_we_evolved_from_aquatic_apes

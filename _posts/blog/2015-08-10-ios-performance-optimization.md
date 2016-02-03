@@ -6,13 +6,16 @@ category: blog
 tag: iOS, Objective-C, performance
 ---
 
-##前言
+## 前言
+
 程序性能优化不应该是一件放在功能完成之后的事，对性能的概念应该从我们一开始写代码时就萦绕在我们脑子里。了解 iOS 程序性能优化的相关知识点，从一开始就把它们落实到代码中是一种好的习惯。
 
 
-##初级技巧
+## 初级技巧
 
-###使用复用机制
+
+### 使用复用机制
+
 在我们使用 UITableView 和 UICollectionView 时我们通常会遇到「复用 Cell」这个提法，所谓「复用 Cell」就是指当需要展示的数据条目较多时，只创建较少数量的 Cell 对象（一般是屏幕可显示的 Cell 数再加一）并通过复用它们的方式来展示数据的机制。这种机制不会为每一条数据都创建一个 Cell，所以可以节省内存，提升程序的效率和交互流畅性。
 
 从 iOS 6 以后，我们在 UITableView 和 UICollectionView 中不光可以复用 Cell，还可以复用各个 Section 的 Header 和 Footer。
@@ -121,18 +124,21 @@ tag: iOS, Objective-C, performance
 可以看到，`- [UITableView dequeueReusableCellWithIdentifier:forIndexPath:];` 必须搭配 `- [UITableView registerClass:forCellReuseIdentifier:];` 或者 `- [UITableView registerNib:forCellReuseIdentifier:];` 使用。当有可重用的 Cell 时，前者直接拿来复用，并调用 `- [UITableViewCell prepareForReuse]` 方法；当没有时，前者会调用 Identifier 对应的那个注册的 UITableViewCell 类的 `- [UITableViewCell initWithStyle:reuseIdentifier:]` 方法来初始化一个，这里省去了你自己初始化的步骤。当你自定义了一个 UITableViewCell 的子类时，你可以这样来用。
 
 
-###尽可能设置 View 为不透明
+### 尽可能设置 View 为不透明
+
 UIView 有一个 `opaque` 属性，在你不需要透明效果时，你应该尽量设置它为 YES 可以提高绘图过程的效率。
 
 在一个静态的视图里，这点可能影响不大，但是当在一个可以滚动的 Scroll View 中或是一个复杂的动画中，透明的效果可能会对程序的性能有较大的影响。
 
-###避免臃肿的 XIB 文件
+### 避免臃肿的 XIB 文件
+
 如果你压根不用 XIB，那就不需要看了。
 
 在你需要重用某些自定义 View 或者因为历史兼容原因用到 XIB 的时候，你需要注意：当你加载一个 XIB 时，它的所有内容都会被加载，如果这个 XIB 里面有个 View 你不会马上就用到，你其实就是在浪费宝贵的内存。而加载 StoryBoard 时并不会把所有的 ViewController 都加载，只会按需加载。
 
 
-###不要阻塞主线程
+### 不要阻塞主线程
+
 基本上 UIKit 会把它所有的工作都放在主线程执行，比如：绘制界面、管理手势、响应输入等等。当你把所有代码逻辑都放在主线程时，有可能因为耗时太长卡住主线程造成程序无法响应、流畅性太差等问题。造成这种问题的大多数场景是因为你的程序把 I/O 操作放在了主线程，比如从硬盘或者网络读写数据等等。
 
 你可以通过异步的方式来进行这些操作，把他们放在别的线程中处理。比如处理网络请求时，你可以使用 NSURLConnection 的异步调用 API：
@@ -155,13 +161,15 @@ UIView 有一个 `opaque` 属性，在你不需要透明效果时，你应该尽
 关于 GCD 更多的知识，你可以看看这篇文章：[GCD](http://www.samirchen.com/ios-gcd/)。
 
 
-###图片尺寸匹配 UIImageView
+### 图片尺寸匹配 UIImageView
+
 当你从 App bundle 中加载图片到 UIImageView 中显示时，最好确保图片的尺寸能够和 UIImageView 的尺寸想匹配（当然，需要考虑 @2x @3x 的情况），否则会使得 UIImageView 在显示图片时需要做拉伸，这样会影响性能，尤其是在一个  UIScrollView 的容器里。
 
 有时候，你的图片是从网络加载的，这时候你并不能控制图片的尺寸，不过你可以在图片下载下来后去手动 scale 一下它，当然，最好是在一个后台线程做这件事，然后在 UIImageView 中使用 resize 后的图片。
 
 
-###选择合适的容器
+### 选择合适的容器
+
 我们经常需要用到容器来转载多个对象，我们通常用到的包括：NSArray、NSDictionary、NSSet，它们的特性如下：
 
 - Array：数组。有序的，通过 index 查找很快，通过 value 查找很慢，插入和删除较慢。
@@ -171,7 +179,8 @@ UIView 有一个 `opaque` 属性，在你不需要透明效果时，你应该尽
 根据以上特性，在编程中需要选择适合的容器。更多内容请看：[Collections Programming Topics](https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/Collections/Collections.html)
 
 
-###启用 GZIP 数据压缩
+### 启用 GZIP 数据压缩
+
 现在越来越多的应用需要跟服务器进行数据交互，当交互的数据量较大时，网络传输的时延就会较长，通过启动数据压缩功能，尤其是对于文本信息，可以降低网络传输的数据量，从而减短网络交互的时间。
 
 一个好消息是当你使用 NSURLConnection 或者基于此的一些网络交互类库（比如 AFNetworking）时 iOS 已经默认支持 GZIP 压缩。并且，很多服务器已经支持发送压缩数据。
@@ -181,11 +190,13 @@ UIView 有一个 `opaque` 属性，在你不需要透明效果时，你应该尽
 
 
 
-##中级技巧
+## 中级技巧
+
 在上面的内容里我们介绍了一些显而易见的优化程序性能的途径，但是有时候，有些优化程序性能的方案并不是那么明显，这些方案是否适用取决于你的代码情况。但是，如果在正确的场景下，这些方案能起到很显著的作用。
 
 
-###View 的复用和懒加载机制
+### View 的复用和懒加载机制
+
 当你的程序中需要展示很多的 View 的时候，这就意味着需要更多的 CPU 处理时间和内存空间，这个情况对程序性能的影响在你使用 UIScrollView 来装载和呈现界面时会变得尤为显著。
 
 处理这种情况的一种方案就是向 UITableView 和 UICollectionView 学习，不要一次性把所有的 subviews 都创建出来，而是在你需要他们的时候创建，并且用复用机制去复用他们。这样减少了内存分配的开销，节省了内存空间。
@@ -221,7 +232,8 @@ UIView 有一个 `opaque` 属性，在你不需要透明效果时，你应该尽
 所以当你考虑使用何种方案时，你需要根据现实的情况来参考，去权衡到底哪个因素才是影响性能的瓶颈，然后再做出选择。
 
 
-###缓存
+### 缓存
+
 在开发我们的程序时，一个很重要的经验法则就是：对那些更新频度低，访问频度高的内容做缓存。
 
 有哪些东西使我们可以缓存的呢？比如下面这些：
@@ -246,7 +258,8 @@ NSURLConnection 可以根据 HTTP 头部的设置来决定把资源内容缓存�
 关于 HTTP 缓存的更多内容可以关注 NSURLCache。关于缓存其他非 HTTP 请求的内容，可以关注 NSCache。对于图片缓存，可以关注一个第三方库 [SDWebImage](https://github.com/rs/SDWebImage)。
 
 
-###关于图形绘制
+### 关于图形绘制
+
 当我们为一个 UIButton 设置背景图片时，对于这个背景图片的处理，我们有很多种方案，你可以使用全尺寸图片直接设置，还可以用 resizable images，或者使用 CALayer、CoreGraphics 甚至 OpenGL 来绘制。
 
 当然，不同的方案的编码复杂度不一样，性能也不一样。关于图形绘制的不同方案的性能问题，可以看看：[Designing for iOS: Graphics Performance](https://robots.thoughtbot.com/designing-for-ios-graphics-performance)
@@ -258,7 +271,8 @@ NSURLConnection 可以根据 HTTP 头部的设置来决定把资源内容缓存�
 总之，你需要去在图形绘制的性能和应用程序包的大小上做权衡，找到最合适的性能优化方案。
 
 
-###处理 Memory Warnings
+### 处理 Memory Warnings
+
 关于内存警告，苹果的官方文档是这样说的：
 
 >If your app receives this warning, it must free up as much memory as possible. The best way to do this is to remove strong references to caches, image objects, and other data objects that can be recreated later.
@@ -277,7 +291,8 @@ NSURLConnection 可以根据 HTTP 头部的设置来决定把资源内容缓存�
 但是需要注意的是，你这时清除的数据，必须是可以在重新获取到的，否则可能因为必要数据为空，造成程序出错。在开发的时候，可以使用 iOS Simulator 的 `Simulate memory warning` 的功能来测试你处理内存警告的代码。
 
 
-###复用高开销的对象
+### 复用高开销的对象
+
 在 Objective-C 中有些对象的初始化过程很缓慢，比如：`NSDateFormatter` 和 `NSCalendar`，但是有些时候，你也不得不使用它们。为了这样的高开销的对象成为影响程序性能的重要因素，我们可以复用它们。
 
 比如，我们在一个类里添加一个 NSDateFormatter 的对象，并使用懒加载机制来使用它，整个类只用到一个这样的对象，并只初始化一次：
@@ -312,19 +327,22 @@ NSURLConnection 可以根据 HTTP 头部的设置来决定把资源内容缓存�
 
 需要注意的是：设置 NSDateFormatter 的 date format 跟创建一个新的 NSDateFormatter 对象一样慢，因此当你的程序中要用到多种格式的 date format，而每种又会用到多次的时候，你可以尝试为每种 date format 创建一个可复用的 NSDateFormatter 对象来提供程序的性能。
 
-###在游戏中使用 Sprite Sheet
+### 在游戏中使用 Sprite Sheet
+
 如果你是游戏开发者，使用 Sprite Sheet 可以帮助你比标准的绘图方法更快地绘制场景，甚至占用更少的内存。
 
 当然这里有些地方也可以参考上面已经提到过的性能优化方案，比如你的游戏有很多 Sprites 时，你可以参考 UITableViewCell 的复用机制，而不是每次都创建它们。
 
 
-###避免倒腾数据
+### 避免倒腾数据
+
 在我们开发应用时，经常会遇到要从服务器获取 JSON 或者 XML 数据来处理的情况，这时我们通常都需要解析这些数据，一般会解析为 NSArray、NSDictionary 的对象。但是在我们实际的开发中，我们通常会为在界面上展示的那些数据定义一些数据结构（ViewModel）。这时候问题就来了，我们需要把解析出来的 NSArray、NSDictionary 对象再倒腾成我们定义的那些数据结构，从程序性能的角度来考虑，这是一项开销较大的操作。
 
 为了避免这样的情况成为影响程序性能的瓶颈，在设计客户端应用程序对应的数据结构时就需要做更细致的考虑，尽量用 NSArray 去承接 NSArray，用 NSDictionary 去承接 NSDictionary，避免倒腾数据造成开销。
 
 
-###选择正确的数据格式
+### 选择正确的数据格式
+
 我们的 iOS 应用程序与服务器进行交互时，通常采用的数据格式就是 JSON 和 XML 两种。那么在选择哪一种时，需要考虑到它们的优缺点。
 
 JSON 文件的优点是：
@@ -341,7 +359,8 @@ JSON 文件的优点是：
 所以，你需要根据具体的应用场景来权衡使用何种数据格式。
 
 
-###合理的设置背景图片
+### 合理的设置背景图片
+
 我们通常有两种方式来设置一个 View 的背景图片：
 
 - 通过 `- [UIColor colorWithPatternImage:]` 方法来设置 View 的 background color。
@@ -359,7 +378,8 @@ JSON 文件的优点是：
 
 
 
-###优化 WebView
+### 优化 WebView
+
 UIWebView 在我们的应用程序中非常有用，它可以便捷的展示 Web 的内容，甚至做到你用标准的 UIKit 控件较难做到的视觉效果。但是，你应该注意到你在应用程序里使用的 UIWebView 组件不会比苹果的 Safari 更快。这是首先于 Webkit 的 Nitro Engine 引擎。所以，为了得到更好的性能，你需要优化你的网页内容。
 
 优化第一步就是避免过量使用 Javascript，例如避免使用较大的 Javascript 框架，比如 jQuery。一般使用原生的 Javascript 而不是依赖于 Javascript 框架可以获得更好的性能。
@@ -368,7 +388,8 @@ UIWebView 在我们的应用程序中非常有用，它可以便捷的展示 Web
 
 优化第三步，总是关注你在页面中所使用的图片，根据具体的场景来显示正确尺寸的图片，同时也可以使用上面提到的「使用 Sprites Sheets」的方案来在某些地方减少内存消耗和提高速度。
 
-###减少离屏渲染
+### 减少离屏渲染
+
 什么是「离屏渲染」？离屏渲染，即 Off-Screen Rendering。与之相对的是 On-Screen Rendering，即在当前屏幕渲染，意思是渲染操作是用于在当前屏幕显示的缓冲区进行。那么离屏渲染则是指图层在被显示之前是在当前屏幕缓冲区以外开辟的一个缓冲区进行渲染操作。
 
 离屏渲染需要多次切换上下文环境：先是从当前屏幕（On-Screen）切换到离屏（Off-Screen）；等到离屏渲染结束以后，将离屏缓冲区的渲染结果显示到屏幕上又需要将上下文环境从离屏切换到当前屏幕，而上下文环境的切换是一项高开销的动作。
@@ -403,7 +424,8 @@ UIWebView 在我们的应用程序中非常有用，它可以便捷的展示 Web
 如果图层是一个简单几何图形如矩形或者圆角矩形（假设不包含任何透明部分或者子图层），通过设置 ShadowPath 属性来创建出一个对应形状的阴影路径就比较容易，而且 Core Animation 绘制这个阴影也相当简单，不会触发离屏渲染，这对性能来说很有帮助。如果你的图层是一个更复杂的图形，生成正确的阴影路径可能就比较难了，这样子的话你可以考虑用绘图软件预先生成一个阴影背景图。
 
 
-###光栅化
+### 光栅化
+
 CALayer 有一个属性是 `shouldRasterize` 通过设置这个属性为 YES 可以将图层绘制到一个屏幕外的图像，然后这个图像将会被缓存起来并绘制到实际图层的 contents 和子图层，如果很很多的子图层或者有复杂的效果应用，这样做就会比重绘所有事务的所有帧来更加高效。但是光栅化原始图像需要时间，而且会消耗额外的内存。这是需要根据实际场景权衡的地方。
 
 当我们使用得当时，光栅化可以提供很大的性能优势，但是一定要避免在内容不断变动的图层上使用，否则它缓存方面的好处就会消失，而且会让性能变的更糟。
@@ -418,7 +440,8 @@ CALayer 有一个属性是 `shouldRasterize` 通过设置这个属性为 YES 可
 但是，如果你的 Cell 是样式不一样，比如高度不定，排版多变，那就要慎重了。
 
 
-###优化 UITableView
+### 优化 UITableView
+
 UITableView 是我们最常用来展示数据的控件之一，并且通常需要 UITableView 在承载较多内容的同时保证交互的流畅性，对 UITableView 的性能优化是我们开发应用程序必备的技巧之一。
 
 在前文「使用复用机制」一节，已经提到了 UITableView 的复用机制。现在就来看看 UITableView 在复用时最主要的两个回调方法：`- [UITableView tableView:cellForRowAtIndexPath:]` 和 `- [UITableView tableView:heightForRowAtIndexPath:]`。UITableView 是继承自 UIScrollView，所以在渲染的过程中它会先确定它的 contentSize 及每个 Cell 的位置，然后才会把复用的 Cell 放置到对应的位置。比如现在一共有 50 个 Cell，当前屏幕上显示 5 个。那么在第一次创建或 reloadData 的时候， UITableView 会先调用 50 次 `- [UITableView tableView:heightForRowAtIndexPath:]` 确定 contentSize 及每个 Cell 的位置，然后再调用 5 次 `- [UITableView tableView:cellForRowAtIndexPath:]` 来渲染当前屏幕的 Cell。在滑动屏幕的时候，每当一个 Cell 进入屏幕时，都需要调用一次 `- [UITableView tableView:cellForRowAtIndexPath:]` 和 `- [UITableView tableView:heightForRowAtIndexPath:]` 方法。
@@ -437,7 +460,8 @@ UITableView 是我们最常用来展示数据的控件之一，并且通常需�
 - 对于 rowHeight、sectionFooterHeight、sectionHeaderHeight 尽量使用常量。
 
 
-###选择合适的数据存储方式
+### 选择合适的数据存储方式
+
 在 iOS 中可以用来进行数据持有化的方案包括：
 
 - NSUserDefaults。只适合用来存小数据。
@@ -449,10 +473,12 @@ UITableView 是我们最常用来展示数据的控件之一，并且通常需�
 
 
 
-##高级技巧
+## 高级技巧
+
 下面介绍几个高级技巧。
 
-###减少应用启动时间
+### 减少应用启动时间
+
 快速启动应用对于用户来说可以留下很好的印象。尤其是第一次使用时。
 
 保证应用快速启动的指导原则：
@@ -462,7 +488,8 @@ UITableView 是我们最常用来展示数据的控件之一，并且通常需�
 
 注意：在测试程序启动性能的时候，最好用与 Xcode 断开连接的设备进行测试。因为 watchdog 在使用 Xcode 进行调试的时候是不会启动的。
 
-###使用 Autorelease Pool
+### 使用 Autorelease Pool
+
 NSAutoreleasePool 是用来管理一个自动释放内存池的机制。在我们的应用程序中通常都是 UIKit 隐式的自动使用 Autorelease Pool，但是有时候我们也可以显式的来用它。
 
 比如当你需要在代码中创建许多临时对象时，你会发现内存消耗激增直到这些对象被释放，一个问题是这些内存只会到 UIKit 销毁了它对应的 Autorelease Pool 后才会被释放，这就意味着这些内存不必要地会空占一些时间。这时候就是我们显式的使用 Autorelease Pool 的时候了，一个示例如下：
@@ -481,7 +508,8 @@ NSAutoreleasePool 是用来管理一个自动释放内存池的机制。在我�
 
 关于 Autorelease Pool 你还可以看看：[Using Autorelease Pool Blocks](https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/MemoryMgmt/Articles/mmAutoreleasePools.html) 和 [iOS 中的 AutoreleasePool](http://www.samirchen.com/ios-autorelease-pool/)。
 
-###imageNamed 和 imageWithContentsOfFile
+### imageNamed 和 imageWithContentsOfFile
+
 在 iOS 应用中加载图片通常有 `- [UIImage imageNamed:]` 和 `-[UIImage imageWithContentsOfFile:]` 两种方式。它们的不同在于前者会对图片进行缓存，而后者只是简单的从文件加载文件。
 
 	UIImage *img = [UIImage imageNamed:@"myImage"]; // caching
@@ -491,7 +519,8 @@ NSAutoreleasePool 是用来管理一个自动释放内存池的机制。在我�
 在整个程序运行的过程中，当你需要加载一张较大的图片，并且只会使用它一次，那么你就没必要缓存这个图片，这时你可以使用 `-[UIImage imageWithContentsOfFile:]`，这样系统也不会浪费内存来做缓存了。当然，如果你会多次使用到一张图时，用 `- [UIImage imageNamed:]` 就会高效很多，因为这样就不用每次都从硬盘上加载图片了。
 
 
-###避免使用 NSDateFormatter
+### 避免使用 NSDateFormatter
+
 在前文中，我们已经讲到了通过复用或者单例来提高 NSDateFormatter 这个高开销对象的使用效率。但是如果你要追求更快的速度，你可以直接使用 C 语言替代 NSDateFormatter 来解析 date，你可以看看这篇文章：[link](http://blog.soff.es/how-to-drastically-improve-your-app-with-an-afternoon-and-instruments)，其中展示了解析 ISO-8601 date string 的代码，你可以根据你的需求改写。完成的代码见：[SSToolkit/NSDate+SSToolkitAdditions.m](https://github.com/samsoffes/sstoolkit/blob/master/SSToolkit/NSDate%2BSSToolkitAdditions.m)。
 
 当然，如果你能够控制你接受到的 date 的参数的格式，你一定要尽量选择 `Unix timestamps` 格式，这样你可以使用：
@@ -505,7 +534,8 @@ NSAutoreleasePool 是用来管理一个自动释放内存池的机制。在我�
 需要注意的是，很多 web API 返回的时间戳是以**毫秒**为单位的，因为这更利于 Javascript 去处理，但是上面代码用到的方法中 NSTimeInterval 的单位是**秒**，所以当你传参的时候，记得先除以 1000。
 
 
-###IMP Caching
+### IMP Caching
+
 在 Objective-C 的消息分发过程中，所有 `[receiver message:…]` 形式的方法调用最终都会被编译器转化为 `obj_msgSend(recevier, @selector(message), …)` 的形式调用。在运行时，Runtime 会去根据 selector 到对应方法列表中查找相应的 IMP 来调用，这是一个动态绑定的过程。为了加速消息的处理，Runtime 系统会缓存使用过的 selector 对应的 IMP 以便后面直接调用，这就是 IMP Caching。通过 IMP Caching 的方式，Rumtime 能够跳过 obj_msgSend 的过程直接调用方法的实现，从而提高方法调用效率。
 
 
@@ -576,7 +606,7 @@ NSAutoreleasePool 是用来管理一个自动释放内存池的机制。在我�
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/ios-performance-optimization
 [3]: http://www.raywenderlich.com/31166/25-ios-app-performance-tips-tricks

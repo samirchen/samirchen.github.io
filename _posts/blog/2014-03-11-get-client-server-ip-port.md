@@ -6,7 +6,8 @@ category: blog
 tag: socket, linux, server, client, getsockname, getpeername, ip, port
 ---
 
-##引言
+## 引言
+
 [socket][2]编程中常有Client和Server需要各自得到对方IP和Port的需求，这里就简单的写了一个小示例，主要介绍了 `getsockname` 和 `getpeername` 的使用。
 
 	#include <sys/socket.h>
@@ -21,7 +22,8 @@ tag: socket, linux, server, client, getsockname, getpeername, ip, port
 对于客户端来说，在调用socket时候内核还不会分配IP和Port，此时调用`getsockname`不会获得正确的IP和Port（当然链接没建立更不能调用`getpeername`）。不过如果调用了`bind`以后可以使用`getsockname`得到本地的IP和Port。想要正确的到对方IP和Port（一般客户端不需要这个功能），则必须在连接建立以后，同样连接建立以后，此时客户端IP和Port就已经被指定，此时也是调用`getsockname`的时机。
 
 
-##Server端代码
+## Server端代码
+
 
 	#include "stdio.h"
 	#include "string.h" // for memset(), bzero()...
@@ -77,7 +79,8 @@ tag: socket, linux, server, client, getsockname, getpeername, ip, port
 	}
 
 
-##Client端代码
+## Client端代码
+
 
 	#include <stdio.h>
 	#include <string.h> // for memset(), bzero...
@@ -126,10 +129,11 @@ tag: socket, linux, server, client, getsockname, getpeername, ip, port
 	    return 0;
 	}
 
-##其他
+## 其他
+
 这里主要介绍了使用 `getsockname` 和 `getpeername` 来获取本地和连接端的IP和Port，其实通常Client端都会指定Server端的IP和Port，然后再去连接，也不用去获取了，其他信息也可以根据具体情况去灵活处理。
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://en.wikipedia.org/wiki/Network_socket

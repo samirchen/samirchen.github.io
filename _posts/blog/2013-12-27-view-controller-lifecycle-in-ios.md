@@ -6,7 +6,8 @@ category: blog
 tag: iOS, Objective-C, View Controller, Lifecycle
 ---
 
-##引言
+## 引言
+
 在 iOS 不断更新的过程中，很多东西也在变化。开发 App 时，最好尽量去拥抱这些变化，去及时跟进。有人喜欢使用原来的 Nib 的方式，有人喜欢纯代码的方式，我觉得在 iOS 7 中应该更积极地去使用 Storyboard。首先，如果能熟练掌握，确实能够更高效地开发；此外，由于苹果控制着这个生态环境，我们只能去积极适应，要不然等到旧的机制被完全抛弃再去更新成本就更高了。本文将要介绍的 View Controller Lifecycle 相关的内容，难免会有纰漏，欢迎大家批评指正，想要理解 View Controller Lifecycle 最好的办法就是自己去动手写代码验证。
 
 在本文中，讨论 View Controller Lifecycle 会主要提到这些方法：
@@ -24,7 +25,8 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 - [didReceiveMemoryWarning][16]
 
 
-##View Controller的初始化
+## View Controller的初始化
+
 当一个 View Controller 第一次被初始化的时候，它会`创建或者加载`它的生命周期中需要的对象。在这里不应该去创建它的 `view hierarchy` 或者跟显示内容相关的对象（这些东西应该在后面需要访问 View Controller 的 view 时再创建(`Lazy Initialization`)），而应该去创建跟数据相关的 `data objects` 以及需要实现其关键操作的对象。
 
 
@@ -60,7 +62,8 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 	在这种情况下创建的 View Controller ，是不会自动调用 [awakeFromNib][4] 方法的，所以不需要我们关注它。但是，在这种情况下，我们通常需要去重载 [loadView][5] 方法，所以**接着需要关注的是 [loadView][5] 方法。**
 
 
-##awakeFromNib
+## awakeFromNib
+
 通过上一节的内容我们可以知道，如果是从 Storyboard 加载 View Controller，那么所有从 Storyboard 被创建出来的 View Controller 及其 Subviews 的 [awakeFromNib][4] 方法会在它们被加载完成并初始化后被调用；如果是用 [initWithNibName:bundle:][6] 方法从 Nib 文件中加载 View Controller，那么它的 Subviews 的 [awakeFromNib][4] 会在它们被加载完成并初始化后被调用。收到 [awakeFromNib][4] 消息的对象的所有 outlet 和 action connection 都已经在此时被确保建立起来了。
 
 如果可以的话，我们可以把代码尽量放在后面的 [viewDidLoad][7] 或 [viewWillAppear][8] 方法中。不过，有时候我们还是需要在 [awakeFromNib][4] 中去写代码干一些在 [viewDidLoad][7] 之前必须要干的事。比如，在这里你可以设置一些用户自定义的控件的属性（如按钮的颜色、字体的大小、文本框的默认值等），还可以在这里载入控件的一些状态等。
@@ -89,7 +92,8 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 	}
 
 
-##loadView
+## loadView
+
 永远不要直接调用该方法。
 
 当代码访问 View Controller 的 view 时，如果 view 存在，是非 nil 的，那么会直接返回这个 view；如果 view 不存在于内存中，是 nil 的，那么 View Controller 会调用它的 [loadView][5] 方法来加载 `view hierarchy` 到内存并把对象赋值给 view。
@@ -122,7 +126,8 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 
 
 
-##viewDidLoad
+## viewDidLoad
+
 在初始化 instantiation 和 outlet-setting 后，viewDidLoad 就会被调用。
 
 	-(void) viewDidLoad {
@@ -135,7 +140,8 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 说到这里，就提一句，在 Navigation Stack 中，一个个的 View Controller 被压栈或弹出栈，如果一个 View Controller 已经在栈中，它上面的别的 View Controller 被弹出，等它到栈顶的时候 viewDidLoad 是不会被调用的；如果它被弹出栈，下一次再被压栈的时候，[viewDidLoad][7] 会被调用。所以我们可以看到在 Navigation Stack 中新压入栈的 View Controller 会被 `load`，弹出栈的 View Controller 会被 `dealloc`。
 
 
-##viewWillAppear & viewDidAppear
+## viewWillAppear & viewDidAppear
+
 在 view 即将出现在屏幕时，[viewWillAppear][8] 会被调用。view 只会 `load` 一次，但是可能会 `appear & disappear` 很多次，所以放在 [viewWillAppear][8] 的代码会一次又一次的执行，这可能是不必要的。比如说一次性初始化的代码就不该放在这里。
 
 如果当你的 MVC 在后台做了某些改变，且跟 View 的显示相关的话，可以在这里写对应的代码。我们还可以在这里优化代码，比如把比较耗时数据加载或网络连接的操作放到另外的线程里面去，而不是让代码在 [viewWillAppear][8] 里等待，这样界面就只能等耗时的数据加载或网络连接完成后才能出现了。我们可以把设置 View 的几何属性的代码（geometry-based initialization）放在这里，但是有更好的地方（[viewWillLayoutSubviews][11] 和 [viewDidLayoutSubviews][12]）。
@@ -143,7 +149,8 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 [viewDidAppear][14] 没什么多说的，view 已经出现了后，调用这个方法。
 
 
-##viewWillDisappear & viewDidDisappear
+## viewWillDisappear & viewDidDisappear
+
 
 当 view 将要从屏幕消失时，会调用 [viewWillDisappear][13] 。
 
@@ -162,7 +169,8 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 [viewDidDisappear][15] 没什么多说的，view 已经消失了后，调用这个方法。
 
 
-##viewWillLayoutSubviews & viewDidLayoutSubviews
+## viewWillLayoutSubviews & viewDidLayoutSubviews
+
 将在 view 的 frame 改变的时候被调用，它的 subviews 也会被 re-layed out。比如， autorotation 的时候。我们可以在这里设置 subviews 的 frame 或其他几何相关的属性。
 
 很多时候，UI 几何改变可以很好的被 iOS 的 [Autolayout][17] 机制处理，但有些时候，一些 UI 几何改变的逻辑需要我们自己写代码去实现，这时候就需要考虑到这两个方法里去实现相关代码了。
@@ -170,7 +178,8 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 
 
 
-##didReceiveMemoryWarning 
+## didReceiveMemoryWarning 
+
 
 当在低内存的情况下，[didReceiveMemoryWarning][16] 会被调用。很少会发生这样的情况，但是，耗内存大的代码通常会用到这个方法。比如 图片、声音、视频等 相关的代码。所里在这里，所有能够 recreated 的大东东应该被释放掉，即 set strong pointer to nil。比如一个图片展示的应用，当前在屏幕上的图片当然不能被释放掉，但是可以用较小的图片去替代它，或者把当前不在屏幕显示范围里的图片给释放掉，等到要显示它们的时候再重新创建它们。
 
@@ -191,7 +200,8 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 
 ![](../../images/view-controller-lifecycle-in-ios/unload-view.png)
 
-##总结
+## 总结
+
 
 我们再大概总结一下从 Storyboard 中加载 View Controller 所经历的过程：
 
@@ -222,7 +232,7 @@ tag: iOS, Objective-C, View Controller, Lifecycle
 更多详情当然应该去参考[苹果的文档][99]了。
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/view-controller-lifecycle-in-ios
 [3]: https://developer.apple.com/library/ios/documentation/Cocoa/Reference/Foundation/Protocols/NSCoding_Protocol/Reference/Reference.html#//apple_ref/occ/intfm/NSCoding/initWithCoder:

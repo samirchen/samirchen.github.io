@@ -21,7 +21,7 @@ tag: product, concept
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://samirchen.com/self-identity-to-product-identity/
+[2]: http://www.samirchen.com/self-identity-to-product-identity
 [3]: http://www.zhihu.com/question/23746259/answer/25611380

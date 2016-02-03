@@ -172,5 +172,7 @@ tag: AppStore, Rank, Top free, Top paid, Top grossing
 ![image](../../images/qrcode-somethoughts.jpg)
 
 
-
+[SamirChen]: http://www.samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{ page.title }})
+[2]: http://www.samirchen.com/app-store-monthly-rank-1
 

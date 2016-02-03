@@ -47,5 +47,5 @@ tag: product, wechat
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/good-product/
+[2]: http://www.samirchen.com/good-product
 

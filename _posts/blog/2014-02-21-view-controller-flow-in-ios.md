@@ -6,10 +6,12 @@ category: blog
 tag: view controller, flow, navigation, modal
 ---
 
-##引言
+## 引言
+
 自己学着做[iOS][2]开发其实有一段时间了，还记得当初第一次在[Xcode][3]中写 `Hello, iOS!` 的时候，就开始在想[iOS][2]中页面之间的跳转和传参该如何控制的事情了。从那时候开始，由于急冲冲地上手没读多少[Apple][4]的官方文档，尝试过不少“野路子”，其中用的挺多的方式包括：自己定义一个中心的 VC(View Controller) 来通过 `[ControlVC.view addSubview:OtherVC.view]` 的方式管理所有其他的 VC 的之间的跳转，这样很灵活，但是也会带来很多的问题。后来随着不断在项目中的实践，以及对[iOS][2]和[Xcode][3]的更深入的了解，最终我总结了一套能够比较优雅地（自认为的，求拍砖，求讨论^_^）实现整个项目页面跳转和传参的方式。当然，从本文的题目就能看出，这里所有的页面跳转和传参都是纯代码管理的，这和使用[Storyboard][5]还是是有一些区别的，关于基于[Storyboard][5]来实现页面跳转和传参的方式多是基于[Segue][6]来实现的，我会在稍后再加以总结，敬请关注。
 
-##页面流
+## 页面流
+
 话不多说，先上图：
 ![](../../images/view-controller-flow-in-ios/view-controller-flow-in-ios.png)
 
@@ -22,10 +24,12 @@ tag: view controller, flow, navigation, modal
 
 在我们上图的结构中，其实做的稍微复杂了一些，是想在这里覆盖多一点的应用场景。比如在上面，我们就用到了两个 Navigation式页面流，一个是 `MainNavigationVC`，一个是 `SubNavigationVC`，其中后者是从前者的 VCN4 作为一个 Modal 式的分支创建出来的。所以可以看到，在一个应用内还能用 Modal 的形式把不同的 Navigation式页面流 连接起来，这对于分模块开发会有一些帮助，此外，如果 MainNavigation 这一主干的页面流都是用纯代码写的，就算 SubNavigation 这一分支的页面流用 [Storyboard][5] 来实现，他们也可以这样衔接起来。
 
-##页面之间的跳转与传参
+## 页面之间的跳转与传参
+
 了解了[`Navigation方式`][7] 和 [`Modal方式`][8]，接下来就看看它们具体对应的代码是怎样的。
 
-###NavigationController的初始化
+### NavigationController的初始化
+
 在图中，我们的入口是先创建一个 `UINavigationController`，并把它的初始VC设置为 VCN1，同时可以在这里传参，代码如下：
 
 	// 在 AppDelegate.m 中
@@ -43,7 +47,8 @@ tag: view controller, flow, navigation, modal
 	}
 
 
-###Navigation-Push
+### Navigation-Push
+
 在图中，蓝色实线正向的箭头就表示的是 Navigation 的 Push 动作，比如：VCN1->VCN2; VCN1->VCN3->VCN4; VCN5->VCN6; VCN5->VCN7->VCN8 等跳转。一般来说，我们都是一级一级往前Push的，不应该有 VCN1->VCN4 这样的正向跳跃式Push的需求，要不然图就不这样画了，页面流就不这样设计了。在Push动作中传参是非常简单直接的，因为你这里创建了你要跳达的VC，直接设置其参数属性就可以了。
 
 例如，VCN1->VCN2 的跳转代码
@@ -59,7 +64,8 @@ tag: view controller, flow, navigation, modal
 
 Push动作是很简单的，基本上所有的Push代码都类似上面这样写。
 
-###Navigation-Pop
+### Navigation-Pop
+
 在图中，蓝色实线反向的箭头就表示的是 Navigation 的 Pop 动作，比如：VCN2->VCN1; VCN4->VCN3 等跳转，Pop的跳转需求相对Push就复杂一点了，因为我们还可能有类似 VCN4->VCN1; VCN8->VCN5 这样的反向跳跃式Pop的需求，这种需求是合理的。比如：我们由“设置页面”进入“登陆页面”，由“登陆页面”进入“注册页面”，等注册完成了，我们想从“注册页面”直接跳回“登陆页面”这是合理的。所以这里Pop动作就分为：
 
 - 1）逐级Pop
@@ -106,7 +112,8 @@ Push动作是很简单的，基本上所有的Push代码都类似上面这样写
 	}
 
 
-###Modal-Present
+### Modal-Present
+
 在图中，绿色虚线正向的箭头就表示的是 Modal 的 Present 动作，比如：VCN2->VCM1; VCM1->VCM2; VCN4->VCN5; VCN6->VCM3 等跳转。Present 也是一级一级往前的。在Present动作中传参，也跟Push类似，因为在这里你要创建你想要展示的页面，这时候设置其参数属性即可。但是在我们的图中出现了几种不同Present的情况：
 
 - 1）Navigation页面流中的某个页面Present一个Modal的页面
@@ -148,7 +155,8 @@ Push动作是很简单的，基本上所有的Push代码都类似上面这样写
     	[self.navigationController presentViewController:subNavigationController animated:YES completion:nil]; // 这里 present 的是 subNavigationController。
     }
 
-###Modal-Dismiss
+### Modal-Dismiss
+
 在图中，绿色虚线反向的箭头就表示的是 Modal 的 Dismiss 动作，比如：VCM1->VCN2; VCM2->VCM1; VCM3->VCN6 等跳转。Dismiss 这个动作其实写起来是很简单的，但是想要往回传参通常就会复杂一点了，尤其是在不同的情况下。这里的关键点就在于搞清楚当前所在VC的 [presentingViewController][9] 这个属性到底指向着谁。
 
 在[Apple][4] 的官方文档里是这样说明这个属性的：
@@ -235,7 +243,8 @@ SubNavigationVC.VCN5->VCN4 的跳转代码：
 
 其实所有由SubNavigationVC管理的这些VC(包括VCN5，VCN6，VCN7，VCN8)的`presentingViewController`都是MainNavigationVC。所以我们可以直接从这些VC中任意一个直接跳到MainNavigationVC的栈顶的VCN4页面。
 
-##其他页面跳转和传参方式
+## 其他页面跳转和传参方式
+
 除了上面所讲的 `Navigation方式+Modal方式` 的页面流逻辑，其实还可以用到：
 
 - `TabBar方式` 的页面流逻辑。需要注意的是我们可以把 `UINavigationController` 嵌入到 `UITabBarController` 中，但是反过来是不行的。
@@ -245,7 +254,8 @@ SubNavigationVC.VCN5->VCN4 的跳转代码：
 - Delegate机制
 - 广播机制，即设置Observer来监听Notifications
 
-##小结
+## 小结
+
 上面说了这么多，其实总结起来也就是需要注意这几点：
 
 - `Navigation方式+Modal方式` 的页面流逻辑其实已经能够满足我们大多时候的使用场景，如果你发现仍然不能满足，那建议首先考虑考虑项目的视图流的设计是不是合理。
@@ -258,7 +268,7 @@ SubNavigationVC.VCN5->VCN4 的跳转代码：
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://zh.wikipedia.org/zh-cn/IOS
 [3]: http://zh.wikipedia.org/wiki/Xcode

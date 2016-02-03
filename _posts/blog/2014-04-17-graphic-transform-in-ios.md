@@ -7,9 +7,12 @@ tag: iOS, Objective-C, transform
 ---
 
 
-##Quartz 2D与CTM
-###Quartz 2D
-####Quartz 2D简介
+## Quartz 2D与CTM
+
+### Quartz 2D
+
+#### Quartz 2D简介
+
 [Quartz 2D][4]是 iPhone OS 和 Mac OS X 环境下的二维绘图引擎。借用 Quartz 2D API，你可以接触到这样一些特性：基于路径的绘图，透明度绘图，遮盖，阴影，透明层，颜色管理，防锯齿渲染，生成 PDF，以及 PDF 元数据相关处理。可能的时候，Quartz 2D 会借助硬件的力量。
 
 在 Mac OS X 下，Quartz 2D 能与其它图形图像技术相结合——Core Image，Core Video，OpenGL，以及Quick Time。
@@ -18,7 +21,8 @@ tag: iOS, Objective-C, transform
 
 Quartz 2D 是二维画图引擎，使用画笔模型(painter’s model)，每次画图操作都是在画布(canvas)上添加一层，称之为页(Page)，后面画的页会覆盖前面画的页，所以要控制操作顺序。
 
-####Graphics Context
+#### Graphics Context
+
 [`graphics context`][5] 是 Quartz 2D 中一个十分重要的概念，它对应的数据结构即 `CGContextRef`，其中包含了Quartz 将图形绘制到输出设备（比如：PDF文件、bitmap、显示窗口）需要的信息。所有 Quartz 中的对象都是画到或是包含在 `graphics context` 中。
 
 你可以认为 `graphics context` 是一个图形绘制的目的地，通过在 Quartz 图形绘制的那一套逻辑上提供不同的 graphics context 类型就可以将同样图像绘制到不同的输出设备，而一套图形绘制的逻辑是不用改变的，Quartz 会为你做好输出到不同的设备所需要的适配计算。
@@ -34,7 +38,8 @@ Quartz 2D 是二维画图引擎，使用画笔模型(painter’s model)，每次
 这些类型针对不同的输出目标而定，详细信息参见 [苹果文档：Drawing Destinations: The Graphics Context][5]。
 
 
-####Quartz 2D Opaque Data Types
+#### Quartz 2D Opaque Data Types
+
 Quartz 2D API 在上面介绍的 graphics context 的基础上还添加了这些数据类型（Quartz 2D Opaque Data Types）：
 
 * CGPathRef
@@ -53,14 +58,16 @@ Quartz 2D API 在上面介绍的 graphics context 的基础上还添加了这些
 想要绘制不同的对象，则根据需求选择不同的 API 来使用，详细信息参见：[苹果文档：Quartz 2D Opaque Data Types][6]。
 
 
-####Graphics State
+#### Graphics State
+
 Quartz 2D 是通过修改参数 **`current graphics state`** 来修改绘图操作的结果。`graphics context` 中用一个栈来管理 `graphics state`，当你用 Quartz 创建一个 `graphics context` 时，这个栈为空；当你调用 `CGContextSaveGState` 方法保存 `graphics state` 时，Quartz 会向栈内压入一个 **`current graphics state`** 的拷贝；当你调用 `CGContextRestoreGState` 方法来恢复 `graphics state` 时，Quartz 会从栈顶弹出一个 `graphics state` 来作为 **`current graphics state`**。
 
 但是需要注意的是，并不是所有的当前绘图环境的参数都是 `graphics state` 的元素，比如 `current path` 就不是 `graphics state` 的一部分，因此即使你调用 `CGContextSaveGState` 也不会保存 `current path` 的信息。
 
 详细信息参见 [苹果文档：Graphics State][7]。
 
-####Quartz 2D Coordinate Systems
+#### Quartz 2D Coordinate Systems
+
 Quartz 2D 默认的坐标系是这样的，原点 (0, 0) 在左下角：
 
 ![](../../images/graphic-transform-in-ios/quartz-coordinates.gif)
@@ -70,7 +77,8 @@ Quartz 2D 默认的坐标系是这样的，原点 (0, 0) 在左下角：
 ![](../../images/graphic-transform-in-ios/flipped-coordinates.jpg)
 
 
-####一些案例
+#### 一些案例
+
 `CGContextRef` 有很多种，其中一种为位图上下文（bitmap graphics context)，位图上下文可用于绘制彩色或灰度图像，其可使用 Quartz 本身 `CGBitmapContextCreate` 函数创建，也可使用高级UIKit框架中的方法创建。
 
 * **在 UIView 的 `drawRect:` 方法中，UIView对象自动建立绘图环境**，使用UIKit框架的 `UIGraphicsGetCurrentContext` 方法即可获取当前的图形上下文。
@@ -89,7 +97,8 @@ Quartz 2D 默认的坐标系是这样的，原点 (0, 0) 在左下角：
 
 **可见，UIKit的API和Quartz在一定程度上是打通的，但是他们使用的坐标系统又不一样，所以一定要搞清楚你使用的API是什么，所对应的绘图环境是什么。**
 
-###CTM
+### CTM
+
 由于不同的设备有着不同的图像处理能力和处理方式，所以图形的位置和大小必须独立于设备来定义---这就由`变换矩阵（CTM：current transform matrix`）来完成。CTM矩阵类型为仿射变换(CGAffineTransform)，可使用 `CGContextGetCTM` 获取当前图形上下文的仿射变换，也可用`CGContextConcatCTM` 将参数中的 CGAffineTransform 应用于图形上下文。
 
 为了实现图形位置和大小相对设备的独立， Quartz 2D 绘图模型的设计了两种空间：`用户空间(user space)`和`设备空间(device space)`。用户空间表示当前需绘制的文档页(document page)，设备空间表示原始分辨率的设备。设备空间与用户空间的概念，可理解为两张纸，设备空间为一张纸，固定着不动，代表着屏幕；用户空间也是一张纸，实际绘图在用户空间这张纸上画，但最终需要贴到设备空间那张纸上，怎么贴就是CTM描述的问题，我可能将用户空间的纸平移一些距离再贴，也可能放大缩小一些再贴，也可能旋转一定的角度再贴。用户空间的纸对应与绘画过程中的每一page,不同的page可能用不同的用户空间，即每次绘制时的CTM可能都不一样。
@@ -121,9 +130,10 @@ Quartz 2D使用变换矩阵CTM将用户空间映射到设备空间。CTM存储�
 		[path stroke];
 	}
 
-##UIView的变换
+## UIView的变换
 
-###UIView的bounds、frame和center属性
+### UIView的bounds、frame和center属性
+
 UIView 中有 3 个跟其位置和尺寸相关的属性：
 
 * `@property CGRect bounds;`  // your view’s internal drawing space’s origin and size
@@ -168,7 +178,8 @@ View B’s middle in its own coordinate space is (bound.size.width/2+bounds.orig
 时，那么 `frame` 属性的值是 **undefined** 的，不要使用它，所以不要在对 view 进行 transform 后使用 `frame`，因为它不能正确的反映出 view 的真实尺寸和位置，这里应该用 `bounds`+`center` 属性来调整其尺寸和位置。此外，`frame` 属性是 animatable 的，也就是说，对这个属性的改变是可以用动画效果展示的，但是依然要遵循前面的原则，transform 后不要使用它。
 
 
-###UIView的transform
+### UIView的transform
+
 UIView 的 `transform` 属性就是一个 CGAffineTransform 类型的数据，
 
 	@property (nonatomic) CGAffineTransform transform;
@@ -265,7 +276,7 @@ CGAffineTransform的用法：
 
 [一个使用CGAffineTransform的Demo。][11]
 
-###CGAffineTransform的理解
+### CGAffineTransform的理解
 
 `CGAffineTransform` 的数据结构表示的是用于仿射变换的矩阵。详细内容可以参考：[苹果文档：CGAffineTransform][2]
 
@@ -294,7 +305,8 @@ CGAffineTransform的用法：
 
 下面介绍一下移动、旋转、缩放这几种图形变换本质对应的仿射变换过程。
 
-####CGAffineTransformMakeTranslate
+#### CGAffineTransformMakeTranslate
+
 
 	CGAffineTransform CGAffineTransformMakeTranslation(CGFloat tx, CGFloat ty);
 
@@ -308,7 +320,8 @@ CGAffineTransformMakeTranslation(tx, ty) 得到的矩阵是：
 ![](../../images/graphic-transform-in-ios/affine-transform-matrix-translation-calcu.png)
 
 
-####CGAffineTransformMakeRotation
+#### CGAffineTransformMakeRotation
+
 
 	CGAffineTransform CGAffineTransformMakeRotation(CGFloat angle);
 	
@@ -346,7 +359,8 @@ CGAffineTransformMakeTranslation(tx, ty) 得到的矩阵是：
 	s = os = oa + as = x*cos(θ) + y*sin(θ) 
 	t = ot = ay – ab = y*cos(θ) – x*sin(θ)
 
-####CGAffineTransformMakeScale
+#### CGAffineTransformMakeScale
+
 
 	CGAffineTransform CGAffineTransformMakeScale(CGFloat sx, CGFloat sy);
 
@@ -359,9 +373,10 @@ CGAffineTransformMakeTranslation(tx, ty) 得到的矩阵是：
 ![](../../images/graphic-transform-in-ios/affine-transform-matrix-scale-calcu.png)
 
 
-##CALayer的变换
+## CALayer的变换
 
-###UIView的layer属性
+### UIView的layer属性
+
 在 iOS 中，我们经常接触到 CALayer 的地方可能就是它作为 UIView 的一个属性 `layer`。
 
 In iOS, if the layer is associated with a UIView object, this property must be set to the view that owns the layer.
@@ -374,9 +389,10 @@ Because the view is the layer’s delegate, never make the view the delegate of 
 * 如果两个UIView是父子关系，那么它们内部的CALayer也是父子关系。
 
 
-###CALayer的frame、bounds、position和anchorPoint属性
+### CALayer的frame、bounds、position和anchorPoint属性
 
-####anchorPoint
+#### anchorPoint
+
 CALayer 的 `anchorPoint` 属性值是用一种相对bounds的比例值来确定的，取值范围是 (0, 0) 到 (1, 1)。`anchorPoint` 主要的作用就是用来作为变换的支点，旋转就是一种变换，类似的还有平移、缩放。比如在下图中，`anchorPoint` 不一样，那么旋转的形态就不一样了。
 
 图1
@@ -387,7 +403,8 @@ CALayer 的 `anchorPoint` 属性值是用一种相对bounds的比例值来确定
 
 * 改变 `anchorPoint` 值会对 `frame.origin` 值产生影响。
 
-####position
+#### position
+
 就像 UIView 有 superView 和 subView 一样，CALayer 也有 superLayer 和 layer。
 
 CALayer 的 `position` 属性值其实是 CALayer 的 `anchorPoint` 点在其 `superLayer` 中的位置坐标。看看position的原始定义：`The layer’s position in its superlayer’s coordinate space.`中文可以理解成为 `position` 是 CALayer 相对 `superLayer` 坐标空间的位置，很显然，这里的位置是根据 `anchorPoint` 来确定的。
@@ -401,7 +418,8 @@ CALayer 的 `position` 属性值其实是 CALayer 的 `anchorPoint` 点在其 `s
 	
 * 改变 `position` 值会对 `frame.origin` 值产生影响。
 
-####frame
+#### frame
+
 下面再来看另外两个问题，如果单方面修改CALayer的 `position` 位置，会对 `anchorPoint` 有什么影响呢？修改 `anchorPoint` 又如何影响 `position`呢？代码测试，这两个属性修改其中一个不会对另一个产生影响。受影响的只会是 `frame.origin`。所以基于上面的公式，可以得到 CALayer 的 `frame` 值计算公式为：
 	
 	frame.origin.x = position.x - anchorPoint.x * bounds.size.width;
@@ -420,7 +438,8 @@ Apple Doc中还有一句描述是这样的：
 * 改变 `frame.origin` 会对 `position` 值产生影响。
 * 改变 `frame.size` 会对 `bounds.size`，`position` 值产生影响。
 
-####bounds
+#### bounds
+
 一般都是在初始化 CALayer 的时候设置。改变 `bounds.origin` 值对其他值没什么变化，基本上可以认为 `bounds.origin` 没啥用。但是改变 `bounds.size` 值时，CALayer 的 frame 值就要变了，这个变法也遵循上面的公式。设置 `frame.size` 会引起 `bounds.size` 的变化，遵循公式：
 	
 	bounds.size.width = frame.size.width;
@@ -429,7 +448,8 @@ Apple Doc中还有一句描述是这样的：
 * 改变 `bounds.origin` 无意义。
 * 改变 `bounds.size` 会对 `frame.size`，`frame.origin` 值产生影响，从而对 `position` 值产生影响。
 
-####小结
+#### 小结
+
 
 
 上面有点绕了，简单点就记住这些：
@@ -457,7 +477,8 @@ Apple Doc中还有一句描述是这样的：
 	
 
 
-###CALayer的transform
+### CALayer的transform
+
 CALayer的 `transform` 属性是是 CATransform3D 类型的数据。就是 3D 版的变换矩阵，当 z 为 0 时，可以转换为 CGAffineTransform。
 
 	struct CATransform3D
@@ -492,7 +513,7 @@ CALayer的 `transform` 属性是是 CATransform3D 类型的数据。就是 3D �
 * CATransform3DGetAffineTransform 
 * CATransform3DMakeAffineTransform
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: https://developer.apple.com/library/ios/documentation/graphicsimaging/reference/CGAffineTransform/Reference/reference.html
 [3]: http://blog.csdn.net/yu0089/article/details/8299323

@@ -41,7 +41,7 @@ category: opinion
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://37signals.com/
 [3]: http://gettingreal.37signals.com/

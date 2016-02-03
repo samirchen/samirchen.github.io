@@ -8,7 +8,8 @@ tag: iOS, Objective-C, block
 
 本文介绍了 Block 的基本语法知识以及相关的使用场景，并进一步探索了 Block 的底层实现机制和内存管理机制，还总结了使用 Block 时应该注意的各种问题。这篇文章写的很长，是为了把关于 Block 的种种问题探索的更清晰，如果在阅读时觉得太累可以根据文章的目录结构寻找自己想要了解的部分。
 
-##Block 是什么
+## Block 是什么
+
 Block 是 Apple 在 C 语言的基础上添加的扩展功能，由于 Ojective-C、C++ 都是源自于 C，所以这三种语言都能够使用它。对于 Block 的功能，可以用一句话概括：**能持有作用域变量的匿名函数。**
 
 `匿名函数`就是没有名称的函数，C 语言的标准不允许存在这样的函数，而通过 Block，源代码中就可以使用匿名函数了。
@@ -18,7 +19,8 @@ Block 是 Apple 在 C 语言的基础上添加的扩展功能，由于 Ojective-
 
 Block 能够让我们创建明显的代码片段，并且可以像参数那样传递给方法或函数。在 Objective-C 中，Block 就像对象一样，能够被添加到集合中（比如：NSArray、NSDictionary）。Block 能够获得其所在作用域的变量，就如同其他语言里`闭包（Closure）`或者`lambda 计算`的概念。
 
-##Block 语法形式
+## Block 语法形式
+
 Block 的语法遵循如下形式：
 
 - `^` `返回值类型` `参数列表` `表达式`
@@ -46,7 +48,8 @@ Block 的语法遵循如下形式：
 可见，Block 语法从形式上来看除了没有名字以及带有 `^` 外，其他都和 C 语言的函数定义相同。
 
 
-##Block 类型变量的使用
+## Block 类型变量的使用
+
 在 C 语言中，可以把一个函数的地址赋值给函数指针类型的变量，如下：
 
 	int func(int a) {
@@ -56,7 +59,8 @@ Block 的语法遵循如下形式：
 	
 同样，在 Block 语法中，也可以把一个 Block 赋值给 Block 类型的变量。
 
-###最简单的 Block
+### 最简单的 Block
+
 声明和定义一个不返回任何值，不接受任何参数的 Block：
     
 	// 完整的写法：
@@ -73,7 +77,8 @@ Block 的语法遵循如下形式：
     // 调用 block
     simpleBlock();
 
-###带参数和返回值的 Block
+### 带参数和返回值的 Block
+
 下面的 Block，接受两个 double 参数，返回一个 double 值：
 
 	// 声明
@@ -87,7 +92,8 @@ Block 的语法遵循如下形式：
     double result = multiplyTwoValues(2,4);
     NSLog(@"The result is %f", result);
 
-###Block 作为参数时的缩写
+### Block 作为参数时的缩写
+
 
 Block 作为参数时的缩写如 Block 语法规则所约定那样。
 
@@ -104,7 +110,8 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 
 
 
-###把 Block 传递给方法或函数
+### 把 Block 传递给方法或函数
+
 
 	// 调用带 block 参数的方法：
 	- (IBAction)fetchRemoteInformation:(id)sender {
@@ -128,7 +135,8 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 
 苹果的建议是在一个方法中最好只使用一个 block 变量，并且如果这个方法如果还带有其他非 block 变量，那么 block 变量应该放在最后一个。
 
-###使用 typedef 来简化 Block 定义
+### 使用 typedef 来简化 Block 定义
+
 
 上面的 Block 类型的变量在使用时，记述方式会一眼看上去有点不够简洁，这时候我们也可以用 typedef 来解决这个问题。
 
@@ -161,7 +169,8 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 	    };
 	};
 
-###定义属性来持有 Block
+### 定义属性来持有 Block
+
 使用 `copy`，因为 Block 要持有它原本所在作用域的其他外面的变量：
 
 	@interface XYZObject : NSObject
@@ -181,7 +190,8 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 	@property (copy) XYZSimpleBlock blockProperty;
 	@end
 
-###Block 的指针类型变量
+### Block 的指针类型变量
+
 我们还可以使用指向 Block 类型变量的指针，即 Block 的指针类型变量。
 
 	typedef int (^MyBlock)(int);
@@ -194,9 +204,10 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 	
 可见 Block 类型变量可像 C 语言中其他类型变量一样使用。
 
-##Block 的使用场景
+## Block 的使用场景
 
-###Block 简化枚举
+### Block 简化枚举
+
 
 	// NSArray 的一个方法，接受一个 block 作为参数，这个 block 会在该方法里每枚举一个对象时被调用一次：
 	- (void)enumerateObjectsUsingBlock:(void (^)(id obj, NSUInteger idx, BOOL *stop))block;
@@ -211,21 +222,24 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
         }
     }];
 
-###Block 简化并发调用
-####Block 和 Operation Queue 一起用
+### Block 简化并发调用
+
+#### Block 和 Operation Queue 一起用
+
 
 	NSBlockOperation *operation = [NSBlockOperation blockOperationWithBlock:^{
 	    ...
 	}];
 
-####Block 和 GCD 一起用
+#### Block 和 GCD 一起用
+
 
 	dispatch_queue_t queue = dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0);
 	dispatch_async(queue, ^{
 	    NSLog(@"Block for asynchronous execution");
 	});
 
-###Block 的使用场景小结
+### Block 的使用场景小结
 
 * Enumeration (像我们上面看到的 NSArray 的枚举接口)
 * View Animations (animations)
@@ -237,10 +251,12 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 
 
 
-##Block 的实现
+## Block 的实现
+
 在前面的内容中，我们知道了 Block 是「能持有作用域变量的匿名函数」，还介绍了使用 Block 的相关内容，那么 Block 究竟是如何实现的呢？我们可以用 clang（LLVM 编译器）把带 Block 语法的源代码代码转换为我们能够理解的源代码来初探一下。这里我们可以使用 `clang -rewrite-objc <source-code-file>` 把含有 Block 语法的源代码转换成 C++ 的源代码（这里其实就是使用了 struct 结构的 C 代码）。 
 
-###最简单的Block
+### 最简单的Block
+
 包含 Block 语法的源代码 test_block.m：
 
 	#include <stdio.h>
@@ -303,7 +319,8 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 - Block 转换后的形式就是简单地使用函数指针来调用函数。
 - Block 其实就是 Objective-C 对象。
 
-###Block 截获自动变量
+### Block 截获自动变量
+
 我们对 test_block.m 代码稍作修改。其中在 Block 中用到了自动变量。
 
 	#include <stdio.h>
@@ -403,7 +420,8 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 而这种赋值方式是不符合 C 语言规范的。而使用指针就没问题了。
 
 
-###Block 使用静态、全局变量
+### Block 使用静态、全局变量
+
 下面的代码中，用到了静态变量、全局变量、全局静态变量，并在 Block 中改变了他们的值。
 
 	#include <stdio.h>
@@ -479,7 +497,8 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 
 
 
-###\_\_block 说明符
+### \_\_block 说明符
+
 上面展示了 Block 截获自动变量以及使用静态变量、全局变量和全局静态变量的实现，接下来，再来看看当需要在 Block 里面改变自动变量时的情况，也就是使用 \_\_block 说明符时 Block 的实现。这里需要关注的问题是：**当使用了 \_\_block 说明符后，对变量做了什么处理，才使得不在变量作用域的 Block 可以去访问修改变量呢？**
 
 `__block` 说明符更准确的表述是：**__block 存储域类说明符**。在 C 语言中还有这些存储域类说明符：typedef、extern、static、auto、register。这些说明符用于指定将变量值设置到哪个存储域中。例如，auto 表示作为自动变量存储在栈上，static 表示作为静态变量存储在数据区等。下面来看看 \_\_block。
@@ -579,7 +598,8 @@ Block 作为参数时的缩写如 Block 语法规则所约定那样。
 
 这两个问题是关于 \_\_block 自动变量的，但是我们还要先看看 Block 内存管理相关的知识后再来解答。
 
-###Block 存储域
+### Block 存储域
+
 Block 有 3 种类型：
 
 - `_NSConcreteStackBlock`，这种类型的 Block 存储在栈上。
@@ -588,14 +608,16 @@ Block 有 3 种类型：
 
 ![image](../../images/block-in-objc/block_memory_segment.png)
 
-####1）NSConcreteGlobalBlock
+#### 1）NSConcreteGlobalBlock
+
 
 在下面两种情况下，我们得到的 Block 是 `_NSConcreteGlobalBlock` 类型的：
 
 - 在记述全局变量的地方有 Block 语法时。
 - Block 语法中不使用任何自动变量时。
 
-####2）NSConcreteStackBlock
+#### 2）NSConcreteStackBlock
+
 
 除上面两种情况创建的 Block 以外，其他 Block 语法生成的 Block 均为 `_NSConcreteStackBlock` 类型，存储在栈上。
 
@@ -622,7 +644,8 @@ Block 有 3 种类型：
 		};
 	}
 	
-####3）NSConcreteMallocBlock
+#### 3）NSConcreteMallocBlock
+
 
 那么问题来了，什么时候会用到存储在堆上的 `_NSConcreteMallocBlock` 类型的 Block 呢？
 
@@ -635,7 +658,8 @@ Block 语法机制提供了将 Block 和 \_\_block 变量从栈上复制到堆�
 
 看到这里，上节遗留的两个问题的答案已经初见端倪，不过，这里还是集中精神先说 Block 的内存管理，还没深入到解答那两个问题，只是突然扯出了答案的尾巴，先不管，还是先关注 Block 吧。
 
-####Block 内存管理需要注意的问题
+#### Block 内存管理需要注意的问题
+
 
 在 ARC 的情况下，编译器在大多时候会做出恰当的判断，自动生成把 Block 从栈上拷贝到堆上的代码。比如：
 
@@ -702,7 +726,8 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 所以，**不管 Block 存储在何处，用 copy 方法复制都不会引起任何问题。在不确定时调用 copy 方法即可。**在 ARC 中不能显式的 release，但是即使多次调用了 copy 方法进行复制也不会有问题。
 
-####小结
+#### 小结
+
 
 - 1）本节讲了 Block 的 3 种类型：NSConcreteStackBlock、NSConcreteGlobalBlock、NSConcreteMallocBlock。介绍了它们的内存管理方式。Block 的内存管理设计解决了 Block 离开作用域被使用的问题（被 copy 到堆上）。
 - 2）在 ARC 特性下，在方法中返回 Block 时将不再需要手动调用 copy 了。
@@ -736,7 +761,8 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 
 
-###\_\_block 变量存储域
+### \_\_block 变量存储域
+
 讲完对 Block 的处理后，我们知道了通过把 Block 拷贝到堆上，使得 Block 离开作用域也可以被使用，**但是，Block 自己还有使用作用域里的自动变量的需求**。所以接下来要解答这个问题，开讲 Block 机制对 \_\_block 变量的处理。
 
 使用 \_\_block 变量的 Block 从栈上复制到堆上时，\_\_block 也会受到影响：
@@ -792,17 +818,20 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 这里，\_\_forwarding 指针的意义显而易见了吧。
 
 
-###总结
+### 总结
+
 这节的内容讲的东西还是比较多的，看着看着可能就失去焦点，陷入细节之中了，在这里，我梳理了一下这节内容的逻辑链条以 Why-How-When 的顺序展开以方便理解。
 
-####Why
+#### Why
+
 「Block 的实现」这节是在我们明确了「Block 是能持有作用域变量的匿名函数」这个定义后，来探索它究竟是如何实现这个定义的。那么首先我们需要搞清楚的是 Block 这个定义背后的设计目标(**Why**)：
 
 - Block 能够持有作用域变量，那必然会有对这些变量进行读写操作的需求，那要采用什么样的机制保证 Block 正确读写所持有的变量呢？
 - Block 是匿名函数，那么作为函数，它就天然带着能够在各个地方被正确调用的属性，那么 Block 的作用域和生命周期机制应该如何设计从而来保证它能在各种地方被正确调用呢？
 - Block 存在作用域和生命周期的问题，那么需要一套怎样的机制来保证 Block 所持有的变量的作用域和生命周期能够与之相匹配，从而保证 Block 的正确使用呢？
 
-####How
+#### How
+
 接下来我们分为下面几个步骤来探讨怎么实现上述的设计目标(**How**)：
 
 - 1）我们需要根据变量的不同的**作用域**和**生命周期**来分别讨论，这样就包括了：`全局变量`、`全局静态变量`、`局部静态变量`和`自动变量`。
@@ -813,7 +842,8 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 - 3）所以接下来，我们开始探讨 Block 存储域相关的知识。介绍了 Block 的三种存储相关类型以及使用时需要注意的问题。
 - 4）介绍完 Block 存储域相关的东西后，就接着说了 \_\_block 变量与 Block 协作时的内存管理机制。从而解释清楚了对「Block 是能持有作用域变量的匿名函数」这个定义的实现方式。
 
-####When
+#### When
+
 通过上面的内容，我们可以理解 Block 的能力的实现机制，但是在具体使用时**在怎样的场景下会触发这些机制**是我们接下来需要搞清楚的(**When**)：
 
 - 首先是 Block 自身的内存管理的情况。比如什么场景下编译器能帮你自动把 Block 给拷贝到堆上，什么情况下你得手动调用 copy 方法去把 Block 拷贝到堆上的问题。对于这些问题，在本节内容中零零散散的提到了，我会一并总结到后面的「使用Block需要注意的问题」那节。
@@ -821,9 +851,10 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 
 
-##使用 Block 需要注意的问题
+## 使用 Block 需要注意的问题
 
-###使用 Block 时需要手动 copy 的情况
+### 使用 Block 时需要手动 copy 的情况
+
 总结一下在 ARC 下使用 Block 时需要手动 copy 和不需要手动 copy 的情况：
 
 - 不需要手动 copy 的情况：
@@ -837,9 +868,10 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 
 
-###Block 截获作用域变量的行为
+### Block 截获作用域变量的行为
 
-####基本类型变量
+#### 基本类型变量
+
 - 局部变量（local varible）在 Block 里是只读的。如果想在 Block 中读写局部变量，那么需要在局部变量前加 `__block`。
 
 >
@@ -900,7 +932,8 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 - 静态变量在 Block 里是可读可写的。
 - 全局变量在 Block 里是可读可写的。
 
-####对象
+#### 对象
+
 在 ARC 环境下，我们来讨论下 Block 对 `__weak`、`__strong`、`__block` 修饰的对象的截获行为。
 
 为了测试，先自定义一个类 MyObject，含一个属性 text，重写 description 方法。如下：
@@ -1085,7 +1118,8 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 - Block 捕获 `weakObj` 指向的对象时是对其进行**弱引用持有**，这是因为 `weakObj` 是用 `__weak` 修饰的。这与上面第 1） 种情况是一样的，但是这里在 Block 的实现中，又通过 `typeof(weakObj) __strong strongObj = weakObj;` 这句代码想要去强引用持有 `weakObj` 指向的对象，但是在执行这句代码之前，如果 `weakObj` 已经被置为 nil，那么这里的 `strongObj` 也并不能强引用持有住对象而延长对象的生命周期。这里很有意思的一点是，这句代码在 `weakObj` 这个中间人的作用下并没有一开始就强引用持有 `obj` 指向的对象，而是等到代码执行到这句才开始，并且这里是通过一个**局部变量** `strongObje` 来强引用持有对象，当局部变量作用域结束，它和它所持有的对象就都会被释放，不会造成内存泄露的问题。这点非常有用，即它不会造成强引用循环，这在后面「避免 Block 使用的对象被提前释放」那节会有用到。
 
 
-###避免强引用循环
+### 避免强引用循环
+
 每次向 Block 里的对象发送消息（方法调用）的时候，将会创建一个 strong 指针指向这个对象，直到 Block 结束。所以像下面的代码，self strong 持有 Block，而在 Block 里又 strong 持有了 self，这样谁也不能被释放：
 
 	// .h
@@ -1122,7 +1156,8 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 
 
-###避免Block使用的对象被提前释放
+### 避免Block使用的对象被提前释放
+
 上面提到了使用 weak 引用的方式解决 retain cycle 的方案，但随着应用场景的改变，又会带来新的问题，比如：在 Block 中用异步的方式使用了外部对象，当对象被释放后，异步方法回调时访问该对象则会为空，这时就可能造成程序崩溃了。解决这个问题的方式则是 weak/strong 化，示例代码如下：
 
 TestBlockViewController.m
@@ -1181,13 +1216,14 @@ TestBlockViewController.m
 - 这种用法可以延长 Block 中使用的对象的生命周期来保证回调时访问对象的合法性。在 self.myBlock 中，通过 `typeof(weakSelf) __strong strongSelf = weakSelf;` 去用一个**局部变量** `strongSelf` 强引用持有对象(self)，如果这时候对象还没释放，那么就局部变量 `strongSelf` 就可以延长对象的生命周期直到局部变量的作用域结束，那时候局部变量被释放，对象也相应被释放。一切都很完美。
 
 
-##参考
+## 参考
 
 - [Apple 的官方文档：Working with Blocks][2]
 - [《Objective-C 高级编程：iOS 与 OS X 多线程和内存管理》][3]
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
+tp://samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/WorkingwithBlocks/WorkingwithBlocks.html
 [3]: https://book.douban.com/subject/24720270/

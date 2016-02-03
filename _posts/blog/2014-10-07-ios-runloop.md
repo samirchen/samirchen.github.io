@@ -8,7 +8,8 @@ tag: iOS, runloop, input source, timer, NSPort
 
 文章的主要内容源自苹果的官方文档：[Run Loops][3]
 
-##Run Loop概念
+## Run Loop概念
+
 通过某种设计设计，使得当一个线程运行的同时，还可以从其它线程里往它里面随意增加或去掉不同的计算任务，这就是 NSRunLoop 的初衷。Run Loop是和线程相关的基础框架的一部分。一个Run Loop就是一个**事件处理的循环**，用来不停地调度和协调接收到的各种事件。使用Run Loop的目的就是调度好线程让其有活干活，没活休息。
 
 Run Loop的管理**不是完全自动的**，所以需要我们自己设计线程代码在合适的时候去启动它并正确地响应输入事件。为此，Cocoa和Core Foundation提供了Run Loop Objects来帮助我们配置和管理线程的Run Loop，每个线程都有对应的Run Loop Objects。通常，在我们的代码里需要**提供while或for循环这些控制语句来驱动Run Loop**，在我们的循环中，我们使用Run Loop Objects来运行事件处理代码，它们响应接收到的事件并运行对应的处理代码。
@@ -16,7 +17,8 @@ Run Loop的管理**不是完全自动的**，所以需要我们自己设计线�
 在Carbon和Cocoa程序中，**主线程**会自动创建并运行它的Run Loop，作为一般应用程序启动过程的一部分，而**辅助线程**需要显式地运行它的Run Loop。
 
 
-##Run Loop事件源
+## Run Loop事件源
+
 Run Loop对象处理的事件源分为两种：**input sources**和**timer sources**。
 
 * input sources：用分发异步事件，通常是用于其他线程或程序的消息，比如：`performSelector:onThread:...`。
@@ -31,7 +33,8 @@ Run Loop对象处理的事件源分为两种：**input sources**和**timer sourc
 Run Loop除了处理各种事件外，同时会**生成关于Run Loop行为相关的通知(Notifications)**，注册**run-loop observers**可以接收到这些通知并根据情况去在线程上做相应的处理。
 
 
-###Run Loop Mode
+### Run Loop Mode
+
 Run Loop Mode是指**要被监听的事件源(包括input sources和timer sources)的集合 + 要被通知的run-loop observers的集合**。
 
 在你运行一个Run Loop时，你会为它显示或隐式地指定一个mode。这之后，在这个Run Loop中，只有与这个mode关联的事件源才会被监听并被允许分发事件，同理，也只有与这个mode关联的observer才会被通知。和其他mode关联的事件源只有当Run Loop运行在对应的mode下才会分发相应的事件过来，否则就处于暂停状态。
@@ -45,16 +48,19 @@ Run Loop Mode是指**要被监听的事件源(包括input sources和timer source
 ![](../../images/ios-runloop/run-loop-modes.png)
 
 
-###Input Sources
+### Input Sources
+
 上面已经说过了，input sources用异步的方式分发事件到你的线程。一共有两种input sources：**基于端口的input source**和**自定义的input source**。
 
 基于端口的input source监听程序的Mach Ports，由系统内核来自动通知它。自定义的input source则需要手动从其他线程通知它。
 
-####基于端口的input source
+#### 基于端口的input source
+
 
 Cocoa和Core Foundation中直接用端口相关的对象和函数就能创建基于端口的input source。值得一提的是，在Cocoa中，你不需要自己直接创建input source，你只用创建一个port对象，并NSPort的相关方法将这个port添加到对应的run loop中就可以了，这个port对象会自己创建和配置所需要的input source。在Core Foundation中，则需要你自己创建port对象和其需要的run loop source。
 
-#####配置基于port的input source的例子(Cocoa)
+##### 配置基于port的input source的例子(Cocoa)
+
 
 先来看看在main thread中实现的代码：
 
@@ -150,7 +156,8 @@ Cocoa和Core Foundation中直接用端口相关的对象和函数就能创建基
 
 可以看到，NSPort提供了一个挺清晰的线程间通信的方案。但是在iOS中，这个用的并不多，因为大多数情况，我们都可以用系统提供给我们的`performSelector:onThread:...`来搞定了，关于**Cocoa Perform Selector Sources**，在后面的**自定义的input source**中会提到。
 
-#####配置一个NSMessagePort对象
+##### 配置一个NSMessagePort对象
+
 `NSMessagePort`主要用于本机分布式连接通信。它的解释是这样的：
 
 - NSMessagePort is a subclass of NSPort that can be used as an endpoint for distributed object connections (or raw messaging). NSMessagePort allows for local (on the same machine) communication only. A companion class, NSSocketPort, allows for both local and remote communication, but may be more expensive than NSMessagePort for the local case.
@@ -173,7 +180,8 @@ Cocoa和Core Foundation中直接用端口相关的对象和函数就能创建基
 
 回头看看上面的代码，对port这个东西的概念多多少少清晰些了，但是其实没多少对input source的感觉，因为前面已经说了，Cocoa不用我们自己直接创建input source，直接拿port对象来用就可以了。接下来来看看在Core Foundation中是如何配置基于port的input source的，这里应该可以感受下input source。
 
-#####配置基于port的input source的例子(Core Foundation)
+##### 配置基于port的input source的例子(Core Foundation)
+
 这里主要展示如何在Core Foundation中创建main thread和worker thread之间的双向通信机制。
 
 在`MySpawnThread()`中是主线程启动worker thread的代码。首先是创建了**CFMessagePortRef**的这样一个port来监听worker thread的消息，而worker thread需要这个port的名字来建立连接，所以port的名字被传递给worker thread的入口函数了。注意这个port名字要是唯一的。
@@ -348,12 +356,14 @@ Cocoa和Core Foundation中直接用端口相关的对象和函数就能创建基
 上面的代码里，明确的体现了创建input source的过程，有点感觉了。
 
 
-####自定义的input source
+#### 自定义的input source
+
 要创建自定义的input source，需要用到Core Foundation中与**CFRunLoopSourceRef**相关的函数，需要用到几个回调函数来配置自定义的input source，Core Foundation会在不同的点上调用它们来配置这个source、处理到来的事件、在run loop结束的时候移除source等等。
 
 这一部分的详细信息，可以参考[苹果官方文档：Run Loops-Defining a Custom Input Source][4]。
 
-#####创建自定义的input source
+##### 创建自定义的input source
+
 创建自定义的input source需要定义以下内容：
 
 1. 你的input source需要处理的信息。
@@ -371,7 +381,8 @@ Cocoa和Core Foundation中直接用端口相关的对象和函数就能创建基
 
 
 
-#####Cocoa Perform Selector Sources
+##### Cocoa Perform Selector Sources
+
 下面说说Cocoa为我们提供的自定义的input source：**Cocoa Perform Selector Sources**。
 
 Cocoa提供给我们的自定义的input sources允许我们在任何线程上去执行一个selector。和基于端口的input source一样，对一个目标线程的多个perform selector的请求是被串行处理的，这就很大地降低了多个方法在一个线程上运行带来的同步问题。和基于端口的input source不一样的是，一个perform selector source会在调用selector后把自己从run loop中移除出去。
@@ -384,7 +395,8 @@ Cocoa提供给我们的自定义的input sources允许我们在任何线程上�
 
 
 
-###Timer Sources
+### Timer Sources
+
 Timer Source会在预设的时间点同步地分发事件到你的线程上。Timer是线程通知自己去干活的一种方式。比如：搜索栏控件就可以使用timer，当用户输入完文字一段时间后，就可以自动开始一次搜索过程，而不是一输入就开始搜索，这里延时一下可以让用户能有足够的时间输入想输入的关键字，而避免产生无效的搜索请求。
 
 尽管timer source产生基于时间的通知，但是timer并不是一个真正实时的机制：
@@ -395,7 +407,8 @@ Timer Source会在预设的时间点同步地分发事件到你的线程上。Ti
 
 你可以配置timer产生事件的时间，可以只来一次，也可以循环着来。但是注意，**一个重复的timer会基于scheduled firing time(而不是actual firing time)自动reschedule它自己**，这两个概念是有区别的，就是说timer的下一次fire是准点进行的，不管你上一次fire是否有延迟，如果延迟太长超过了设定的时间间隔，那就相当于作废了，因为到下一个fire时间点，timer已经reschedule自己了。
 
-####配置Timer Sources
+#### 配置Timer Sources
+
 要配置一个timer source，你只需要创建一个timer，然后把它安排到你的run loop中去。
 
 在Cocoa中，用下面的方法可以一次性创建和安排timer。这两个方法创建timer，并在默认模式(NSDefaultRunLoopMode)下把它添加到当前线程的run loop中。
@@ -430,7 +443,8 @@ Timer Source会在预设的时间点同步地分发事件到你的线程上。Ti
 
 
 
-##Run Loop Observers
+## Run Loop Observers
+
 对比上面说的事件源---它们是在特定的同步事件或异步事件发生时被触发，run loop observer就不一样了，它是在run loop执行自己的代码到某一个指定位置时被触发。我们可以用run loop observers来跟踪到这些事件：
 
 - 进入run loop的时候。
@@ -501,7 +515,8 @@ Timer Source会在预设的时间点同步地分发事件到你的线程上。Ti
 	    // Clean up code here. Be sure to release any allocated autorelease pools.
 	}
 
-##Run Loop事件处理流程
+## Run Loop事件处理流程
+
 每次运行时，你的线程的Run Loop就会开始处理等待的事件并为run loop observers生成通知。整个的处理流程大致如下：
 
 * 1、通知observers已经进入run loop了。
@@ -529,7 +544,8 @@ Timer Source会在预设的时间点同步地分发事件到你的线程上。Ti
 可以通过run loop object来显式地唤醒run loop。其他事件也可以唤醒run loop，比如：添加一个其他的非基于端口的input source可以唤醒run loop立即处理这个input source，而不是等到其他事件发生才处理。
 
 
-##线程安全和Run Loop对象
+## 线程安全和Run Loop对象
+
 线程是否安全取决于你用什么API来操作你的Run Loop。Core Foundation的函数一般都是线程安全的。
 
 Cocoa的NSRunLoop不是线程安全的，如果你使用NSRunLoop对象来修改你的run loop，那么你最好只从拥有该run loop的thread上去操作。把属于一个线程的input source或timer source再添加到其他的线程会引起崩溃。
@@ -537,7 +553,7 @@ Cocoa的NSRunLoop不是线程安全的，如果你使用NSRunLoop对象来修改
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/ios-runloop/
 [3]: https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/Multithreading/RunLoopManagement/RunLoopManagement.html#//apple_ref/doc/uid/10000057i-CH16-SW1

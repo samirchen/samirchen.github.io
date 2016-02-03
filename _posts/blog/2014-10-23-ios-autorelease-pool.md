@@ -9,7 +9,8 @@ tag: iOS, autorelease pool, memory management
 文章的主要内容源自苹果的官方文档：[Using Autorelease Pool Blocks][3]
 
 
-##关于Autorelease Pool
+## 关于Autorelease Pool
+
 [Autorelease Pool][3] 是iOS内存管理机制中很重要的一个部分。 Autorelease Pool字面上看起来是「自动释放池」的意思，在这个池子里去管理对象的内存。
 
 Autorelease Pool的一个使用场景是在需要延迟释放某些对象的情况时，可以把他们先放到对应的Autorelease Pool中，等Autorelease Pool生命周期结束时再一起释放。这些对象会被发送autorelease消息。在非ARC时代，我们显示地发送autorelease消息，在ARC时代，系统会帮我们做这些事情。[点这里了解更多][4]
@@ -41,7 +42,8 @@ Cocoa中总是会期望代码在一个Autorelease Pool Block中运行，否则�
 	- 你需要在线程的任务代码中创建自己的autorelease pool block。
 
 
-##使用Autorelease Pool Block来降低内存占用峰值
+## 使用Autorelease Pool Block来降低内存占用峰值
+
 
 上例子：
 
@@ -79,14 +81,16 @@ Cocoa中总是会期望代码在一个Autorelease Pool Block中运行，否则�
 	}
 
 
-##Autorelease Pool Block和线程
+## Autorelease Pool Block和线程
+
 在Cocoa中，每个线程去维护它自己的autorelease pool block的栈，所以当我们自己要写一些线程代码，我们可能就要自己去创建自己的autorelease pool block了，尤其当你的线程是长时间工作、可能生产出大量的autorelease的对象的时候。
 
 如果你分发的线程不会产生对Cocoa的调用，那么你也许就不需要使用autorelease pool block了。
 
 
 
-##autorelease的实现
+## autorelease的实现
+
 
 既然说到 Autorelease Pool，这里就多说一下在 MRC 时代 autorelease 的实现机制，了解这个机制对于我们理解 Objective-C 的内存管理是很有帮助的。
 
@@ -171,7 +175,8 @@ autorelease 实例方法的本质就是调用 NSAutoreleasePool 对象的 addObj
 
 
 
-##NSThread、NSRunLoop 和 NSAutoreleasePool
+## NSThread、NSRunLoop 和 NSAutoreleasePool
+
 根据苹果官方文档中对 NSRunLoop 的描述，我们可以知道每一个线程，包括主线程，都会拥有一个专属的 NSRunLoop 对象，并且会在有需要的时候自动创建。
 
 在主线程的 [NSRunLoop][5] 对象（在系统级别的其他线程中应该也是如此，比如通过 dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0) 获取到的线程）的每个 event loop 开始前，系统会自动创建一个 Autorelease Pool ，并在 event loop 结束时 drain 。我们上面提到的场景 1 中创建的 autoreleased 对象就是被系统添加到了这个自动创建的 Autorelease Pool 中，并在这个 Autorelease Pool 被 drain 时得到释放。
@@ -182,7 +187,7 @@ autorelease 实例方法的本质就是调用 NSAutoreleasePool 对象的 addObj
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/ios-autorelease-pool/
 [3]: https://developer.apple.com/library/ios/documentation/cocoa/conceptual/memorymgmt/Articles/mmAutoreleasePools.html#//apple_ref/doc/uid/20000047-CJBFBEDI

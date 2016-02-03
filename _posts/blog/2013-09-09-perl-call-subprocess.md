@@ -5,7 +5,7 @@ description: 介绍3种在Perl中调用子进程的常用方法。
 category: blog
 ---
 
-##场景
+## 场景
 
 在Unix-like环境下，通常会使用Perl脚本来做一些文本处理、数据处理、系统命令测试之类的工作。在这些工作中经常会需要我们调用别人的代码或程序来完成某一部分工作，这就涉及到如何在Perl中调用子进程的问题。
 
@@ -18,9 +18,9 @@ category: blog
 
 如果使用脚本的话，我们在脚本中让Perl去一遍一遍地修改设置read/write buffer的大小，并调用对应的测试程序命令即可。我们所要做的就是启动一次脚本，接着等结果就好了。这个过程中我们就要用Perl去调用测试程序了。
 
-##Perl中调用子进程的方式
+## Perl中调用子进程的方式
 
-###使用`system`函数
+### 使用`system`函数
 
 这样调用子进程可以得到一个返回值，这个返回值右移`8`位后与在Shell中调用这个程序得到的返回值一致。几个例子：
 
@@ -68,7 +68,7 @@ category: blog
 
 这样结果就与Shell中调用所得到的返回值一致了。
 
-###使用`exec`函数
+### 使用`exec`函数
 
 这样调用子进程后，Perl进程会结束掉，然后只运行这个被调用的子进程。这种方式可以在只想把Perl脚本当做一个启动其他进程的启动器时用到。几个例子：
 
@@ -91,7 +91,7 @@ category: blog
 
 可以看到，结果并没有打印出`End`，而且Perl还给了我们一个提示，意义很明显。Perl进程在执行完`exec`函数后就退出了。
 
-###使用``(反引号)
+### 使用``(反引号)
 
 这样调用进程可以捕捉到调用该进程的输出文本，这个输出文本与直接在Shell下调用这个进程一致。这个是很有用的，我们有很多程序都会输出文本给用户以反馈，我们可以在Perl中捕捉这些信息，对其进行处理分析，这个在自动化测试、数据处理等工作中搭配上Perl的正则表达式等功能尤其有用。几个例子：
 
@@ -108,6 +108,6 @@ category: blog
 	[cx@rh Perl]$ perl test.pl
 	httpd dead but subsys locked
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})
 [iperf]: http://iperf.sourceforge.net/ "iperf"

@@ -8,7 +8,7 @@ tag: git, scm
 
 转自：[git rebase](http://gitbook.liuhui998.com/4_2.html)
 
-##场景
+## 场景
 假设你现在基于远程分支 origin，创建一个叫 mywork 的分支。
 
     $ git checkout -b mywork origin
@@ -28,13 +28,13 @@ tag: git, scm
 ![image](../../images/git-rebase/rebase1.png)
 
 
-##使用git merge
+## 使用git merge
 在这里，你可以用 pull 命令把 origin 分支上的修改拉下来并且和你的修改合并；结果看起来就像一个新的**合并的提交**(merge commit)。
 
 ![image](../../images/git-rebase/rebase2.png)
 
 
-##使用git rebase
+## 使用git rebase
 
 但是，如果你想让 mywork 分支历史看起来像没有经过任何合并一样，你也许可以用 git rebase 命令。
 
@@ -71,6 +71,6 @@ tag: git, scm
     $ git rebase --abort
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})
 

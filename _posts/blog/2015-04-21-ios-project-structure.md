@@ -8,7 +8,8 @@ tag: iOS, project structure
 
 
 
-##结论
+## 结论
+
 不废话，我现在通常采用的目录结构如下：
 
 ```
@@ -41,9 +42,11 @@ tag: iOS, project structure
 
 
 
-##目录结构的进化
+## 目录结构的进化
 
-###形式一
+
+### 形式一
+
 
 ```
 |—MyProject
@@ -71,7 +74,8 @@ tag: iOS, project structure
 以前跟同事一起开发的时候会分层来分工，比如，当对项目抽象完毕、设计好数据库后，就会由同学 A 负责映射数据库的 Model 层的开发，然后提供相应的 DAO 层、LocalService 层的接口，一般就是常见的增删查改操作接口，当负责 Controller 层的同学 B 需要本地数据时，则去调用同学 A 提供的 LocalService 层的接口。这时问题就出现了，由于同学 A 开发 LocalService 层的接口时，并没有接触到上层的业务逻辑，他设计接口时只能充分发挥他自己的想象力，一般也就是提供常见的增删查改操作，这些接口与业务逻辑对接时，常常会发现要么冗余，提供的接口根本就用不上，要么对于复杂点的业务逻辑支持不够，想复杂一点操作数据，现有的接口却支持不了。所以，就需要考虑换一种分工方式，采用基于 Feature 的方式进行分工了，基于这点，项目的目录结构也逐渐演变成下面要讲的形式了。
 
 
-###形式二
+### 形式二
+
 下面的目录结构就是文章开头所说的我现在通常采用的目录结构。这种形式的主要特点就是更好地支持基于 Feature 进行模块划分和任务指派。在每个 Feature 下，对应的开发人员需要穿透 MVC 整个层次来完成这个功能模块的开发，那么他对于各层的接口也能更高效地开发，不需要的接口不用写，复杂的接口能写的更高效。甚至，开发人员可以根据 Feature 的特点采用更适合的架构，比如 MVVM 架构等等，这样更具灵活性。但是需要关注的是，还是需要提供一定规范限制，保持每个 Feature 下代码结构的清晰，这样也利于同事的查阅、修改和调用。
 
 ```
@@ -102,7 +106,8 @@ tag: iOS, project structure
 ```
 
 
-###基本原则
+### 基本原则
+
 上面的 iOS 项目目录结构不一定适合所有人的想法，关键看你希望用一个结构解决什么问题。就我自己而言，我是希望通过一个良好的项目结构去达到两个目的：
 
 - 1）使项目更适合于团队开发，能够降低耦合、便于任务的划分和代码的整合管理。
@@ -116,9 +121,10 @@ tag: iOS, project structure
 
 
 
-##关于Xcode的文件夹
+## 关于Xcode的文件夹
 
-###Group 和 Folder Reference 的区别
+### Group 和 Folder Reference 的区别
+
 说完目录结构，插一点小话题，说说 Xcode 的文件夹。Xcode 项目的文件夹有 Group 和 Folder Reference 之分。它们的区别在 [Xcode Groups vs. Folder References][3] 这篇文章里有详细的讲述。
 
 Group 的缺点如下：
@@ -149,7 +155,8 @@ Folder Reference 的有这些缺点：
 
 在实际使用中，使用 Group 要多得多。
 
-###Xcode 项目结构和磁盘文件结构的对应
+### Xcode 项目结构和磁盘文件结构的对应
+
 上面说了 Group 和 Folder Reference 各自的优缺点，在项目中，我习惯上也是不使用 Folder Reference，只用 Group。在 Xcode 项目中创建 Group 的方式有两种：
 
 - 1）创建时需要先在磁盘上创建对应的文件夹，再把文件夹拖进 Xcode 项目中对应的位置，并选择 Create groups for any added folders。这样创建的 Group 会对应着磁盘上的 Folder。
@@ -199,7 +206,7 @@ Folder Reference 的有这些缺点：
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/ios-project-structure/
 [3]: http://vocaro.com/trevor/blog/2012/10/21/xcode-groups-vs-folder-references/

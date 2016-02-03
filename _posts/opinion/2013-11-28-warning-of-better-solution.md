@@ -17,7 +17,7 @@ category: opinion
 
 条条大路通罗马，找到更好的路很重要，坚持在一条路上走下去也很重要！寻找一个平衡点，要不然就是曲曲折折的绕远或者试不完的“更好的路”。
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})
 
 

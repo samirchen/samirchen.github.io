@@ -6,7 +6,8 @@ category: blog
 tag: design, interaction, web, mobile, reading notes
 ---
 
-##话说简单
+## 话说简单
+
 
 1、简单并不意味着最少化。朴素的设计仍然具有自身的特征和个性。简单并不意味着欠缺或低劣，也不意味着不注重装饰或完全赤裸裸。而是说装饰应该紧贴设计本身，任何无关的要素都应该予以剔除。换句话说，抛开极简主义，也能够成就简单。简单的特征和个性应该源自你使用的方法、所要表现的产品以及用户执行的任务。
 
@@ -20,7 +21,8 @@ tag: design, interaction, web, mobile, reading notes
 ![image](../../images/reading-notes-suwmid/evaluate.png)
 
 
-##明确认识
+## 明确认识
+
 
 3、三种用户。
 
@@ -60,7 +62,8 @@ tag: design, interaction, web, mobile, reading notes
 对于用户在做什么，要关注主要的行动，并通过用户的语言来描述行动的经过。比如，对于摄像机，一开始可以写“拍摄并分享视频”，然后列出用户行动的每一个步骤，详细程度要前后一致。
 
 
-##简约四策略
+## 简约四策略
+
 
 8、简约四策略，以简化 DVD 遥控器为例：
 
@@ -72,7 +75,8 @@ tag: design, interaction, web, mobile, reading notes
 ![image](../../images/reading-notes-suwmid/4-tactics.png)
 
 
-##合理删除
+## 合理删除
+
 
 9、简化设计最明显的方式是删除不必要的功能。
 
@@ -147,7 +151,8 @@ tag: design, interaction, web, mobile, reading notes
 - 聚焦于达成用户的目标。纠结于流程会陷入细节的泥潭而无法自拔。
 - 删除那些干扰性的、增加用户负担的“减速带”：错误信息、不知所云的文字、不必要的选项和造成视觉混乱的元素。
 
-##分层组织
+## 分层组织
+
 
 27、画出用户的行为有助于理解如何组织你的软件产品。
 
@@ -166,7 +171,8 @@ tag: design, interaction, web, mobile, reading notes
 - 对于同等重要的类别，利用感知分层技术，使用相同的亮度和大小，只是色调要有所区别。
 
 
-##适时隐藏
+## 适时隐藏
+
 
 32、不常用但不能少的功能通常是适合隐藏的功能。在寻找要隐藏的功能时，“设置”通常都是首选。
 
@@ -195,7 +201,8 @@ tag: design, interaction, web, mobile, reading notes
 - 不可强迫或寄希望于主流用户使用自定义功能，不过可以给专家提供这个选项。
 - 巧妙地隐藏。换句话说，首先是彻底隐藏，其实是适时出现。
 
-##巧妙转移
+## 巧妙转移
+
 
 40、有些功能在有的平台上简单，而在其他平台上就会变得复杂。
 
@@ -238,7 +245,8 @@ tag: design, interaction, web, mobile, reading notes
 45、简单的体验需要信任。计算机之所以搞得用户不舒服，就是因为它们总是控制和指挥用户。
 
 
-##最后
+## 最后
+
 46、到了设计简单用户体验的最后，往往不是问“怎样才能把这个功能设计得更简单”，而是问“到底应该把这个复杂性放到哪里”。
 
 - 这个任务应该是自动化的（像Flip的自动对焦功能），还是应该由用户来控制（如iPhone中通过触摸屏幕来对准相机焦距）？
@@ -257,6 +265,6 @@ tag: design, interaction, web, mobile, reading notes
 50、不要让你的设计干扰用户的思绪。简单的设计能够为用户留出足够的空间，他们会自己用自己的生活来填充这些空间，从而创造出更丰富、更有意义的体验。
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen/reading-notes-suwmid/

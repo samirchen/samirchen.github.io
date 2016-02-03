@@ -5,7 +5,7 @@ description: 介绍一些Linux环境下网络性能测试常用的工具和具�
 category: blog
 ---
 
-##网络性能测试的几项重要指标
+## 网络性能测试的几项重要指标
 
 1、可用性
 
@@ -27,15 +27,15 @@ category: blog
 
 与网络吞吐量不同，网络带宽容量指的是在网络的两个节点之间的最大可用带宽，这是由组成网络的设备能力所决定的。
 
-##使用iperf进行测试
+## 使用iperf进行测试
 
-###iperf介绍
+### iperf介绍
 
 [iperf][]是一个TCP/IP和UDP/IP性能测试工具，能够提供网络吞吐率信息，以及震动、丢包率、最大组和最大传输单元大小等统计信息，可以由这些信息来分析网络的通信性能、定位网络瓶颈。
 
 [iperf][]以client/server方式工作，服务器端和客户端都使用同一程序`iperf`，服务器端使用`-s`选项，而客户端则使用`-c`选项。在 client与server之间，首先建立一个控制连接，传递有关测试配置的信息，以及测试的结果；在控制连接建立并传递了测试配置信息以后，client与server之间会再建立一个测试连接，用来回传递着特殊的流量模式，以测试网络的性能。
 
-###iperf获取与安装
+### iperf获取与安装
 
 下载地址：[http://iperf.sourceforge.net/](http://iperf.sourceforge.net/)
 
@@ -48,7 +48,7 @@ category: blog
 	[root@rh iperf-2.0.2]# make install
 	[root@rh iperf-2.0.2]# ls /usr/netperf
 
-###iperf的使用
+### iperf的使用
 
 启动server端：
 
@@ -119,9 +119,9 @@ category: blog
 
 
 
-##使用netperf进行测试
+## 使用netperf进行测试
 
-###netperf介绍
+### netperf介绍
 
 [netperf][]是一种网络性能测量工具，主要针对基于TCP或UDP的传输。[netperf][]根据应用的不同，可以进行不同模式的网络性能测试，即批量数据传输（bulk data transfer）模式和请求/应答（request/response）模式。[netperf][]反应的是一个系统能以多快的速度向另一个系统发送数据，以及另一个系统能以多快的速度接受数据。
 
@@ -140,7 +140,7 @@ category: blog
 
 由于UDP传输的不可靠性，在使用 [netperf][]时要确保发送的缓冲区大小不大于接收缓冲区大小，否则数据会丢失，[netperf][]将给出错误的结果。因此，对于接收到分组的统计不一定准确，需要结合发送分组的统计综合得出结论。
 
-###netperf获取与安装
+### netperf获取与安装
 
 下载地址：[http://www.netperf.org/netperf/](http://www.netperf.org/netperf/)
 
@@ -154,7 +154,7 @@ category: blog
 	[root@rh netperf-2.6.0]# make install
 	[root@rh netperf-2.6.0]# ls /usr/netperf
 
-###netperf使用
+### netperf使用
 
 启动server端：
 
@@ -341,19 +341,19 @@ category: blog
 但是如果出现了相反的结果，即交易率反而降低了，也不用太惊讶，因为这说明在网络中，路由器或其他网络设备对 UDP 采用了与 TCP 不同的缓冲区空间和处理技术。
 
 
-##其他注意事项
+## 其他注意事项
 
 测试的时候，常常由于防火墙的原因造成网络不能连接，这时候可以设置或关闭防火墙后再测试。关闭和启动防火墙命令：
 
 	service iptables stop/start;
 
-##后记
+## 后记
 
 常用的网络性能测试工具除了 [iperf][]、[netperf][]，还有 [pathload][]、[pathrate][]、[DBS][]、[tcptrace][]等工具。
 
 本文参考：[《网络管理必备工具软件精解（Linux版）》][]，作者：李波；杨红，人民邮电出版社。
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})
 [iperf]: http://iperf.sourceforge.net/ "iperf"
 [netperf]: http://www.netperf.org/netperf/ "netperf"

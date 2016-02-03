@@ -14,9 +14,11 @@ tag: iOS, Objective-C, runtime
 
 与之对应的实现就是 Objective-C 短小精悍的 Runtime。对于苹果维护的 Objective-C 的 Runtime 源码，你可以在这里看到： [Objective-C 源码](http://www.opensource.apple.com/source/objc4/)。
 
-##运行时的类与对象
+## 运行时的类与对象
 
-###相关函数
+
+### 相关函数
+
 Objective-C 的 Runtime 为我们提供了很多运行时状态下跟类与对象相关的函数，比如：
 
 - `const char *class_getName(Class cls)`，获取指定类的类名。
@@ -54,7 +56,8 @@ Objective-C 的 Runtime 为我们提供了很多运行时状态下跟类与对�
 
 上面罗列的函数只是一部分，在使用这些函数时，有时候需要注意一些细节信息和使用规范，具体可以查阅 [Objective-C Runtime Reference][5]。
 
-###类的数据结构
+### 类的数据结构
+
 上面的函数非常丰富，我们可以看出这些函数为我们提供了在运行时改变一个类的结构、属性、方法、协议等信息的能力。那这些函数背后所操作的数据结构是什么样的呢？这个其实可以在 `objc/runtime.h` 的源码中查到：
 
 	struct objc_class {
@@ -88,7 +91,8 @@ Objective-C 的 Runtime 为我们提供了很多运行时状态下跟类与对�
 
 
 
-###元类(Meta Class)
+### 元类(Meta Class)
+
 
 上面讲到一个类也是一个对象，那么它必然也是某一种类的实例，这种类就是：元类(Meta Class)。就如类是对应的实例的描述一样，元类则是类作为对象时的描述。元类的方法列表对应的则是类方法(Class Method)列表，这正是类作为一个对象时所需要的。当我们像 `[NSObject alloc]` 这样给一个类发送消息时，Runtime 就会去对应的元类查找其类方法列表，并匹配调用。
 
@@ -103,7 +107,8 @@ Objective-C 的 Runtime 为我们提供了很多运行时状态下跟类与对�
 在图中还能看到类的继承关系以及对应的元类的继承关系，已经比较清晰了，不再详述。
 
 
-###类的实例的数据结构
+### 类的实例的数据结构
+
 
 在 Objective-C 中类的实例的数据结构是定义在 `struct objc_object` 中(objc/objc.h)：
 
@@ -128,9 +133,11 @@ Objective-C 的 Runtime 为我们提供了很多运行时状态下跟类与对�
 	typedef struct objc_object *id;
 
 
-###运行时操作类与对象的代码示例
+### 运行时操作类与对象的代码示例
 
-####实例、类、父类、元类关系结构的示例代码
+
+#### 实例、类、父类、元类关系结构的示例代码
+
 
 首先我创建了继承关系为 `SubClass -> SuperClass -> NSObject` 的几个类，下面就用 Runtime 提供的运行时方法来打印一下相关信息：
 
@@ -203,7 +210,8 @@ Objective-C 的 Runtime 为我们提供了很多运行时状态下跟类与对�
 
 
 
-####动态操作类与实例的示例代码
+#### 动态操作类与实例的示例代码
+
 
 接着上面的代码，我们继续：
 
@@ -298,9 +306,9 @@ Objective-C 的 Runtime 为我们提供了很多运行时状态下跟类与对�
 
 
 
-##运行时的成员变量与属性
+## 运行时的成员变量与属性
 
-###相关函数
+### 相关函数
 
 Runtime 中与成员变量和属性相关的函数有很多，这里列出一些：
 
@@ -325,7 +333,7 @@ Runtime 中与成员变量和属性相关的函数有很多，这里列出一些
 
 
 
-###成员变量(Ivar)的数据结构
+### 成员变量(Ivar)的数据结构
 
 在 Objective-C 中成员变量即 `Ivar` 类型，是指向 `struct objc_ivar` 结构体的指针。可以在 objc/runtime.h 中查到：
 
@@ -343,7 +351,7 @@ Runtime 中与成员变量和属性相关的函数有很多，这里列出一些
 	} 
 
 
-###属性的数据结构
+### 属性的数据结构
 
 属性(Property)的数据结构：
 
@@ -359,14 +367,14 @@ Runtime 中与成员变量和属性相关的函数有很多，这里列出一些
 
 
 
-###属性和成员变量的联系
+### 属性和成员变量的联系
 
 本质上一个属性背后必然对应着一个成员变量，但是属性又不仅仅只是一个成员变量，属性还会根据自己对应的属性特性的定义来对这个成员变量进行一系列的封装：提供 Getter/Setter 方法、内存管理策略、线程安全机制等等。
 
 
 
 
-###运行时操作成员变量和属性的代码示例
+### 运行时操作成员变量和属性的代码示例
 
 接着放示例代码：
 
@@ -463,10 +471,10 @@ Runtime 中与成员变量和属性相关的函数有很多，这里列出一些
 - 添加一个属性及对应的成员变量后，我们还能通过 `[obj valueForKey:@"propertyName"];` 获得属性值。
 
 
-##运行时的消息分发
+## 运行时的消息分发
 
 
-###相关函数
+### 相关函数
 
 - `id objc_msgSend(id self, SEL op, ...)`，消息分发。(objc/message.h)
 - `id method_invoke(id receiver, Method m, ...);`，调用指定方法的实现。
@@ -488,10 +496,11 @@ Runtime 中与成员变量和属性相关的函数有很多，这里列出一些
 - `BOOL sel_isEqual(SEL lhs, SEL rhs);`，比较两个选择器。
 
 
-###消息机制相关的数据结构
+### 消息机制相关的数据结构
 
 
-####选择器
+#### 选择器
+
 选择器在 Objective-C 中即 SEL 类型。它的定义如下(objc/objc.h)：
 
 	typedef struct objc_selector *SEL;
@@ -528,7 +537,8 @@ Runtime 中与成员变量和属性相关的函数有很多，这里列出一些
 
 
 
-####函数指针
+#### 函数指针
+
 
 函数指针在 Objective-C 中即 IMP 类型。它的定义如下(objc/objc.h)：
 
@@ -537,7 +547,8 @@ Runtime 中与成员变量和属性相关的函数有很多，这里列出一些
 IMP 其实就是 `implementation` 的缩写，表示方法实现的代码块地址，可以像 C 函数一样直接调用。通常情况下，我们都是通过 `[object method:parameter]` 或 `objc_msgSend()` 的方式调用方法或函数，然后 Runtime 去寻找消息匹配的 IMP 来调用，但有时候我们也可以直接获取 IMP 来调用。通过 IMP，我们可以跳过 Rumtime 的消息分发流程，直接执行 IMP 指向的代码块，这样会比直接向对象发送消息高效一些。这就是 IMP Caching 技术。
 
 
-####方法
+#### 方法
+
 方法在 Objective-C 中即 Method 类型。它的定义如下(objc/runtime.h)：
 
 	typedef struct objc_method *Method;
@@ -560,7 +571,7 @@ IMP 其实就是 `implementation` 的缩写，表示方法实现的代码块地�
 这里的描述了方法的 SEL 以及参数类型。
 
 
-###消息分发机制说明
+### 消息分发机制说明
 
 Objective-C 中的消息是直到运行时才绑定到具体的方法实现上。基本上代码中形如 `[receiver message]` 的消息表达式在编译阶段只是确定了要向 receiver 发送 message 这样一件事，这里的 message 是一个方法名 selector 以及相关的参数。这个消息会被编译器转化为对 `objc_msgSend()` 函数或相近函数的调用，在这个过程中，objc_msgSend() 函数会获取 receiver、selector 以及 message 中的参数作为自己的参数，调用形式如下：
 
@@ -589,9 +600,10 @@ Objective-C 中的消息是直到运行时才绑定到具体的方法实现上�
 
 
 
-###运行时消息分发的代码示例
+### 运行时消息分发的代码示例
 
-####Method Swizzling
+#### Method Swizzling
+
 
 在前文中讲 Method 的数据结构时我们说到过，方法的数据结构中包含了 SEL 和 IMP。selector 相当于一个方法的 id；IMP 是方法的实现。这样分开的一个便利之处是 selector 和 IMP 之间的对应关系可以被改变。比如一个 IMP 可以有多个 selectors 指向它。而本节所讲的 Method Swizzling 的概念则是交换两个方法的实现，从而「狸猫换太子」。
 
@@ -675,7 +687,8 @@ ViewController.m
 ![image](../../images/objective-c-runtime/method-swizzling.png)
 
 
-####消息转发
+#### 消息转发
+
 
 当一个对象能接收一个消息时，就会走正常的方法调用流程。但如果一个对象无法接收指定消息时，又会发生什么事呢？默认情况下，如果是以 `[receiver message]` 的方式调用方法，如果 receiver 无法响应 message 消息时，编译器会报错。但如果是以 `performSelector…` 的形式来调用，则需要等到运行时才能确定 receiver 是否能接收 message 消息。如果不能，则程序崩溃。
 
@@ -698,7 +711,8 @@ ViewController.m
 - 第二步：备用接收者。
 - 第三步：完整转发。
 
-#####第一步：动态方法解析
+##### 第一步：动态方法解析
+
 
 对象在接收到未知的消息时，首先会调用所属类的类方法 `+resolveInstanceMethod:` 或者 `+resolveClassMethod:`，前者处理实例方法调用，后者处理类方法调用。我们可以它们里面用 `class_addMethod()` 加入异常处理的方法，不过前提是我们以及实现了处理方法。示例代码如下：
 
@@ -734,7 +748,8 @@ ViewController.m
 
 
 
-#####第二步：备用接收者
+##### 第二步：备用接收者
+
 
 如果在第一步还是无法处理消息，则 Runtime 会继续调以下方法：
 
@@ -807,7 +822,8 @@ ViewController.m
 
 这一步适用于当我们只想将消息转发到另一个能处理该消息的对象上的情况，它无法进一步对消息进行处理，比如：操作消息的参数和返回值。
 
-#####第三步：完整转发
+##### 第三步：完整转发
+
 
 如果`第二步：备用接收者`还是未能处理好消息，那么接下来只有启用完整的消息转发机制了，这时候会调用以下方法：
 
@@ -921,7 +937,7 @@ NSObject 的 `-forwardInvocation:` 方法实现只是简单调用了 `-doesNotRe
 从某种意义上来讲，`-forwardInvocation:` 就像一个未知消息的分发中心，将这些未知的消息转发给其它对象。或者也可以像一个运输站一样将所有未知消息都发送给同一个接收对象。这取决于具体的实现。
 
 
-####消息转发与多重继承
+#### 消息转发与多重继承
 
 回过头来看上面第二步和第三步，通过 `-forwardingTargetForSelector:` 和 `-forwardInvocation:` 这两个方法我们可以允许一个对象与其它对象建立关系，以处理某些未知消息，而表面上看仍然是该对象在处理消息。通过这种关系，我们可以模拟 `多重继承` 的某些特性，让对象可以继承其它对象的特性来处理一些事情。不过，这两者间有一个重要的区别：多重继承将不同的功能集成到一个对象中，它会让对象变得过大，涉及的东西过多；而消息转发将功能分解到独立的小的对象中，并通过某种方式将这些对象连接起来，并做相应的消息转发。
 
@@ -942,7 +958,7 @@ NSObject 的 `-forwardInvocation:` 方法实现只是简单调用了 `-doesNotRe
 	}
 
 
-##参考
+## 参考
 
 - [Objective-C Runtime Reference][5]
 - [Classes and Metaclasses][3]

@@ -20,7 +20,8 @@ tag: iOS, layout
 	@property (nonatomic,assign) BOOL automaticallyAdjustsScrollViewInsets NS_AVAILABLE_IOS(7_0); // Defaults to YES
 
 
-##edgesForExtendedLayout
+## edgesForExtendedLayout
+
 
 通过 `edgesForExtendedLayout` 这个属性来设置你的 View Controller 页面的哪一侧会延伸至屏幕边缘。可选值有：UIRectEdgeNone、UIRectEdgeTop、UIRectEdgeLeft、UIRectEdgeBottom、UIRectEdgeRight、UIRectEdgeAll。默认值是 UIRectEdgeAll，即 View Controller 的布局是全屏填满。
 
@@ -37,7 +38,8 @@ tag: iOS, layout
 
 
 
-##extendedLayoutIncludesOpaqueBars
+## extendedLayoutIncludesOpaqueBars
+
 
 `extendedLayoutIncludesOpaqueBars` 这个属性是对 `edgesForExtendedLayout` 的补充。它的意思当 NavigationBar、TabBar、TooBar 这些 Bar 不是半透明时(Bar 的 translucent 属性值为 NO)，如果设置 extendedLayoutIncludesOpaqueBars 为 NO，则不会将 View Controller 的页面布局延伸至全屏，如果设置为 YES，则坚持延伸至全屏。
 
@@ -45,7 +47,8 @@ tag: iOS, layout
 
 
 
-##automaticallyAdjustsScrollViewInsets
+## automaticallyAdjustsScrollViewInsets
+
 
 当我们采用全屏布局设置了 edgesForExtendedLayout 为 UIRectEdgeAll，而此时 View Controller 的 self.view 的第一个 Subview 是 UIScrollView 类型或其子类型(如：UITableView 等)时，`automaticallyAdjustsScrollViewInsets` 这个属性就会被用来辅助我们对 UIScrollView 类的视图进行布局。automaticallyAdjustsScrollViewInsets 默认值即为 YES。
 
@@ -60,6 +63,6 @@ tag: iOS, layout
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/ios-view-controller-full-screen-layout/

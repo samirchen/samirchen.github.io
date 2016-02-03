@@ -8,7 +8,8 @@ tag: iOS, Objective-C, property
 
 本文中的概念都是基于 iOS 7 的，在以前版本中是否适用并未做详细考证。
 
-##private & public
+## private & public
+
 在 [Objective-C][3] 中，`.h` 文件中都是 public API 的声明，`.m` 文件中是 private API 的声明和所有的代码实现。比如：
 
 `Card.h` 文件：
@@ -37,7 +38,8 @@ tag: iOS, Objective-C, property
 	@end
 
 
-##strong & weak
+## strong & weak
+
 `strong` 关键字和 `weak` 关键字用于对指针属性（@property）的修饰。
 
 当堆上的对象有一个或多个 strong 指针指向它时，它会安好。当一个指向它的 strong 指针也没有时（比如设置最后一个指向它的 strong 指针为 nil），这个对象立即被释放；如果此时还有一个或多个 weak 的指针指向这个对象，那么这些 weak 的指针将被设为 nil。比如：
@@ -53,7 +55,8 @@ tag: iOS, Objective-C, property
 
 `nonatomic` 关键字用于对属性的修饰，当调用这个属性的 setter 或 getter 的时候不是线程安全的，这样开销也会小一些。
 
-##@synthesize
+## @synthesize
+
 `@synthesize` 的含义是在没有进行重载的情况下，让编译器根据读写属性自动为类的属性生成 getter 和 setter 方法。我们通常会这样写：
 
 `.h` 文件中：
@@ -86,7 +89,8 @@ tag: iOS, Objective-C, property
 要注意一点，[Objective-C][3] 对象的所有的属性（即实例变量instance variables）都初始化为 0 或 nil。@synthesize 不会为属性分配空间。在Objective-C 中向为 nil 发送消息不会造成程序崩溃，但是什么也不会执行，如果有返回值的话，返回 0 或 nil。
 
 
-##@property的初始化
+## @property的初始化
+
 当我们有一个属性
 
 	@property (strong, nonatomic) NSMutableArray *cards;
@@ -108,7 +112,8 @@ tag: iOS, Objective-C, property
 
 我们通常都是在 getter 中初始化属性，而不是在别的地方搞个 initializer 之类的方法来做。这种方式叫做 [Lazy Instantiation][4]。这是 Objective-C 中常用的模式。
 
-##IBAction & IBOutlet
+## IBAction & IBOutlet
+
 从界面上的一个控件 Control+drag 拖一个方法到代码的实现区，会得到类似：
 
 	-(IBAction) touchCardButton:(UIButton*)sender;
@@ -121,7 +126,8 @@ tag: iOS, Objective-C, property
 
 的UI属性。这里一定是一个 weak 的属性，因为这个属性是被 View 所 strong 持有的，对 Controller 来说只应该 weak 地指向它。这里的 IBOutlet 跟 IBAction 的意思差不多，主要是方便 Xcode用它，编译器会忽略它。
 
-##Data & UI
+## Data & UI
+
 我们通常在属性的 setter 中保证属性数据和对应的 UI 的一致性。比如：
 
 	-(void) setFlipCount:(int)flipCount {
@@ -131,7 +137,7 @@ tag: iOS, Objective-C, property
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen/property-in-objectivec
 [3]: http://zh.wikipedia.org/zh-cn/Objective-C

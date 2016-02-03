@@ -7,7 +7,8 @@ tag: CocoaPods, Podfile.lock, Git
 ---
 
 
-##发生了什么
+## 发生了什么
+
 你加入一个 iOS 项目，根据小伙伴给你的 git 仓库地址把代码 clone 下来，在项目目录下 `ls -al` 看一下：
 
 	$ ls -al
@@ -62,7 +63,8 @@ tag: CocoaPods, Podfile.lock, Git
 又是 Podfile.lock 这鬼？等等，还有 Manifest.lock 又是啥？
 
 
-##Podfile.lock 是啥
+## Podfile.lock 是啥
+
 
 Podfile.lock 是在第一次运行 `pod install` 时生成的，Podfile.lock 中会标注项目当前依赖库的准确版本，其中包括了项目在 Podfile 中直接标注使用的库，以及这些库依赖的其他库。这样的好处是当你跟小伙伴协同开发时，你的小伙伴同步了你的 Podfile.lock 文件后，他执行 `pod install` 会安装 Podfile.lock 指定版本的依赖库，这样就可以防止大家的依赖库不一致而造成问题。因此，CocoaPods 官方强烈推荐把 Podfile.lock 纳入版本控制之下。
 
@@ -90,7 +92,8 @@ Podfile.lock 是在第一次运行 `pod install` 时生成的，Podfile.lock 中
 	
 - 使用 `pod update`，你会根据 Podfile 的规则更新所有依赖库，不会理睬现有的 Podfile.lock，而是根据安装依赖库的情况生成新的 Podfile.lock 文件。
 
-##Manifest.lock 又是啥
+## Manifest.lock 又是啥
+
 Manifest.lock 是 Podfile.lock 的副本，每次只要生成 Podfile.lock 时就会生成一个一样的 Manifest.lock 存储在 Pods 文件夹下。在每次项目 Build 的时候，会跑一下脚本检查一下 Podfile.lock 和 Manifest.lock 是否一致：
 
 ![image](../../images/about-podfile-lock/check-pod-manifest-lock.png)
@@ -103,7 +106,8 @@ Manifest.lock 是 Podfile.lock 的副本，每次只要生成 Podfile.lock 时�
 	
 这样做的原因是 Pods 目录并不总是被放到版本控制之下，有了这个检查机制就能保证开发团队的各个小伙伴能在运行项目前更新他们的依赖库，并保持这些依赖库的版本一致，从而防止在依赖库的版本不统一造成程序在一些不明显的地方编译失败或运行崩溃。
 
-##到底发生了什么
+## 到底发生了什么
+
 说清楚了 Podfile.lock 和 Manifest.lock 到底是什么，现在我们回头再看看第一节到底发生了什么。现在你可以看第一节里的各种类似下面的信息了：
 
 - A: (Podfile.lock(A), Manifest.lock(A))
@@ -135,7 +139,8 @@ Manifest.lock 是 Podfile.lock 的副本，每次只要生成 Podfile.lock 时�
 除了上面这些问题，另外再提醒一下：注意 `pod install` 和 `pod update` 的区别。如果不合理的使用 `pod update` 也可能会给你带来一些困惑。
 
 
-##怎么对待 Podfile.lock
+## 怎么对待 Podfile.lock
+
 讲完上面这些，那么究竟该怎样对待 Podfile.lock 呢？以下建议可供参考：
 
 - Podfile.lock 应该加入版本控制，保证小伙伴们的依赖库版本一致，防止出现难以发现的 bug。另外，在初始创建项目的时候就应该加入版本控制。
@@ -143,5 +148,5 @@ Manifest.lock 是 Podfile.lock 的副本，每次只要生成 Podfile.lock 时�
 - 理解 `pod install` 和 `pod update` 的区别以及它们对 Podfile.lock 的影响，合理使用。一般就是多用 `pod install`，在需要时使用 `pod update`。
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})

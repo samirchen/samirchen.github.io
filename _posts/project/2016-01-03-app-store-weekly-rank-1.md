@@ -55,5 +55,5 @@ tag: AppStore, Rank
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/app-store-weekly-rank-1/
+[2]: http://www.samirchen.com/app-store-weekly-rank-1
 

@@ -7,7 +7,7 @@ category: blog
 
 在之前写的一篇博客[git命令详解][2]里面尽量详细系统地介绍了一些git命令。这里主要针[iOS][6]团队开发使用[Xcode][5]和git时的一些场景做一些小结。
 
-##关于.gitignore
+## 关于.gitignore
 
 首先说说`.gitignore`。在 [Mac OS X][4] 上用 [Xcode][5] 做iOS开发，有一些文件通常是不应该提交到版本管理库里面去的，那就需要在项目的根目录下添加 `.gitignore` 文件，并编辑其内容，将这些文件按一定的规则添加进来。
 
@@ -178,21 +178,22 @@ category: blog
 关于 `.gitignore` 我们还可以参考 [github官方的Objective-C.gitignore][3]。
 
 
-##如何在Xcode中使用git
+## 如何在Xcode中使用git
 
 在 `Xcode 5` 中，苹果的 Source Control 能很好的支持 git。具体如何使用，可以参考：[How To Use Git Source Control with Xcode in iOS 7](http://www.raywenderlich.com/51351/how-to-use-git-source-control-with-xcode-in-ios-7)。
 
 
 
-##一些场景
+## 一些场景
 
 这里主要总结一些自己的使用场景，由于还算不上深度用户，欢迎大家批评指谬误之处。
 
-###开发某个项目的多个版本
+### 开发某个项目的多个版本
 
 开发某个项目的多个版本时，可以为不同的版本建立不同的分支来管理。
 
-###合并不同分支
+### 合并不同分支
+
 现在我们有两个分支：b1 和 b2，我们当前在 b1 上。
 
 	$ git branch
@@ -215,7 +216,7 @@ category: blog
 
 <img src="/images/git-in-xcode/xcode-merge-tool.png" alt="xcode-merge-tool">
 
-###遇到不能checkout的错误
+### 遇到不能checkout的错误
 
 想切换一下分支的时候遇到下面的错误：
 
@@ -239,7 +240,7 @@ category: blog
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{page.title}})
 [2]: http://samirchen.com/git-commands/
 [3]: https://github.com/github/gitignore/blob/master/Objective-C.gitignore

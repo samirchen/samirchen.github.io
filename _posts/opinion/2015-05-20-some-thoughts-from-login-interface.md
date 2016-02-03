@@ -9,7 +9,8 @@ tag: iOS, UI, interactive, design
 登录界面是很多产品展现给用户的第一个交互界面，想起来，其实不过就是几个输入框、几个按钮的事，很简单，但是最近看了几个 App 的登录界面后，觉得这简单的元素背后其实还是有点东西可以说说的。
 
 
-##几个例子
+## 几个例子
+
 随手挑了几个常用 App，试了试它们的登录界面：
 
 ![](../../images/some-thoughts-from-login-interface/douban-login-interface.gif)
@@ -47,7 +48,8 @@ tag: iOS, UI, interactive, design
 
 
 
-##逻辑的衔接
+## 逻辑的衔接
+
 
 一个功能的处理过程通常就是一根逻辑链条，在这个链条上会根据产品的设计分布着一个接一个的状态节点，从一个节点跳到下一个节点的过程该如何衔接是一个值得思考的问题。几个参考建议：
 
@@ -56,7 +58,8 @@ tag: iOS, UI, interactive, design
 - 从一个逻辑节点到下一个逻辑节点的变化过程越平滑，体验就越好。合理的动画效果就是手段之一。
 
 
-##画面的负荷
+## 画面的负荷
+
 
 逻辑的链条形成后便是以一幅幅画面展现给用户，至于在每个画面框住哪几个节点则是根据情况而定。几个参考建议：
 
@@ -73,6 +76,6 @@ tag: iOS, UI, interactive, design
 
 
 
-[SamirChen]: http://samirchen.com "SamirChen"
+[SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://samirchen.com/some-thoughts-from-login-interface/
+[2]: http://www.samirchen.com/some-thoughts-from-login-interface

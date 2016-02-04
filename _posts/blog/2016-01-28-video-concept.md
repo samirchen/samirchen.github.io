@@ -30,23 +30,12 @@ tag: iOS, Objective-C, video, ffmpeg, h264
 下面我们就列举一些文件封装格式：
 
 - **AVI 格式**，对应的文件格式为 `.avi`，英文全称 Audio Video Interleaved，是由 Microsoft 公司于 1992 年推出。这种视频格式的优点是图像质量好，无损 AVI 可以保存 alpha 通道。缺点是体积过于庞大，并且压缩标准不统一，存在较多的高低版本兼容问题。
-
 - **DV-AVI 格式**，对应的文件格式为 `.avi`，英文全称 Digital Video Format，是由索尼、松下、JVC 等多家厂商联合提出的一种家用数字视频格式。常见的数码摄像机就是使用这种格式记录视频数据的。它可以通过电脑的 IEEE 1394 端口传输视频数据到电脑，也可以将电脑中编辑好的的视频数据回录到数码摄像机中。
-
 - **WMV 格式**，对应的文件格式是 `.wmv`、`.asf`，英文全称 Windows Media Video，是微软推出的一种采用独立编码方式并且可以直接在网上实时观看视频节目的文件压缩格式。在同等视频质量下，WMV 格式的文件可以边下载边播放，因此很适合在网上播放和传输。
-
 - **MPEG 格式**，对应的文件格式有 `.mpg`、`.mpeg`、`.mpe`、`.dat`、`.vob`、`.asf`、`.3gp`、`.mp4` 等等，英文全称 Moving Picture Experts Group，是由运动图像专家组制定的视频格式，该专家组于 1988 年组建，专门负责视频和音频标准制定，其成员都是视频、音频以及系统领域的技术专家。MPEG 格式目前有三个压缩标准，分别是 MPEG-1、MPEG-2、和 MPEG-4。MPEG-4 是现在用的比较多的视频封装格式，它为了播放流式媒体的高质量视频而专门设计的，以求使用最少的数据获得最佳的图像质量。
-
-
 - **Matroska 格式**，对应的文件格式是 `.mkv`，Matroska 是一种新的视频封装格式，它可将多种不同编码的视频及 16 条以上不同格式的音频和不同语言的字幕流封装到一个 Matroska Media 文件当中。
-
 - **Real Video 格式**，对应的文件格式是 `.rm`、`.rmvb`，是 Real Networks 公司所制定的音频视频压缩规范称为 Real Media。用户可以使用 RealPlayer 根据不同的网络传输速率制定出不同的压缩比率，从而实现在低速率的网络上进行影像数据实时传送和播放。
-
-
 - **QuickTime File Format 格式**，对应的文件格式是 `.mov`，是 Apple 公司开发的一种视频格式，默认的播放器是苹果的 QuickTime。这种封装格式具有较高的压缩比率和较完美的视频清晰度等特点，并可以保存 alpha 通道。
-
-
-
 - **Flash Video 格式**，对应的文件格式是 `.flv`，是由 Adobe Flash 延伸出来的一种网络视频封装格式。这种格式被很多视频网站所采用。
 
 
@@ -67,20 +56,29 @@ tag: iOS, Objective-C, video, ffmpeg, h264
 	- `H.263`，主要用于视频会议、视频电话和网络视频相关产品。在对逐行扫描的视频源进行压缩的方面，`H.263` 比它之前的视频编码标准在性能上有了较大的提升。尤其是在低码率端，它可以在保证一定质量的前提下大大的节约码率。
 	- `H.264`，等同于 `MPEG-4 第十部分`，也被称为高级视频编码(Advanced Video Coding，简称 AVC)，是一种视频压缩标准，一种被广泛使用的高精度视频的录制、压缩和发布格式。该标准引入了一系列新的能够大大提高压缩性能的技术，并能够同时在高码率端和低码率端大大超越以前的诸标准。
 	- `H.265`，被称为高效率视频编码(High Efficiency Video Coding，简称 HEVC)是一种视频压缩标准，是 `H.264` 的继任者。HEVC 被认为不仅提升图像质量，同时也能达到 `H.264` 两倍的压缩率（等同于同样画面质量下比特率减少了 50%），可支持 4K 分辨率甚至到超高画质电视，最高分辨率可达到 8192×4320（8K 分辨率），这是目前发展的趋势。
-
-
 - **MPEG 系列**，由国际标准组织机构(ISO)下属的运动图象专家组(MPEG)开发。
 	- `MPEG-1 第二部分`，主要使用在 VCD 上，有些在线视频也使用这种格式。该编解码器的质量大致上和原有的 VHS 录像带相当。
 	- `MPEG-2 第二部分`，等同于 `H.262`，使用在 DVD、SVCD 和大多数数字视频广播系统和有线分布系统中。
 	- `MPEG-4 第二部分`，可以使用在网络传输、广播和媒体存储上。比起 `MPEG-2 第二部分`和第一版的 `H.263`，它的压缩性能有所提高。
 	- `MPEG-4 第十部分`，等同于 `H.264`，是这两个编码组织合作诞生的标准。
-
-
 - 其他，AMV、AVS、Bink、CineForm 等等，这里就不做多的介绍了。
 
 
 
 介绍了上面这些「视频编解码方式」后，我们来说说它和上一节讲的「视频封装格式」的关系。可以把「视频封装格式」看做是一个装着视频、音频、「视频编解码方式」等信息的容器。一种「视频封装格式」可以支持多种「视频编解码方式」，比如：QuickTime File Format(.MOV) 支持几乎所有的「视频编解码方式」，MPEG(.MP4) 也支持相当广的「视频编解码方式」。当我们看到一个视频文件名为 `test.mov` 时，我们可以知道它的「视频文件格式」是 `.mov`，也可以知道它的视频封装格式是 `QuickTime File Format`，但是无法知道它的「视频编解码方式」。那比较专业的说法可能是以 A/B 这种方式，A 是「视频编解码方式」，B 是「视频封装格式」。比如：一个 H.264/MOV 的视频文件，它的封装方式就是 QuickTime File Format，编码方式是 H.264。
+
+
+
+### 音频编解码方式
+
+视频中除了画面通常还有声音，所以这就涉及到音频编解码。在视频中经常使用的音频编码方式有：
+
+
+- **AAC**，英文全称 Advanced Audio Coding，是由 Fraunhofer IIS、杜比实验室、AT&T、Sony等公司共同开发，在 1997 年推出的基于 MPEG-2 的音频编码技术。2000 年，MPEG-4 标准出现后，AAC 重新集成了其特性，加入了 SBR 技术和 PS 技术，为了区别于传统的 MPEG-2 AAC 又称为 MPEG-4 AAC。
+- **MP3**，英文全称 MPEG-1 or MPEG-2 Audio Layer III，是当曾经非常流行的一种数字音频编码和有损压缩格式，它被设计来大幅降低音频数据量。它是在 1991 年，由位于德国埃尔朗根的研究组织 Fraunhofer-Gesellschaft 的一组工程师发明和标准化的。MP3 的普及，曾对音乐产业造成极大的冲击与影响。
+- **WMA**，英文全称 Windows Media Audio，由微软公司开发的一种数字音频压缩格式，本身包括有损和无损压缩格式。
+
+
 
 
 
@@ -294,6 +292,82 @@ So RBSP contains SODB. According to the ITU-T specification if SODB empty (zero 
 ![image](../../images/video-concept/block-matching.jpg)
 
 
+
+
+
+## 视频业务
+
+
+我们平常最常接触到的视频相关的业务方式通常有：**本地视频文件播放**、**网络视频点播**、**网络视频直播**等等几种。对于网络视频点播、网络视频直播，整个过程大致如下图所示：
+
+![image](../../images/video-concept/video-data-flow.jpg)
+
+而本地视频文件播放就更简单了，是在上面的过程中省略掉解协议的过程。
+
+
+### 流媒体协议
+
+随着互联网基础设施越来越完善，网络视频点播和直播业务也越来越多，这其中少不了流媒体协议的支持。常见的流媒体协议有：
+
+- **RTP**，实时传输协议，Real-time Transport Protocol，是一种网络传输协议，运行在 UDP 协议之上，RTP协议详细说明了在互联网上传递音频和视频的标准数据包格式。RTP协议常用于流媒体系统（配合 RTSP 协议）。
+- **RTCP**，实时传输控制协议，Real-time Transport Control Protocol，是实时传输协议（RTP）的一个姐妹协议。RTCP为RTP媒体流提供信道外（out-of-band）控制。RTCP 本身并不传输数据，但和 RTP 一起协作将多媒体数据打包和发送。RTCP 定期在流多媒体会话参加者之间传输控制数据。RTCP 的主要功能是为 RTP 所提供的服务质量（Quality of Service）提供反馈。
+- **RTSP**，实时流传输协议，Real Time Streaming Protocol，该协议定义了一对多应用程序如何有效地通过 IP 网络传送多媒体数据。RTSP 在体系结构上位于 RTP 和 RTCP 之上，它使用 TCP 或 UDP 完成数据传输。使用 RTSP 时，客户机和服务器都可以发出请求，即 RTSP 可以是双向的。
+- **RTMP**，实时消息传输协议，Real Time Messaging Protocol，是 Adobe Systems 公司为 Flash 播放器和服务器之间音频、视频和数据传输开发的开放协议。协议基于 TCP，是一个协议族，包括 RTMP 基本协议及 RTMPT/RTMPS/RTMPE 等多种变种。RTMP 是一种设计用来进行实时数据通信的网络协议，主要用来在 Flash/AIR 平台和支持RTMP协议的流媒体/交互服务器之间进行音视频和数据通信。
+- **RTMFP**，是 Adobe 公司开发的一套新的通信协议，全称 Real Time Media Flow Protocol，协议基于 UDP，支持 C/S 模式和 P2P 模式，即该协议可以让使用 Adobe Flash Player 的终端用户之间进行直接通信。
+- **HTTP**，超文本传输协议，HyperText Transfer Protocol，运行在 TCP 之上，这个协议是大家非常熟悉的，它也可以用到视频业务中来。
+
+
+### 业务方案
+
+在国内主流的一些视频业务相关的公司中，主要采用的视频业务方案有：
+
+**网络视频点播**
+
+| 公司 | 协议 | 封装 | 视频编码 | 音频编码 | 播放器 |
+|---|---|---|---|---|---| 
+| CNTV | HTTP | MP4 | H.264 | AAC | Flash |
+| CNTV（部分） | RTMP | FLV | H.264 | AAC | Flash |
+| 华数 TV | HTTP | MP4 | H.264 | AAC | Flash |
+| 优酷网 | HTTP | FLV | H.264 | AAC | Flash |
+| 土豆网 | HTTP | F4V | H.264 | AAC | Flash |
+| 56网 | HTTP | FLV | H.264 | AAC | Flash |
+| 音悦台 | HTTP | MP4 | H.264 | AAC | Flash |
+| 乐视网 | HTTP | FLV | H.264 | AAC | Flash |
+| 新浪视频 | HTTP | FLV | H.264 | AAC | Flash |
+
+
+网络视频点播业务采用 HTTP 有两方面优势：
+
+- HTTP 是基于 TCP 协议的应用层协议，媒体传输过程中不会出现丢包等现象，从而保证了视频的质量。
+- HTTP 是绝大部分的 Web 服务器支持的协议，因而流媒体服务机构不必投资购买额外的流媒体服务器，从而节约了开支。
+
+网络视频点播服务采用的封装格式有多种：MP4，FLV，F4V 等，它们之间的区别不是很大。
+
+视频编码标准和音频编码标准是 H.264 和 AAC，这两种标准分别是当今实际应用中编码效率最高的视频标准和音频标准。
+
+视频播放器方面则都使用了 Flash 播放器。
+
+
+**网络视频直播**
+
+| 公司 | 协议 | 封装 | 视频编码 | 音频编码 | 播放器 |
+|---|---|---|---|---|---| 
+| 华数 TV | RTMP | FLV | H.264 | AAC | Flash |
+| 六间房 | RTMP | FLV | H.264 | AAC | Flash |
+| 中国教育电视台 | RTMP | FLV | H.264 | AAC | Flash |
+| 北广传媒移动电视 | RTMP | FLV | H.264 | AAC | Flash |
+| 上海IPTV | RTSP+RTP | TS | H.264 | MP2 | 机顶盒 |
+
+
+网络视频直播服务采用 RTMP 作为直播协议的好处是可以直接被 Flash 播放器支持，而 Flash 播放器在 PC 时代有着极高的普及率，并且与浏览器结合的很好。因此这种流媒体直播平台基本上可以实现了「无插件直播」，极大降低了用户使用成本。
+
+封装格式、视频编码、音频编码、播放器方面几乎全部采用了 FLV、H.264、AAC、Flash。FLV、RTMP、Flash 都是 Adobe 公司的产品，天生有着良好的结合性。
+
+
+
+在现在看来，以上的数据已经有些过时了，比如现在随着移动互联网时代的爆发，H5 以及客户端应用的普及，行业中对视频业务技术方案的选择也逐渐在发生着变化，而我们则需要结合眼下的实际情况和技术发展的趋势去做出合适的技术选型。
+
+
 ## 参考
 
 - [知乎 - 视频格式相关 - 胡虎航的回答][4]
@@ -301,8 +375,8 @@ So RBSP contains SODB. According to the ITU-T specification if SODB empty (zero 
 - [Exploring H.264. Part 1: Color models][5]
 - [Exploring H.264. Part 2: H.264 Bitstream format][6]
 - [知乎 - 视频的帧内压缩和帧间压缩 - 王婷婷的回答][7]
-
-
+- [维基百科 - 音频文件格式][8]
+- [视音频编解码技术][9]
 
 
 
@@ -315,4 +389,7 @@ So RBSP contains SODB. According to the ITU-T specification if SODB empty (zero 
 [5]: http://gentlelogic.blogspot.com/2011/11/exploring-h264-part-1-color-models.html
 [6]: http://gentlelogic.blogspot.com/2011/11/exploring-h264-part-2-h264-bitstream.html
 [7]: https://www.zhihu.com/question/20237091
+[8]: https://zh.wikipedia.org/zh-cn/%E9%9F%B3%E9%A2%91%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F
+[9]: http://blog.csdn.net/leixiaohua1020/article/details/18893769
+
 

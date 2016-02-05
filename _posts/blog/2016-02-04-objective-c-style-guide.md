@@ -59,11 +59,15 @@ tag: iOS, Objective-C, Swift
 使用美式英语。别用拼音。
 
 **推荐：**
+
+
 ```objc
 UIColor *myColor = [UIColor whiteColor];
 ```
 
 **不推荐：**
+
+
 ```objc
 UIColor *myColour = [UIColor whiteColor];
 UIColor *woDeYanSe = [UIColor whiteColor];
@@ -139,6 +143,8 @@ UIColor *woDeYanSe = [UIColor whiteColor];
 * 方法大括号和其他大括号(`if`/`else`/`switch`/`while` 等)总是在同一行打开，但在新的一行关闭。
 
 **推荐：**
+
+
 ```objc
 if (user.isHappy) {
   //Do something
@@ -148,6 +154,8 @@ if (user.isHappy) {
 ```
 
 **不推荐：**
+
+
 ```objc
 if (user.isHappy)
 {
@@ -164,6 +172,7 @@ else {
 
 **推荐：**
 
+
 ```objc
 // blocks are easily readable
 [UIView animateWithDuration:1.0 animations:^{
@@ -174,6 +183,7 @@ else {
 ```
 
 **不推荐：**
+
 
 ```objc
 // colon-aligning makes the block indentation hard to read
@@ -203,11 +213,13 @@ else {
 
 **推荐：**
 
+
 ```objc
 UIButton *settingsButton;
 ```
 
 **不推荐：**
+
 
 ```objc
 UIButton *setBut;
@@ -221,11 +233,13 @@ UIButton *setBut;
 
 **推荐：**
 
+
 ```objc
 static NSTimeInterval const RWTTutorialViewControllerNavigationFadeAnimationDuration = 0.3;
 ```
 
 **不推荐：**
+
 
 ```objc
 static NSTimeInterval const fadetime = 1.7;
@@ -235,11 +249,13 @@ static NSTimeInterval const fadetime = 1.7;
 
 **推荐：**
 
+
 ```objc
 @property (strong, nonatomic) NSString *descriptiveVariableName;
 ```
 
 **不推荐：**
+
 
 ```objc
 id varnm;
@@ -263,6 +279,7 @@ id varnm;
 `and` 这个词的用法应该保留，它不应该用于多个参数之间。
 
 **推荐：**
+
 ```objc
 - (void)setExampleText:(NSString *)text image:(UIImage *)image;
 - (void)sendAction:(SEL)aSelector to:(id)anObject forAllCells:(BOOL)flag;
@@ -271,6 +288,7 @@ id varnm;
 ```
 
 **不推荐：**
+
 
 ```objc
 -(void)setT:(NSString *)text i:(UIImage *)image;
@@ -292,6 +310,7 @@ id varnm;
 
 **推荐：**
 
+
 ```objc
 @interface RWTTutorial : NSObject
 
@@ -301,6 +320,7 @@ id varnm;
 ```
 
 **不推荐：**
+
 
 ```objc
 @interface RWTTutorial : NSObject {
@@ -315,12 +335,14 @@ id varnm;
 
 **推荐：**
 
+
 ```objc
 @property (weak, nonatomic) IBOutlet UIView *containerView;
 @property (strong, nonatomic) NSString *tutorialName;
 ```
 
 **不推荐：**
+
 
 ```objc
 @property (nonatomic, weak) IBOutlet UIView *containerView;
@@ -331,11 +353,13 @@ id varnm;
 
 **推荐：**
 
+
 ```objc
 @property (copy, nonatomic) NSString *tutorialName;
 ```
 
 **不推荐：**
+
 
 ```objc
 @property (strong, nonatomic) NSString *tutorialName;
@@ -348,6 +372,7 @@ id varnm;
 我们应该总是使用点符号预发类访问或者修改属性，因为它使得代码更加简洁。`[]` 则应该用在其他场景下。
 
 **推荐：**
+
 ```objc
 NSInteger arrayCount = [self.array count];
 view.backgroundColor = [UIColor orangeColor];
@@ -355,6 +380,7 @@ view.backgroundColor = [UIColor orangeColor];
 ```
 
 **不推荐：**
+
 ```objc
 NSInteger arrayCount = self.array.count;
 [view setBackgroundColor:[UIColor orangeColor]];
@@ -367,6 +393,7 @@ UIApplication.sharedApplication.delegate;
 
 **推荐：**
 
+
 ```objc
 NSArray *names = @[@"Brian", @"Matt", @"Chris", @"Alex", @"Steve", @"Paul"];
 NSDictionary *productManagers = @{@"iPhone": @"Kate", @"iPad": @"Kamal", @"Mobile Web": @"Bill"};
@@ -375,6 +402,7 @@ NSNumber *buildingStreetNumber = @10018;
 ```
 
 **不推荐：**
+
 
 ```objc
 NSArray *names = [NSArray arrayWithObjects:@"Brian", @"Matt", @"Chris", @"Alex", @"Steve", @"Paul", nil];
@@ -389,6 +417,7 @@ NSNumber *buildingStreetNumber = [NSNumber numberWithInteger:10018];
 
 **推荐：**
 
+
 ```objc
 static NSString * const RWTAboutViewControllerCompanyName = @"RayWenderlich.com";
 
@@ -396,6 +425,7 @@ static CGFloat const RWTImageThumbnailHeight = 50.0;
 ```
 
 **不推荐：**
+
 
 ```objc
 #define CompanyName @"RayWenderlich.com"
@@ -430,6 +460,7 @@ typedef NS_ENUM(NSInteger, RWTGlobalConstants) {
 
 
 **不推荐：**
+
 
 ```objc
 enum GlobalConstants {
@@ -526,12 +557,14 @@ Objective-C 使用 `YES` 和 `NO` 作为 BOOL 值。因此，`true` 和 `false` 
 
 **推荐：**
 
+
 ```objc
 if (someObject) {}
 if (![anotherObject boolValue]) {}
 ```
 
 **不推荐：**
+
 
 ```objc
 if (someObject == nil) {}
@@ -558,6 +591,7 @@ if (isAwesome == true) {} // Never do this.
 
 
 **推荐：**
+
 ```objc
 if (!error) {
   return success;
@@ -565,6 +599,7 @@ if (!error) {
 ```
 
 **不推荐：**
+
 ```objc
 if (!error)
   return success;
@@ -583,6 +618,7 @@ if (!error) return success;
 非布尔类型的变量与某对象比较时最好加上括号来提高代码可读性，如果被比较的变量是布尔类型那就不用括号了。
 
 **推荐：**
+
 ```objc
 NSInteger value = 5;
 result = (value != 0) ? x : y;
@@ -592,6 +628,7 @@ result = isHorizontal ? x : y;
 ```
 
 **不推荐：**
+
 ```objc
 result = a > b ? x = c > d ? c : d : y;
 ```
@@ -631,6 +668,7 @@ Init 方法应该遵循 Apple 生成代码模板的命名规则。返回类型�
 
 **推荐：**
 
+
 ```objc
 CGRect frame = self.view.frame;
 
@@ -642,6 +680,7 @@ CGRect frame = CGRectMake(0.0, 0.0, width, height);
 ```
 
 **不推荐：**
+
 
 ```objc
 CGRect frame = self.view.frame;
@@ -659,6 +698,7 @@ CGRect frame = (CGRect){ .origin = CGPointZero, .size = frame.size };
 
 **推荐：**
 
+
 ```objc
 - (void)someMethod {
   if (![someOther boolValue]) {
@@ -670,6 +710,7 @@ CGRect frame = (CGRect){ .origin = CGPointZero, .size = frame.size };
 ```
 
 **不推荐：**
+
 
 ```objc
 - (void)someMethod {
@@ -684,6 +725,7 @@ CGRect frame = (CGRect){ .origin = CGPointZero, .size = frame.size };
 当方法通过引用来返回一个错误参数时，应该判断返回值而不是错误变量。
 
 **推荐：**
+
 ```objc
 NSError *error;
 if (![self trySomethingWithError:&error]) {
@@ -692,6 +734,7 @@ if (![self trySomethingWithError:&error]) {
 ```
 
 **不推荐：**
+
 ```objc
 NSError *error;
 [self trySomethingWithError:&error];

@@ -36,6 +36,7 @@ tag: iOS, Objective-C, Swift
 UIColor *myColor = [UIColor whiteColor];
 ```
 
+
 **不推荐：**
 
 
@@ -118,9 +119,9 @@ UIColor *woDeYanSe = [UIColor whiteColor];
 
 ```objc
 if (user.isHappy) {
-  //Do something
+	//Do something
 } else {
-  //Do something else
+	//Do something else
 }
 ```
 
@@ -147,9 +148,9 @@ else {
 ```objc
 // blocks are easily readable
 [UIView animateWithDuration:1.0 animations:^{
-  // something
+	// something
 } completion:^(BOOL finished) {
-  // something
+	// something
 }];
 ```
 
@@ -160,10 +161,10 @@ else {
 // colon-aligning makes the block indentation hard to read
 [UIView animateWithDuration:1.0
                  animations:^{
-                     // something
+				 	 // something
                  }
                  completion:^(BOOL finished) {
-                     // something
+                 	 // something
                  }];
 ```
 
@@ -178,9 +179,9 @@ else {
 
 ## 命名
 
-你可能是从 Java、Python、C++ 或是其他语言转过来的，但是来到 Objective-C 这底盘，请遵守苹果的命名规范，这样你才能使得自己的代码与周边和谐统一，尤其注释 [memory management rules](https://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/MemoryMgmt/Articles/MemoryMgmt.html) ([NARC](http://stackoverflow.com/a/2865194/340508)) 相关的命名规范.
+你可能是从 Java、Python、C++ 或是其他语言转过来的，但是来到 Objective-C 这地盘，请遵守苹果的命名规范，这样你才能使得自己的代码与周边和谐统一，尤其需要注意 [memory management rules](https://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/MemoryMgmt/Articles/MemoryMgmt.html) ([NARC](http://stackoverflow.com/a/2865194/340508)) 相关的命名规范.
 
-长的，描述性的方法和变量命名是好的，这使得代码更容易被读懂。
+长的、描述性的方法和变量命名是好的，这使得代码更容易被读懂。
 
 **推荐：**
 
@@ -238,8 +239,8 @@ id varnm;
 
 但是有 2 个特列：
 
-- 在属性的 getter/setter 方法中必须使用下划线，(i.e. _variableName)。
-- 在类的初始化和销毁方法中，有时为了避免属性的 getter/setter 方法的负作用，可以使用下划线。
+- 在属性的 getter/setter 方法中必须使用下划线，(比如：_variableName)。
+- 在类的初始化和销毁方法中，有时为了避免属性的 getter/setter 方法的副作用，可以使用下划线。
 
 局部变量不要包含下划线。
 
@@ -295,7 +296,7 @@ id varnm;
 
 ```objc
 @interface RWTTutorial : NSObject {
-  NSString *tutorialName;
+	NSString *tutorialName;
 }
 ```
 
@@ -340,22 +341,22 @@ id varnm;
 
 点符号语法是对方法调用语法很方便的一种封装。在返回属性时，使用点符号语法，属性的 getter/setter 方法也能确保被调用。更多信息阅读[这里](https://developer.apple.com/library/ios/documentation/cocoa/conceptual/ProgrammingWithObjectiveC/EncapsulatingData/EncapsulatingData.html)。
 
-我们应该总是使用点符号预发类访问或者修改属性，因为它使得代码更加简洁。`[]` 则应该用在其他场景下。
+我们应该总是使用点符号语法来访问或者修改属性，因为它使得代码更加简洁。`[]` 则应该用在其他场景下。
 
 **推荐：**
 
 ```objc
-NSInteger arrayCount = [self.array count];
+NSInteger arrayCount = self.array.count; // `count` is a property of NSArray.
 view.backgroundColor = [UIColor orangeColor];
-[UIApplication sharedApplication].delegate;
+[UIApplication sharedApplication].delegate; // `sharedApplication` is not a property of UIApplication.
 ```
 
 **不推荐：**
 
 ```objc
-NSInteger arrayCount = self.array.count;
+NSInteger arrayCount = [self.array count]; // `count` is a property of NSArray.
 [view setBackgroundColor:[UIColor orangeColor]];
-UIApplication.sharedApplication.delegate;
+UIApplication.sharedApplication.delegate; // `sharedApplication` is not a property of UIApplication.
 ```
 
 ## 字面值
@@ -412,9 +413,9 @@ static CGFloat const RWTImageThumbnailHeight = 50.0;
 
 ```objc
 typedef NS_ENUM(NSInteger, RWTLeftMenuTopItemType) {
-  RWTLeftMenuTopItemMain,
-  RWTLeftMenuTopItemShows,
-  RWTLeftMenuTopItemSchedule
+	RWTLeftMenuTopItemMain,
+	RWTLeftMenuTopItemShows,
+	RWTLeftMenuTopItemSchedule
 };
 ```
 
@@ -422,10 +423,10 @@ typedef NS_ENUM(NSInteger, RWTLeftMenuTopItemType) {
 
 ```objc
 typedef NS_ENUM(NSInteger, RWTGlobalConstants) {
-  RWTPinSizeMin = 1,
-  RWTPinSizeMax = 5,
-  RWTPinCountMin = 100,
-  RWTPinCountMax = 500,
+	RWTPinSizeMin = 1,
+	RWTPinSizeMax = 5,
+	RWTPinCountMin = 100,
+	RWTPinCountMax = 500,
 };
 ```
 
@@ -435,8 +436,8 @@ typedef NS_ENUM(NSInteger, RWTGlobalConstants) {
 
 ```objc
 enum GlobalConstants {
-  kMaxPinSize = 5,
-  kMaxPinCount = 500,
+	kMaxPinSize = 5,
+	kMaxPinCount = 500,
 };
 ```
 
@@ -447,20 +448,20 @@ enum GlobalConstants {
 
 ```objc
 switch (condition) {
-  case 1:
-    // ...
-    break;
-  case 2: {
-    // ...
-    // Multi-line example using braces
-    break;
-  }
-  case 3:
-    // ...
-    break;
-  default: 
-    // ...
-    break;
+	case 1:
+		// ...
+		break;
+	case 2: {
+		// ...
+		// Multi-line example using braces
+		break;
+	}
+	case 3:
+		// ...
+		break;
+	default: 
+		// ...
+		break;
 }
 
 ```
@@ -471,14 +472,14 @@ switch (condition) {
 
 ```objc
 switch (condition) {
-  case 1:
-    // ** fall-through! **
-  case 2:
-    // code executed for values 1 and 2
-    break;
-  default: 
-    // ...
-    break;
+	case 1:
+		// ** fall-through! **
+	case 2:
+		// code executed for values 1 and 2
+	break;
+	default: 
+		// ...
+		break;
 }
 
 ```
@@ -489,15 +490,15 @@ switch (condition) {
 RWTLeftMenuTopItemType menuType = RWTLeftMenuTopItemMain;
 
 switch (menuType) {
-  case RWTLeftMenuTopItemMain:
-    // ...
-    break;
-  case RWTLeftMenuTopItemShows:
-    // ...
-    break;
-  case RWTLeftMenuTopItemSchedule:
-    // ...
-    break;
+	case RWTLeftMenuTopItemMain:
+		// ...
+		break;
+	case RWTLeftMenuTopItemShows:
+		// ...
+		break;
+	case RWTLeftMenuTopItemSchedule:
+		// ...
+		break;
 }
 ```
 
@@ -565,7 +566,7 @@ if (isAwesome == true) {} // Never do this.
 
 ```objc
 if (!error) {
-  return success;
+	return success;
 }
 ```
 
@@ -573,7 +574,7 @@ if (!error) {
 
 ```objc
 if (!error)
-  return success;
+	return success;
 ```
 
 或者
@@ -610,11 +611,11 @@ Init 方法应该遵循 Apple 生成代码模板的命名规则。返回类型�
 
 ```objc
 - (instancetype)init {
-  self = [super init];
-  if (self) {
-    // ...
-  }
-  return self;
+	self = [super init];
+	if (self) {
+		// ...
+	}
+	return self;
 }
 ```
 
@@ -672,11 +673,11 @@ CGRect frame = (CGRect){ .origin = CGPointZero, .size = frame.size };
 
 ```objc
 - (void)someMethod {
-  if (![someOther boolValue]) {
-	return;
-  }
+	if (![someOther boolValue]) {
+		return;
+	}
 
-  //Do something important
+	//Do something important
 }
 ```
 
@@ -685,12 +686,13 @@ CGRect frame = (CGRect){ .origin = CGPointZero, .size = frame.size };
 
 ```objc
 - (void)someMethod {
-  if ([someOther boolValue]) {
-    //Do something important
-  }
+	if ([someOther boolValue]) {
+		//Do something important
+	}
 }
 ```
 
+<!-- 
 ## 错误处理
 
 当方法通过引用来返回一个错误参数时，应该判断返回值而不是错误变量。
@@ -714,10 +716,9 @@ if (error) {
 }
 ```
 
-<!-- Some of Apple’s APIs write garbage values to the error parameter (if non-NULL) in successful cases, so switching on the error can cause false negatives (and subsequently crash). -->
 
-因为有些 Apple 的 API 在方法调用成功的情况下也会往 error 中写入垃圾值，这时候如果根据 error 来做判断就会得到不正确的结果，甚至 crash。
-
+因为有些 Apple 的 API 在方法调用成功的情况下也会往 error 中写入垃圾值，这时候如果根据 error 来做判断就会得到不正确的结果，甚至会 crash。
+ -->
 
 ## 单例
 
@@ -726,14 +727,14 @@ if (error) {
 
 ```objc
 + (instancetype)sharedInstance {
-  static id sharedInstance = nil;
+	static id sharedInstance = nil;
 
-  static dispatch_once_t onceToken;
-  dispatch_once(&onceToken, ^{
-    sharedInstance = [[self alloc] init];
-  });
+	static dispatch_once_t onceToken;
+	dispatch_once(&onceToken, ^{
+		sharedInstance = [[self alloc] init];
+	});
 
-  return sharedInstance;
+	return sharedInstance;
 }
 ```
 
@@ -754,7 +755,7 @@ self.productsRequest = [[SKProductsRequest alloc] initWithProductIdentifiers:pro
 
 ```objc
 self.productsRequest = [[SKProductsRequest alloc] 
- 	initWithProductIdentifiers:productIdentifiers];
+  initWithProductIdentifiers:productIdentifiers];
 ```
  
 
@@ -787,3 +788,5 @@ self.productsRequest = [[SKProductsRequest alloc]
 [7]: https://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/CocoaFundamentals/Introduction/Introduction.html
 [8]: https://developer.apple.com/library/mac/#documentation/Cocoa/Conceptual/CodingGuidelines/CodingGuidelines.html
 [9]: http://developer.apple.com/library/ios/#documentation/iphone/conceptual/iphoneosprogrammingguide/Introduction/Introduction.html
+
+

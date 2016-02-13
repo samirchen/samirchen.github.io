@@ -71,33 +71,35 @@ UIColor *woDeYanSe = [UIColor whiteColor];
 - (void)didReceiveMemoryWarning {}
 - (void)dealloc {}
 
+// 如果这是一个 UIViewController 类，可以接着描述这个页面可以跳转到的其他页面。
+#pragma mark - Navigation
+
+- (void)goToMainPage {}
+- (void)goToUserPage {}
+
+
 // 接着描述这个类的响应方法，能做哪些交互。
 // 比如：按钮点击的响应方法、手势的响应方法等等。
 #pragma mark - Action
 
 - (IBAction)submitData:(id)sender {}
 
-// 然后描述这个类公共方法。
-#pragma mark - Public
+// 然后描述这个类的其他分组方法。这里的分组可以是多个，如何分组可以由你扩展。
+#pragma mark - <Other Functional Grouping>
 
-- (void)publicMethod {}
-
-// 然后描述这个类私有方法。
-#pragma mark - Private
-
-- (void)privateMethod {}
+- (void)someGroupedMethod {}
 
 
 // 接下来描述这个类实现的 Protocol/Delegate 的方法。
 // 先放自定义的 Protocol/Delegate 方法，后放官方提供的 Protocal/Delegate 方法。
-#pragma mark - Protocol Conformance
+#pragma mark - <Protocol/Delegate Conformance>
 #pragma mark - UITextFieldDelegate
 #pragma mark - UITableViewDataSource
 #pragma mark - UITableViewDelegate
 
 // 然后是对继承的父类中方法重载。
 // 先发自定义的父类方法重载，后方官方父类的方法重载。
-#pragma mark - Superclass Overridden
+#pragma mark - <Superclass Overridden>
 
 - (void)someOverriddenMethod {}
 

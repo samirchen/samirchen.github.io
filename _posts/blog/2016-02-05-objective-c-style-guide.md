@@ -121,9 +121,9 @@ UIColor *woDeYanSe = [UIColor whiteColor];
 
 ```objc
 if (user.isHappy) {
-	//Do something
+	// Do something
 } else {
-	//Do something else
+	// Do something else
 }
 ```
 
@@ -133,10 +133,10 @@ if (user.isHappy) {
 ```objc
 if (user.isHappy)
 {
-    //Do something
+	// Do something
 }
 else {
-    //Do something else
+	// Do something else
 }
 ```
 
@@ -163,10 +163,10 @@ else {
 // colon-aligning makes the block indentation hard to read
 [UIView animateWithDuration:1.0
                  animations:^{
-				 	 // something
+					// something
                  }
                  completion:^(BOOL finished) {
-                 	 // something
+					// something
                  }];
 ```
 

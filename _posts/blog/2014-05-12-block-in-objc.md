@@ -1223,7 +1223,6 @@ TestBlockViewController.m
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
-tp://samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/ProgrammingWithObjectiveC/WorkingwithBlocks/WorkingwithBlocks.html
 [3]: https://book.douban.com/subject/24720270/

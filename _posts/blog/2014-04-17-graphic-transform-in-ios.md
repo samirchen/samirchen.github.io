@@ -307,6 +307,7 @@ CGAffineTransform的用法：
 
 #### CGAffineTransformMakeTranslate
 
+API 如下：
 
 	CGAffineTransform CGAffineTransformMakeTranslation(CGFloat tx, CGFloat ty);
 
@@ -322,6 +323,7 @@ CGAffineTransformMakeTranslation(tx, ty) 得到的矩阵是：
 
 #### CGAffineTransformMakeRotation
 
+API 如下：
 
 	CGAffineTransform CGAffineTransformMakeRotation(CGFloat angle);
 	
@@ -361,6 +363,7 @@ CGAffineTransformMakeTranslation(tx, ty) 得到的矩阵是：
 
 #### CGAffineTransformMakeScale
 
+API 如下：
 
 	CGAffineTransform CGAffineTransformMakeScale(CGFloat sx, CGFloat sy);
 

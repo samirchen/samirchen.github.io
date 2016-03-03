@@ -315,6 +315,7 @@ So RBSP contains SODB. According to the ITU-T specification if SODB empty (zero 
 - **RTMP**，实时消息传输协议，Real Time Messaging Protocol，是 Adobe Systems 公司为 Flash 播放器和服务器之间音频、视频和数据传输开发的开放协议。协议基于 TCP，是一个协议族，包括 RTMP 基本协议及 RTMPT/RTMPS/RTMPE 等多种变种。RTMP 是一种设计用来进行实时数据通信的网络协议，主要用来在 Flash/AIR 平台和支持RTMP协议的流媒体/交互服务器之间进行音视频和数据通信。
 - **RTMFP**，是 Adobe 公司开发的一套新的通信协议，全称 Real Time Media Flow Protocol，协议基于 UDP，支持 C/S 模式和 P2P 模式，即该协议可以让使用 Adobe Flash Player 的终端用户之间进行直接通信。
 - **HTTP**，超文本传输协议，HyperText Transfer Protocol，运行在 TCP 之上，这个协议是大家非常熟悉的，它也可以用到视频业务中来。
+- **HLS**，是苹果公司实现的基于 HTTP 的流媒体传输协议，全称 HTTP Live Streaming，可支持流媒体的直播和点播，主要应用在 iOS 系统，为 iOS 设备（如 iPhone、iPad）提供音视频直播和点播方案。对于 HLS 点播，基本上就是常见的分段 HTTP 点播，不同在于，它的分段非常小。要实现HLS点播，重点在于对媒体文件分段。对于 HLS 直播，相对于常见的流媒体直播协议，例如 RTMP 协议、RTSP 协议等，HLS 最大的不同在于直播客户端获取到的并不是一个完整的数据流，而是连续的、短时长的媒体文件（MPEG-TS 格式），客户端不断的下载并播放这些小文件。由于数据通过 HTTP 协议传输，所以完全不用考虑防火墙或者代理的问题，而且分段文件的时长很短，客户端可以很快的选择和切换码率，以适应不同带宽条件下的播放。不过 HLS 的这种技术特点，决定了它的延迟一般总是会高于普通的流媒体直播协议。
 
 
 ### 业务方案

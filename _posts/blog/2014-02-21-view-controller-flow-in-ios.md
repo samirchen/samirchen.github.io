@@ -239,7 +239,7 @@ SubNavigationVC.VCN5->VCN4 的跳转代码：
 		if ([self.presentingViewController isKindOfClass:[UINavigationController class]]) {
         	UINavigationController* mainNavigationController = (UINavigationController*) self.presentingViewController;
         	if ([[mainNavigationController.viewControllers lastObject] isKindOfClass:[VCN4 class]]) {
-            	VCN4* vcn4 = (VCN2*) [mainNavigationController.viewControllers lastObject];
+            	VCN4* vcn4 = (VCN4*) [mainNavigationController.viewControllers lastObject];
             	vcn4.stringPara = @"value"; // 传参
         	}
     	}

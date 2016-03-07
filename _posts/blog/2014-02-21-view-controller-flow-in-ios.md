@@ -74,10 +74,15 @@ Push动作是很简单的，基本上所有的Push代码都类似上面这样写
 	
 	// 在 VCN2.m 中
 	-(void) back:(id)sender {
-		if ([[self.navigationController.viewControllers lastObject] isKindOfClass:[VCN1 class]]) {
-        	VCN1* vcn1 = (VCN1*) [self.navigationController.viewControllers lastObject];
-        	vcn1.stringPara = @"value"; // 传参
-    	}
+	    NSInteger *preVCIndex = self.navigationController.viewControllers.count - 2;
+	    if (preVCIndex >= 0) {
+	        UIViewController *preVC = [self.navigationController.viewControllers objectAtIndex:preVCIndex];
+	        if ([preVC isKindOfClass:[VCN1 class]]) {
+	        	VCN1* vcn1 = (VCN1*) preVC;
+	        	vcn1.stringPara = @"value"; // 传参
+	        }
+	    }
+
     	[self.navigationController popViewControllerAnimated:YES];
 	}
 
@@ -253,6 +258,7 @@ SubNavigationVC.VCN5->VCN4 的跳转代码：
 
 - Delegate机制
 - 广播机制，即设置Observer来监听Notifications
+
 
 ## 小结
 

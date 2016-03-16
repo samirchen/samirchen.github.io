@@ -226,7 +226,7 @@ Xcode 编译 Framework 时针对模拟器和真机打的包是不一样的，支
 
 
 
-	### Build device platform. (arm64, armv7)
+	### Build universal platform.
 	echo "========== Build Universal Platform =========="
 	## Copy the framework structure to the universal folder (clean it first).
 	rm -rf "${UNIVERSAL_OUTPUTFOLDER}"

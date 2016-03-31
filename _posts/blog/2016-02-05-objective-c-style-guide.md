@@ -305,7 +305,7 @@ id varnm;
 
 ## 属性特性
 
-所有的属性特性应该显式地列出来，有助于新手阅读代码。属性特性的顺序应该是：storage、atomicity。与在 Interface Builder 连接 UI 元素时自动生成代码一致。
+属性特性的顺序应该是：存储特性、访问特性、原子特性、getter/setter。其中存储特性、原子特性应该显式地列出来，有助于新手阅读代码。与在 Interface Builder 连接 UI 元素时自动生成代码一致。
 
 **推荐：**
 
@@ -313,6 +313,7 @@ id varnm;
 ```objc
 @property (weak, nonatomic) IBOutlet UIView *containerView;
 @property (strong, nonatomic) NSString *tutorialName;
+@property (assign, readonly, nonatomic, getter=isFinished) BOOL finished;
 ```
 
 **不推荐：**

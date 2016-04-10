@@ -323,5 +323,5 @@ tag: AppStore, Rank, Top free, Top paid, Top grossing
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/app-store-weekly-rank-11
+[2]: http://www.samirchen.com/app-store-weekly-rank-13
 

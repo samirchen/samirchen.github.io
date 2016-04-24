@@ -1,7 +1,8 @@
 auto: true
 
 markdown: kramdown
-pygments: true
+#pygments: true
+highlighter: rouge
 paginate: 8
 permalink: /:title/
 

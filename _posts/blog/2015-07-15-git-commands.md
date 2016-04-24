@@ -439,6 +439,13 @@ Git 采用这样的设计带来了这些好处：
 - 解释：尽管 .gitignore 可以阻止 Git 跟踪所指定的文件的变化甚至让 Git 不去提醒这些文件的存在，但是，一旦在你把某个文件加入 .gitignore 之前已经把它 git add 和 commit 了，Git 依然会持续跟踪这个文件的变化。如果你希望移除那些应当被忽略的文件，可以先用 git rm –-cached 命令停止对改文件的跟踪，这个命令不会物理删除文件，然后你还需要在 .gitignore 中添加它以保证以后都不再跟踪这个文件的变化。完成这些后，你将不会在 git status 中看到它，也不会再把这个文件 commit 了。
 
 
+### 同步 Fork 的项目
+
+- 场景：随着 Github 开源项目盛行，我们会常常 fork 一些项目来自己做一些定制开发，但是有时候我们需要同步原项目的更新，怎么做呢？
+- 命令：git remote add upstream <original_repository>; git remote -v; git fetch upstream; git checkout master; git merge upstream/master
+- 解释：就是把 upstream 的 master 分支拉下来 merge 到自己的 master 分支。
+
+
 
 
 参考：[如何在Git中撤销一切](http://www.jointforce.com/jfperiodical/article/show/796?m=d03)，翻译：李伟，审校：张帆，译自：[How to undo (almost) anything with Git](https://github.com/blog/2019-how-to-undo-almost-anything-with-git)。

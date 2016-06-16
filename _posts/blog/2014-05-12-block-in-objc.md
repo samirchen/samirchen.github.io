@@ -1152,7 +1152,21 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 
 - **在 ARC 环境下且 iOS 5.0 以上的版本**，用 `__weak` 解决强引用循环的问题。\_\_weak 修饰的变量在被释放时，对应的指针会被自动设为 nil。这点很好，所以推荐使用。
 - **在 ARC 环境下但是要兼容 iOS 4.x 的版本**，用 `__unsafe_unretained` 解决强引用循环的问题。\_\_unsafe_unretained 修饰的变量就相当于一个普通的指针，但是需要注意的是它指向的对象被释放时，这个指针不会被设置 nil，就成了野指针，就不能再用它了，会崩溃的。所以，除非是要兼容 4.x 系统，否则就别用了。
-- **在 MRC 环境下**，用 `__block` 解决强引用循环的问题。因为在 ARC 下，\_\_block 修饰的变量在 Block 块中会被 retain，而在 MRC 下，不会 retain。
+- **在 MRC 环境下**，用 `__block` 解决强引用循环的问题。因为在 ARC 下，\_\_block 修饰的变量在 Block 块中会被 retain，而在 MRC 下，不会 retain。但是在 MRC 下用 \_\_block 有一个问题，不会对已经释放的对象自动置为 nil，这时候在某些异步调用的情况下，当 Block 块中的代码被执行时，就可能出现野指针的情况而引发问题。这种情况我们可以通过 `malloc_zone_from_ptr` 这个函数来检查指针是否为野指针。示例代码如下：
+
+```
+// MRC.
+#import <malloc/malloc.h>
+- (void)configureBlock {
+    XYZBlockKeeper * __block blockSelf = self;
+    self.block = ^{
+    	if (!malloc_zone_from_ptr(blockSelf)) {
+    		return;
+	    }
+        [blockSelf doSomething];
+    }
+}
+```
 
 
 

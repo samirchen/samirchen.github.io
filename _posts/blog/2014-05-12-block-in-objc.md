@@ -1158,13 +1158,13 @@ blk() 在执行时发生异常，这时由于 getBlockArray 函数执行结束�
 // MRC.
 #import <malloc/malloc.h>
 - (void)configureBlock {
-    XYZBlockKeeper * __block blockSelf = self;
-    self.block = ^{
-    	if (!malloc_zone_from_ptr(blockSelf)) {
-    		return;
-	    }
-        [blockSelf doSomething];
-    }
+	XYZBlockKeeper * __block blockSelf = self;
+	self.block = ^{
+		if (!malloc_zone_from_ptr(blockSelf)) {
+			return;
+		}
+		[blockSelf doSomething];
+	}
 }
 ```
 

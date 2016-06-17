@@ -442,7 +442,7 @@ Git 采用这样的设计带来了这些好处：
 ### 同步 Fork 的项目
 
 - 场景：随着 Github 开源项目盛行，我们会常常 fork 一些项目来自己做一些定制开发，但是有时候我们需要同步原项目的更新，怎么做呢？
-- 命令：git remote add upstream <original_repository>; git remote -v; git fetch upstream; git checkout master; git merge upstream/master
+- 命令：1）同步合并已有分支：`git remote add upstream <original_repository>`; `git remote -v`; `git fetch upstream`; `git checkout master`; `git merge upstream/master`；2）同步原项目中新的分支到 Fork 的项目：`git checkout -b newbranch upstream/newbranch`; `git push -u origin newbranch`
 - 解释：就是把 upstream 的 master 分支拉下来 merge 到自己的 master 分支。
 
 

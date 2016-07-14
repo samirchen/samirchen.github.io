@@ -53,6 +53,8 @@ Framework 是 Mac OS/iOS 平台用来打包代码的一种方式，它可以将�
 
 ![image](../../images/create-a-framework/compile-target.png)
 
+
+<!-- 
 ## 创建一个测试 Framework 的 Demo 项目
 
 1) 在 Xcode 中，File -> New -> Project -> Application -> Single View Application 创建一个测试 Framework 的 Demo App：CXUIKitDemo。将上一节中创建的 Framework 项目的 CXUIKit.xcodeproj 文件拖到 CXUIKitDemo 中，位置如图所示。在拖之前，需要注意的是，你需要先关掉 CXUIKit 项目，因为 Xcode 不允许在两个不同的窗口打开同一个项目。
@@ -66,6 +68,25 @@ Framework 是 Mac OS/iOS 平台用来打包代码的一种方式，它可以将�
 ![image](../../images/create-a-framework/demo-project-build-phases.png)
 
 接下来，你就可以在 CXUIKitDemo 项目中使用 CXUIKit 提供的 CXTextField 等代码了，并且应该能正确编译执行。如果你修改了 CXUIKit Framework 项目中的代码，直接运行 CXUIKitDemo App 项目就能看到效果。
+-->
+
+
+## 创建一个测试 Framework 的 Demo 项目
+
+1）在 Xcode 中，File -> New -> Target -> Application -> Single View Application 在当前 UIKit 项目中创建一个新的 Application 的 Target：CXUIKitDemo。
+
+![image](../../images/create-a-framework/create-a-app-target-1.png)
+
+2）在 CXUIKitDemo Target 对应的 Build Phrases -> Target Dependencies 中添加 CXUIKit 作为依赖项。
+
+![image](../../images/create-a-framework/create-a-app-target-2.png)
+
+3）在 CXUIKitDemo Target 对应的 General -> Embedded Binaries 中添加 CXUIKit.framework。
+
+![image](../../images/create-a-framework/create-a-app-target-3.png)
+
+接下来，你就可以在 CXUIKitDemo 项目中使用 CXUIKit 提供的 CXTextField 等代码了，并且应该能正确编译执行。如果你修改了 CXUIKit Framework 项目中的代码，直接运行 CXUIKitDemo App 项目就能看到效果。
+
 
 
 
@@ -122,7 +143,8 @@ Framework 是 Mac OS/iOS 平台用来打包代码的一种方式，它可以将�
 	  Referenced from: .../TestBlock.app/TestBlock
 	  Reason: image not found
 
-Embedded Binaries 的含义可以这样理解：在 Build 时需要拷贝进 App Bundle 里的库。这时相对 Apple 官方提供的那些 Cocoa Framework(Foundation.framework, UIKit.framework) 而言的，官方提供的 Framework 是在系统中就包含的，不需要我们拷贝到 App Bundle 里，而我们自己开发的 Framework 则需要，即通过在 Embedded Binaries 添加它们来实现。
+Embedded Binaries 的含义可以这样理解：在 Build 时需要拷贝进 App Bundle 里的库。这时相对 Apple 官方提供的那些 Cocoa Framework(Foundation.framework, UIKit.framework) 而言的，官方提供的 Framework 是在系统中就包含的，不需要我们拷贝到 App Bundle 里，而我们自己开发的 Framework 则需要，即通过在 Embedded Binaries 添加它们来实现。 
+
 
 
 ## 编译各架构通用的 Framework

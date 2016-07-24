@@ -49,6 +49,7 @@ tag: Audio, Video, Live, RTMP, HLS
 
 <!-- 
 协议差别：
+
 - HLS：HTTP Live Streaming；基于短连接 HTTP；集合一段时间的数据生成 ts 切片文件，更新 m3u8 文件；延时 25s+。
 - RTMP：Real Time Messaging Protocal；基于长连接TCP；每个时刻收到的数据立即转发；延时 1~3s。
 - HTTP-FLV: RTMP over HTTP；基于长连接 HTTP；每个时刻收到的数据立即转发，使用 HTTP 协议；延时 1~3s。 

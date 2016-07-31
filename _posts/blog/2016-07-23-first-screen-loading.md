@@ -50,5 +50,6 @@ tag: Audio, Video, Live, First Screen Loading
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/first-screen-loading
-
+[4]: http://mp.weixin.qq.com/s?__biz=MzAwMDU1MTE1OQ==&mid=2653547042&idx=1&sn=26d8728548a6b5b657079eeab121e283&scene=2&srcid=0428msEitG9LJ3JaKGaRCEjg&from=timeline&isappinstalled=0
+[5]: https://github.com/ossrs/srs/wiki/v1_CN_LowLatency
 

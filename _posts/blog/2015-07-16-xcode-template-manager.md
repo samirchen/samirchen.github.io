@@ -2,7 +2,7 @@
 layout: post
 title: 用 Xcode 中的代码模板去推进 iOS 项目规范和提高代码复用
 description: 本文讨论 Xcode 代码片段、文件模板、项目模板等相关接口对于普及团队开发的项目规范、提高 iOS 项目代码复用效率的意义。
-category: project
+category: blog
 tag: iOS, Xcode, Project
 ---
 

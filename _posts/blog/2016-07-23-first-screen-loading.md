@@ -21,7 +21,7 @@ tag: Audio, Video, Live, First Screen Loading
 
 ![image](../../images/first-screen-loading/first-screen-loading-1.png)
 
-另外，**客户端业务侧还可以在进入直播间之前就从备选列表中选择网络情况最好的 CDN 节点，在进入直播间时从最好的节点拉取直播流播放从而优化网络加载的时间，加快首屏渲染。**
+另外，**客户端业务侧还可以在进入直播间之前通过 HTTPDNS 来选择网络情况最好的 CDN 节点，在进入直播间时从最好的节点拉取直播流播放从而优化网络加载的时间，加快首屏渲染。**
 
 
 

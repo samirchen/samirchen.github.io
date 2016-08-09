@@ -7,7 +7,11 @@ tag: Audio, Video, FFmpeg
 ---
 
 
+brew install automake fdk-aac git 
 
+libtool libvorbis libvpx opus sdl shtool texi2html theora wget x264 xvid yasm
+
+lame libass
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"

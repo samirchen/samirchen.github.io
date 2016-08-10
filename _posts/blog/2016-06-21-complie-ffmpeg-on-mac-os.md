@@ -6,12 +6,36 @@ category: blog
 tag: Audio, Video, FFmpeg
 ---
 
+## 使用 brew 安装依赖库
 
-brew install automake fdk-aac git 
+```
+brew install automake fdk-aac git libtool libvorbis libvpx opus sdl shtool yasm texi2html theora wget x264 xvid lame 
 
-libtool libvorbis libvpx opus sdl shtool texi2html theora wget x264 xvid yasm
+libass
+```
 
-lame libass
+在安装这些库时，如果发生错误，可以重试一下，有时候可能是由于网络原因导致下载未完成而引起安装失败。你可以这样来单独安装一个库：
+
+```
+// Install x264 with brew.
+brew install x264
+```
+
+如果有的库始终安装不成功，那么你可以尝试先升级更新下 brew：
+
+```
+brew update
+```
+
+悲剧的是，有时候执行 `brew update` 后，brew 可能都报错了，原因大多是本地的 brew 仓库（通常在 /usr/local/ 目录下）发生了冲突，这时候需要执行下 git 命令处理下冲突再更新 brew，命令如下：
+
+```
+cd $(brew --prefix)
+git reset --hard HEAD
+brew update
+```
+
+
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"

@@ -72,7 +72,7 @@ AVAudioSession *session = [AVAudioSession sharedInstance];
 
 ## 激活和关闭 Audio Session
 
-苹果官方建议如果你需要用到 Audio Session，总是应该显示地激活你的 Audio Session。并且参考 [Setting Preferred Hardware Values][12] 来设置相应的硬件参数。这样可以在你使用 Audio Session 前来测试是否能成功激活，以便于做出正确的处理逻辑。
+[苹果官方建议][16]如果你需要用到 Audio Session，总是应该显示地激活你的 Audio Session。并且参考 [Setting Preferred Hardware Values][12] 来设置相应的硬件参数。这样可以在你使用 Audio Session 前来测试是否能成功激活，以便于做出正确的处理逻辑。
 
 激活 Audio Session 代码如下：
 
@@ -127,5 +127,6 @@ Inter-App Audio 特性允许一个 Node App 将它的音频输出给一个 Host 
 [13]: https://developer.apple.com/library/ios/documentation/AVFoundation/Reference/AVAudioSession_ClassReference/index.html#//apple_ref/occ/instp/AVAudioSession/otherAudioPlaying
 [14]: https://developer.apple.com/library/ios/documentation/General/Reference/InfoPlistKeyReference/Articles/iPhoneOSKeys.html#//apple_ref/doc/uid/TP40009252-SW22
 [15]: https://developer.apple.com/library/ios/documentation/AVFoundation/Reference/AVAudioSession_ClassReference/index.html#//apple_ref/c/econst/AVAudioSessionCategoryOptionMixWithOthers
+[16]: https://developer.apple.com/library/ios/documentation/Audio/Conceptual/AudioSessionProgrammingGuide/AudioGuidelinesByAppType/AudioGuidelinesByAppType.html#//apple_ref/doc/uid/TP40007875-CH11-SW1
 
 

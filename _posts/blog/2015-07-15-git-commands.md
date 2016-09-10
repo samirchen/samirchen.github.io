@@ -445,7 +445,10 @@ Git 采用这样的设计带来了这些好处：
 - 命令：1）同步合并已有分支：`git remote add upstream <original_repository>`; `git remote -v`; `git fetch upstream`; `git checkout master`; `git merge upstream/master`；2）同步原项目中新的分支到 Fork 的项目：`git checkout -b newbranch upstream/newbranch`; `git push -u origin newbranch`
 - 解释：就是把 upstream 的 master 分支拉下来 merge 到自己的 master 分支。
 
+### 查询某个文件的修改历史
 
+- 场景：有时候，你需要查询某个文件从头到尾的修改历史，这时候怎么办呢？
+- 命令：1）查看某个文件的提交历史记录：`git log <file_name>` 或 `git log -p <file_name>`，加上 -p 可以显示每次提交的 diff。2）查看某次提交中单个文件的修改：`git show <commit_sha> <file_name>`。
 
 
 参考：[如何在Git中撤销一切](http://www.jointforce.com/jfperiodical/article/show/796?m=d03)，翻译：李伟，审校：张帆，译自：[How to undo (almost) anything with Git](https://github.com/blog/2019-how-to-undo-almost-anything-with-git)。

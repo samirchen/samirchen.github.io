@@ -188,6 +188,6 @@ h3.about {color:#777;margin-top:20px;font-size:22px;margin-bottom:10px}
 
 /* samir add */
 table{border-collapse:collapse;border-spacing:0;border-bottom:1px solid #ededed;border-top:1px solid #ededed;color:#757575;width:100%;margin-bottom:24px;font-size:13px;line-height:2;}
-th{text-align:left;font-weight:bold;}
-td{text-align:left;border:1px;}
+th{padding:5px;text-align:left;border:1px solid #ededed;font-weight:bold;}
+td{padding:5px;text-align:left;border:1px solid #ededed;}
 

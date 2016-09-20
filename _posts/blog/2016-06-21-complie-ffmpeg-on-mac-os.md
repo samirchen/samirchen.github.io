@@ -69,7 +69,7 @@ $ cd ffmpeg
 $ ./configure  --prefix=/usr/local --enable-gpl --enable-nonfree --enable-libass \
 --enable-libfdk-aac --enable-libfreetype --enable-libmp3lame --enable-libopus \
 --enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libxvid --extra-ldflags=-L/usr/local/lib
-$ make && sudo make install
+$ make && make install
 ```
 
 当你 config 的时候有时候会报错找不到一些库，这时候你可以添加 `--extra-ldflags=-L/usr/local/lib` 试试。

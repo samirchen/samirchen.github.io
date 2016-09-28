@@ -872,6 +872,7 @@ while i < attendeeList.count {
 	i += 1
 }
 ```
+
 ## 黄金路径
 
 尽早 return 或 break。当使用条件语句编写逻辑时，左手的代码应该是 「golden」 或 「happy」 路径。也就是说，不要嵌套多个 if 语句，即使写多个 return 语句也是 OK 的。`guard` 就是用来做这事的。

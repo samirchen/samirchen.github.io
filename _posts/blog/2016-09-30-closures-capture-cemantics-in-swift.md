@@ -104,15 +104,15 @@ closure 2 - value has been now set to <Pokemon Charizard>
 4. 创建闭包 2，它的新本地变量 `capturedPokemon` 捕获了 `pokemon` 指向对象的值（此刻 `pokemon` 的值为 `Mewtwo`）。闭包同时也捕获了 `pokemon` 这个引用，因为 `capturedPokemon` 和 `pokemeon` 都会在闭包中使用。
 5. 此时，demo() 函数执行完成。
 6. 过了 1 秒钟后，GCD 开始执行第一个闭包：
-	- 6.1 它的打印结果为 `Mew`，即第 2 步创建闭包时通过 `capturedPokemon` 变量捕获到的值。
-	- 6.2 闭包同时根据所捕获 `pokemon` 的引用，找出它所指向对象的当前值，即 `Mewtwo`（这个是在第 5 步 demo() 函数执行完成时的 `pokemon` 指向对象的值）。
-	- 6.3 然后将变量 `pokemon` 指向对象的值改为 `Pikachu`（闭包捕获的是变量 `pokemon` 的引用，所以 demo() 函数中的 `pokemon` 变量与闭包中进行赋值操作的 `pokemon` 变量是相同的引用）。
-	- 6.4 当闭包执行完成被 GCD 释放后，没有人再强引用 `Mew` 这个对象了，因此它会释放掉。但是第二个闭包的 `capturedPokemon` 依然捕获着 `Mewtwo` 这个对象，并且第二个闭包也捕获了 `pokemon` 这个引用，此刻它的指向对象的值为 `Pikachu`。
+	1. 它的打印结果为 `Mew`，即第 2 步创建闭包时通过 `capturedPokemon` 变量捕获到的值。
+	2. 闭包同时根据所捕获 `pokemon` 的引用，找出它所指向对象的当前值，即 `Mewtwo`（这个是在第 5 步 demo() 函数执行完成时的 `pokemon` 指向对象的值）。
+	3. 然后将变量 `pokemon` 指向对象的值改为 `Pikachu`（闭包捕获的是变量 `pokemon` 的引用，所以 demo() 函数中的 `pokemon` 变量与闭包中进行赋值操作的 `pokemon` 变量是相同的引用）。
+	4. 当闭包执行完成被 GCD 释放后，没有人再强引用 `Mew` 这个对象了，因此它会释放掉。但是第二个闭包的 `capturedPokemon` 依然捕获着 `Mewtwo` 这个对象，并且第二个闭包也捕获了 `pokemon` 这个引用，此刻它的指向对象的值为 `Pikachu`。
 7. 又过了 1 秒钟，GCD 开始执行第二个闭包：
-	- 7.1 它的打印结果为 `Mewtwo`，即步骤 4 中第二个闭包创建时由 `capturedPokemon` 变量捕获到的值。
-	- 7.2 它也会根据所捕获的 `pokemon` 这个引用，找出它指向对象的当前值，即 `Pikachu`（因为在第一个闭包中修改了它）。
-	- 7.3 最后，将 `pokemon` 指向对象 `Charizard`，由于 `Pikachu` 此前只被 `pokemon` 变量强引用，而此时 `pokemon` 已不再指向它了，所以也会立即被释放。。
-	- 7.4 当闭包执行完毕被 GCD 释放后，本地变量 `capturedPokemon` 脱离了作用域，所以它捕获并持有的对象 `Mewtwo` 会被释放，同时指向 `pokemon` 变量的强引用也会消失，`Charizard` 也会被释放。
+	1. 它的打印结果为 `Mewtwo`，即步骤 4 中第二个闭包创建时由 `capturedPokemon` 变量捕获到的值。
+	2. 它也会根据所捕获的 `pokemon` 这个引用，找出它指向对象的当前值，即 `Pikachu`（因为在第一个闭包中修改了它）。
+	3. 最后，将 `pokemon` 指向对象 `Charizard`，由于 `Pikachu` 此前只被 `pokemon` 变量强引用，而此时 `pokemon` 已不再指向它了，所以也会立即被释放。。
+	4. 当闭包执行完毕被 GCD 释放后，本地变量 `capturedPokemon` 脱离了作用域，所以它捕获并持有的对象 `Mewtwo` 会被释放，同时指向 `pokemon` 变量的强引用也会消失，`Charizard` 也会被释放。
 
 在这里做一下闭包捕获语义的总结：
 

@@ -35,8 +35,8 @@ tag: iOS, Objective-C, Swift
 private let maximumWidgetCount = 100
 
 class WidgetContainer {
-  var widgetButton: UIButton
-  let widgetHeightPercentage = 0.85
+	var widgetButton: UIButton
+	let widgetHeightPercentage = 0.85
 }
 ```
 
@@ -46,8 +46,8 @@ class WidgetContainer {
 let MAX_WIDGET_COUNT = 100
 
 class app_widgetContainer {
-  var wBut: UIButton
-  let wHeightPct = 0.85
+	var wBut: UIButton
+	let wHeightPct = 0.85
 }
 ```
 
@@ -87,8 +87,8 @@ timedAction(afterDelay: 1.0, perform: someOtherAction)
 
 ```swift
 class Counter {
-  func combineWith(otherCounter: Counter, options: Dictionary?) { ... }
-  func incrementBy(amount: Int) { ... }
+	func combineWith(otherCounter: Counter, options: Dictionary?) { ... }
+	func incrementBy(amount: Int) { ... }
 }
 ```
 
@@ -103,10 +103,10 @@ class Counter {
 
 ```swift
 enum Shape {
-  case rectangle
-  case square
-  case rightTriangle
-  case equilateralTriangle
+	case rectangle
+	case square
+	case rightTriangle
+	case equilateralTriangle
 }
 ```
 

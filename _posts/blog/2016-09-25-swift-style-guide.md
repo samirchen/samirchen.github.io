@@ -138,11 +138,13 @@ let myClass = MyModule.UsefulClass()
 不要再用字符串来指定选择器，而应该使用新的语法方式，更安全。通常，你应该使用上下文来缩短选择器表达式。
 
 **推荐：**
+
 ```swift
 let sel = #selector(viewDidLoad)
 ```
 
 **不推荐：**
+
 ```swift
 let sel = #selector(ViewController.viewDidLoad)
 ```

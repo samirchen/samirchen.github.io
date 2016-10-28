@@ -84,6 +84,11 @@ $ ffplay http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/g
 ```
 
 
+## 其他
+
+如果你想要编译 FFmpeg 来适用于 iOS 项目，你可以看一下 [FFmpegCompileTool][7]。
+
+
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/complie-ffmpeg-on-mac-os
@@ -91,3 +96,5 @@ $ ffplay http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/g
 [4]: http://stackoverflow.com/questions/26461966/osx-10-10-curl-post-to-https-url-gives-sslread-error/26538127
 [5]: https://developer.apple.com/
 [6]: http://brew.sh/
+[7]: https://github.com/samirchen/FFmpegCompileTool
+

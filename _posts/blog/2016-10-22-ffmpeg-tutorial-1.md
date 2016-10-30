@@ -23,6 +23,7 @@ brew install ffmpeg
 
 ## 概要
 
+视频文件通常有一些基本结构。首先，文件本身被称为「容器(Container)」，容器的类型定义了文件的信息是如何存储。比如，AVI、QuickTime 等容器格式。
 
 
 

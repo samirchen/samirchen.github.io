@@ -1,7 +1,7 @@
 ---
 layout: post
 title: AppStore 每周排行榜 - 第 1 期
-description: 在这里订阅 AppStore 榜单信息。本周：2015/12/18-2016/01/03。
+description: 在这里订阅 AppStore 榜单信息。本周：2015/12/28-2016/01/03。
 category: project
 tag: AppStore, Rank
 ---
@@ -10,7 +10,7 @@ tag: AppStore, Rank
 
 
 
-本周：2015/12/18-2016/01/03
+本周：2015/12/28-2016/01/03
 
 「免费应用排行榜」如下：
 

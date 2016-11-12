@@ -23,7 +23,7 @@ brew install ffmpeg
 
 ## 概要
 
-视频文件通常有一些基本的组成部分。首先，文件本身被称为**「容器(container)」**，容器的类型定义了文件的信息是如何存储，比如，AVI、QuickTime 等容器格式。接着，你需要了解的概念是**「流(streams)」**，例如，你通常会有一路音频流和一路视频流。流中的数据元素被称为**「帧(frames)」**。每路流都会被相应的**「编/解码器(codec)」**进行编码或解码（codec 这个名字就是源于 COded 和 DECoded）。codec 定义了实际数据是如何被编解码的，比如你用到的 codecs 可能是 DivX 和 MP3。**「数据包(packets)」**是从流中读取的数据片段，这些数据片段中包含的一个个比特就是解码后能最终被我们的应用程序处理的原始帧数据。为了达到我们音视频处理的目标，每个数据包都包含着完整的帧，在音频情况下，一个数据包中可能会包含多个音频帧。
+媒体文件通常有一些基本的组成部分。首先，文件本身被称为**「容器(container)」**，容器的类型定义了文件的信息是如何存储，比如，AVI、QuickTime 等容器格式。接着，你需要了解的概念是**「流(streams)」**，例如，你通常会有一路音频流和一路视频流。流中的数据元素被称为**「帧(frames)」**。每路流都会被相应的**「编/解码器(codec)」**进行编码或解码（codec 这个名字就是源于 COded 和 DECoded）。codec 定义了实际数据是如何被编解码的，比如你用到的 codecs 可能是 DivX 和 MP3。**「数据包(packets)」**是从流中读取的数据片段，这些数据片段中包含的一个个比特就是解码后能最终被我们的应用程序处理的原始帧数据。为了达到我们音视频处理的目标，每个数据包都包含着完整的帧，在音频情况下，一个数据包中可能会包含多个音频帧。
 
 基于以上这些基础，处理视频流和音频流的过程其实很简单：
 
@@ -33,13 +33,13 @@ brew install ffmpeg
 - 4：处理 frame。
 - 5：跳到步骤 2。
 
-尽管在一些程序中上面步骤 4 处理 frame 的逻辑可能会非常复杂，但是在本文中的例程中，用 FFmpeg 来处理多媒体文件的部分会写的比较简单一些，这里我们将要做的就是打开一个视频文件，读取其中的视频流，将视频流中获取到的视频帧写入到 PPM 文件中保存起来。
+尽管在一些程序中上面步骤 4 处理 frame 的逻辑可能会非常复杂，但是在本文中的例程中，用 FFmpeg 来处理多媒体文件的部分会写的比较简单一些，这里我们将要做的就是打开一个媒体文件，读取其中的视频流，将视频流中获取到的视频帧写入到 PPM 文件中保存起来。
 
 下面我们一步一步来实现。
 
-## 打开视频文件
+## 打开媒体文件
 
-首先，我们来看看如何打开视频文件。在使用 FFmpeg 时，首先需要初始化对应的 Library。
+首先，我们来看看如何打开媒体文件。在使用 FFmpeg 时，首先需要初始化对应的 Library。
 
 
 ```
@@ -59,9 +59,24 @@ int main(int argc, char *argv[]) {
 
 ```
 
-上面的代码会注册 FFmpeg 库中所有可用的「视频格式」和 「codec」，这样当使用库打开一个视频文件时，就能找到对应的视频格式处理程序和 codec 来处理。需要注意的是在使用 FFmpeg 时，你只需要调用 `av_register_all()` 一次即可，因此我们在 main 中调用。当然，你也可以根据需求只注册给定的视频格式和 codec，但通常你不需要这么做。
+上面的代码会注册 FFmpeg 库中所有可用的「视频格式」和 「codec」，这样当使用库打开一个媒体文件时，就能找到对应的视频格式处理程序和 codec 来处理。需要注意的是在使用 FFmpeg 时，你只需要调用 `av_register_all()` 一次即可，因此我们在 main 中调用。当然，你也可以根据需求只注册给定的视频格式和 codec，但通常你不需要这么做。
 
-调用下面的代码打开文件：
+
+接下来我们就要准备打开媒体文件了，那么媒体文件中有哪些信息是值得注意的呢？
+
+- 是否包含：音频、视频。
+- 码流的封装格式，用于解封装。
+- 视频的编码格式，用于初始化视频解码器
+- 音频的编码格式，用于初始化音频解码器。
+- 视频的分辨率、帧率、码率，用于视频的渲染。
+- 音频的采样率、位宽、通道数，用于初始化音频播放器。
+- 码流的总时长，用于展示、拖动 Seek。
+- 其他 Metadata 信息，如作者、日期等，用于展示。
+
+这些关键的媒体信息，被称作 **metadata**，常常记录在整个码流的开头或者结尾处，例如：wav 格式主要由 wav header 头来记录音频的采样率、通道数、位宽等关键信息；mp4 格式，则存放在 moov box 结构中；而 FLV 格式则记录在 onMetaData 中等等。
+
+
+`avformat_open_input` 这个函数主要负责服务器的连接和码流头部信息的拉取，我们就用它来打开媒体文件：
 
 ```
 AVFormatContext *pFormatCtx = NULL;
@@ -72,9 +87,9 @@ if (avformat_open_input(&pFormatCtx, argv[1], NULL, NULL) != 0) {
 }
 ```
 
-我们从程序入口获得要打开文件的路径，作为 `avformat_open_input` 函数的第二个参数传入，这个函数会读取视频文件的文件头并将文件格式相关的信息存储在我们作为第一个参数传入的 `AVFormatContext` 数据结构中。`avformat_open_input` 函数的第三个参数用于指定视频文件格式，第四个参数是文件格式相关选项。如果你后面这两个参数传入的是 NULL，那么 libavformat 将自动探测文件格式。
+我们从程序入口获得要打开文件的路径，作为 `avformat_open_input` 函数的第二个参数传入，这个函数会读取媒体文件的文件头并将文件格式相关的信息存储在我们作为第一个参数传入的 `AVFormatContext` 数据结构中。`avformat_open_input` 函数的第三个参数用于指定媒体文件格式，第四个参数是文件格式相关选项。如果你后面这两个参数传入的是 NULL，那么 libavformat 将自动探测文件格式。
 
-`avformat_open_input` 这个函数只会去检查文件头，所以接下来还需要检查视频文件的流信息：
+接下来对于媒体信息的探测和分析工作就要交给 `avformat_find_stream_info` 函数了：
 
 ```
 // Retrieve stream information.
@@ -83,14 +98,54 @@ if (avformat_find_stream_info(pFormatCtx, NULL) < 0) {
 }
 ```
 
-`avformat_find_stream_info` 函数会为 `pFormatCtx->streams` 填充对应的信息。这里还有一个调试用的函数 `av_dump_format` 可以为我们显式 `pFormatCtx` 中都有哪些信息。
+`avformat_find_stream_info` 函数会为 `pFormatCtx->streams` 填充对应的信息。这里还有一个调试用的函数 `av_dump_format` 可以为我们打印 `pFormatCtx` 中都有哪些信息。
 
 ```
 // Dump information about file onto standard error.
 av_dump_format(pFormatCtx, 0, argv[1], 0);
 ```
 
-经过上面的调用，现在 `pFormatCtx->streams` 只是一个指针的数组，数组的大小为 `pFormatCtx->nb_streams`。我们接着往下走，直到我们找到一个视频流：
+`AVFormatContext` 里包含了下面这些跟媒体信息有关的成员：
+
+- struct AVInputFormat *iformat; // 记录了封装格式信息
+- unsigned int nb_streams; // 记录了该 URL 中包含有几路流
+- AVStream **streams; // 一个结构体数组，每个对象记录了一路流的详细信息
+- int64_t start_time; // 第一帧的时间戳
+- int64_t duration; // 码流的总时长
+- int bit_rate; // 码流的总码率，bps
+- AVDictionary *metadata; // 一些文件信息头，key/value 字符串
+
+由此可见，经过 `avformat_find_stream_info` 的处理，我们可以拿到媒体资源的封装格式、总时长、总码率了。此外 `pFormatCtx->streams` 是一个 `AVStream` 指针的数组，里面包含了媒体资源的每一路流信息，数组的大小为 `pFormatCtx->nb_streams`。
+
+`AVStream` 结构体中关键的成员包括：
+
+- AVCodecContext *codec; // 记录了该码流的编码信息
+- int64_t start_time; // 第一帧的时间戳
+- int64_t duration; // 该码流的时长
+- int64_t nb_frames; // 该码流的总帧数
+- AVDictionary *metadata; // 一些文件信息头，key/value 字符串
+- AVRational avg_frame_rate; // 平均帧率
+
+这里可以拿到平均帧率。
+
+`AVCodecContext` 则记录了一路流的具体编码信息，其中关键的成员包括：
+
+- const struct AVCodec *codec; // 编码的详细信息
+- enum AVCodecID codec_id; // 编码类型
+- int bit_rate; // 平均码率
+- video only：
+	- int width, height; // 图像的宽高尺寸，码流中不一定存在该信息，会由解码后覆盖
+	- enum AVPixelFormat pix_fmt; // 原始图像的格式，码流中不一定存在该信息，会由解码后覆盖
+- audio only：
+	- int sample_rate; // 音频的采样率
+	- int channels; // 音频的通道数
+	- enum AVSampleFormat sample_fmt; // 音频的格式，位宽
+	- int frame_size; // 每个音频帧的 sample 个数
+
+可以看到编码类型、图像的宽度高度、音频的参数都在这里了。
+
+
+了解完这些数据结构，我们接着往下走，直到我们找到一个视频流：
 
 
 ```
@@ -132,7 +187,6 @@ if (avcodec_open2(pCodecCtx, pCodec, NULL) < 0) {
 }
 ```
 
-Note that we must not use the AVCodecContext from the video stream directly! So we have to use avcodec_copy_context() to copy the context to a new location (after allocating memory for it, of course).
 
 需要注意，我们不能直接使用视频流中的 `AVCodecContext`，所以我们需要用 `avcodec_copy_context()` 来拷贝一份新的 `AVCodecContext` 出来。
 
@@ -254,10 +308,6 @@ void SaveFrame(AVFrame *pFrame, int width, int height, int iFrame) {
 }
 ```
 
-<!-- 
-We do a bit of standard file opening, etc., and then write the RGB data. We write the file one line at a time. A PPM file is simply a file that has RGB information laid out in a long string. If you know HTML colors, it would be like laying out the color of each pixel end to end like #ff0000#ff0000.... would be a red screen. (It's stored in binary and without the separator, but you get the idea.) The header indicated how wide and tall the image is, and the max size of the RGB values.
- -->
-
 下面我们回到 main 函数，当我们完成了视频流的读取，我们需要做一些扫尾工作：
 
 ```
@@ -284,13 +334,15 @@ return 0;
 以上便是我们这节教程的全部代码，你可以从这里获得：[https://github.com/samirchen/TestFFmpeg][6]
 
 
+## 编译执行
+
 你可以使用下面的命令编译它：
 
 ```
 $ gcc -o tutorial01 tutorial01.c -lavutil -lavformat -lavcodec -lswscale -lz -lm
 ```
 
-找一个视频文件，你可以这样执行一下试试：
+找一个媒体文件，你可以这样执行一下试试：
 
 ```
 $ tutorial01 myvideofile.mp4
@@ -304,4 +356,5 @@ $ tutorial01 myvideofile.mp4
 [4]: https://github.com/samirchen/FFmpegCompileTool
 [5]: http://www.samirchen.com/complie-ffmpeg-on-mac-os
 [6]: https://github.com/samirchen/TestFFmpeg
+[7]: http://ticktick.blog.51cto.com/823160/1869849
 

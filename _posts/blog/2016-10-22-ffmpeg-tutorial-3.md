@@ -209,9 +209,153 @@ switch (event.type) {
 }
 ```
 
-## 获取数据包
+## 填充队列数据
+
+接着要做的就是创建我们的队列：
+
+```
+PacketQueue audioq;
+int main(int argc, char *argv[]) {
+	// ... code ...
+
+	avcodec_open2(aCodecCtx, aCodec, &audioOptionsDict);
+
+	// audio_st = pFormatCtx->streams[index].
+	packet_queue_init(&audioq);
+	SDL_PauseAudio(0);
+	
+	// ... code ...
+}
+```
+
+`SDL_PauseAudio()` 最终开启了音频设备，如果这时候没有获得数据，那么它就静音。
+
+一旦当我们的队列建立起来，我们就可以开始往里面填充数据包了。下面就是我们用于填数据的循环：
+
+```
+while (av_read_frame(pFormatCtx, &packet) >= 0) {
+	// Is this a packet from the video stream?
+	if (packet.stream_index == videoStream) {
+		// Decode video frame.
+		
+		// ... code ...
+
+	} else if (packet.stream_index == audioStream) {
+		packet_queue_put(&audioq, &packet);
+	} else {
+		// Free the packet that was allocated by av_read_frame.
+		av_packet_unref(&packet);
+	}
+
+	// ... code ...
+
+}
+```
+
+注意，我们没有在把音频数据包 packet 放入队列后就立即释放它，我们会在解码它之后才释放。
 
 
+## 获取队列数据
+
+
+这里我们开始实现我们获取和处理队列数据的回调函数，这个回调函数必须遵循这样的形式：`void callback(void *userdata, Uint8 *stream, int len)`，其中 `userdata` 是我们给 SDL 的指针，`stream` 是我们写入音频数据的缓冲区，`len` 是缓冲区的大小。
+
+
+```
+void audio_callback(void *userdata, Uint8 *stream, int len) {
+	AVCodecContext *aCodecCtx = (AVCodecContext *)userdata;
+	int len1, audio_size;
+	
+	static uint8_t audio_buf[(MAX_AUDIO_FRAME_SIZE * 3) / 2];
+	static unsigned int audio_buf_size = 0;
+	static unsigned int audio_buf_index = 0;
+	
+	while (len > 0) {
+		if (audio_buf_index >= audio_buf_size) {
+			// We have already sent all our data; get more.
+			audio_size = audio_decode_frame(aCodecCtx, audio_buf, audio_buf_size);
+			if (audio_size < 0) {
+				// If error, output silence.
+				audio_buf_size = 1024; // arbitrary?
+				memset(audio_buf, 0, audio_buf_size);
+			} else {
+				audio_buf_size = audio_size;
+			}
+			audio_buf_index = 0;
+		}
+		len1 = audio_buf_size - audio_buf_index;
+		if (len1 > len) {
+			len1 = len;
+		}
+		memcpy(stream, (uint8_t *) audio_buf + audio_buf_index, len1);
+		len -= len1;
+		stream += len1;
+		audio_buf_index += len1;
+	}
+}
+```
+
+这里实现了一个简单的循环来拉取数据，`audio_decode_frame()` 会存储解码结果在一个临时缓冲区，这个缓冲区的数据会流向 `stream`。`audio_buf` 这个缓冲区的大小是 FFmpeg 给我们的最大音频帧大小的 1.5 倍，从而起到一个很好的弹性的作用。
+
+
+## 音频解码
+
+音频解码的代码都在 `audio_decode_frame()` 函数中实现：
+
+```
+int audio_decode_frame(AVCodecContext *aCodecCtx, uint8_t *audio_buf, int buf_size) {
+	static AVPacket pkt;
+	static uint8_t *audio_pkt_data = NULL;
+	static int audio_pkt_size = 0;
+	static AVFrame frame;
+	
+	int len1, data_size = 0;
+	
+	for (;;) {
+		while(audio_pkt_size > 0) {
+			int got_frame = 0;
+			len1 = avcodec_decode_audio4(aCodecCtx, &frame, &got_frame, &pkt);
+			if (len1 < 0) {
+				// if error, skip frame.
+				audio_pkt_size = 0;
+				break;
+			}
+			audio_pkt_data += len1;
+			audio_pkt_size -= len1;
+			if (got_frame) {
+				data_size = av_samples_get_buffer_size(NULL, aCodecCtx->channels, frame.nb_samples, aCodecCtx->sample_fmt, 1);
+				memcpy(audio_buf, frame.data[0], data_size);
+			}
+			if (data_size <= 0) {
+				// No data yet, get more frames.
+				continue;
+			}
+			// We have data, return it and come back for more later.
+			return data_size;
+		}
+		if (pkt.data) {
+			av_packet_unref(&pkt);
+		}
+		
+		if (quit) {
+			return -1;
+		}
+		
+		if (packet_queue_get(&audioq, &pkt, 1) < 0) {
+			return -1;
+		}
+		audio_pkt_data = pkt.data;
+		audio_pkt_size = pkt.size;
+	}
+}
+```
+
+我们从最后面开始看这整段代码的处理逻辑，我们调用 `packet_queue_get()` 函数从队列中取数据包并存下来，接着一旦我们有了数据包就调用 `avcodec_decode_audio4()` 函数来进行解码。在一些情况下，一个数据包 packet 可能有超过 1 个帧，那样就需要多次调用这段处理逻辑来从数据包里取得所有数据。一旦我们取得了一个帧，我们就把它拷贝的音频缓冲区。这里需要注意的是数据类型转换，因为 SDL 给我们的是 8 bit 的整型缓冲区，但是 FFmpeg 给我们的数据是 16 bit 的整型缓冲区。另外，还需要搞清楚 `len1` 和 `data_size` 的区别，`len1` 是一个 packet 中已被我们使用的字节数，`data_size` 是返回的原生数据的大小。
+
+
+当我们获取到一些数据后就立即返回来看看是否需要从队列中获得更多的数据或者已经可以足够。如果一个 packet 中还有更多的数据需要继续处理，我们就将这些数据保存一会；如果已经处理完一个 packet 中的所有数据，那我们就释放这个 packet 的内存。
+
+略作总结，主线程的数据读取的循环负责从媒体文件中读取数据并写入到队列，我们从队列中取出数据给 `audio_callback` 回调函数处理，回调函数会将数据交给 SDL，SDL 将数据交给声卡来播放出声音。
 
 
 

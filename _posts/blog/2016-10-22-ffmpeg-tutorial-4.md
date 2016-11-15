@@ -70,8 +70,384 @@ typedef struct VideoState {
 } VideoState;
 ```
 
+简单看看 `VideoState` 中都有什么。首先，格式信息 `pFormatCtx`；视频和音频流的标记 `videoStream`、`audioStream`，以及对应的视频和音频流对象 `audio_st`、`video_st`；接下来，是我们移过来的音频缓冲区相关的数据：`audio_buf`、`audio_buf_size`、`audio_buf_index` 等；我们还添加了视频数据队列 `videoq`、视频数据缓冲区 `pictq` 来存储解码后的视频帧，`VideoPicture` 是我们自己创建的数据结构，我们后面再看里面都有些啥；我们还增加了两个指向对应线程的指针：`parse_tid`、`video_tid`；此外还有退出标志 `quit`，媒体文件名 `filename` 等等。
 
 
+现在我们回到 main 函数来看看我们的程序都有哪些改变。首先，我们创建 `VideoState` 并分配内存：
+
+```
+int main(int argc, char *argv[]) {
+	SDL_Event event;
+	VideoState *is;
+	is = av_mallocz(sizeof(VideoState));
+	// ... code ...
+}
+```
+
+`av_mallocz()` 会为我们分配内存并将内存初始化为 0。
+
+接着，初始化视频渲染相关数据缓冲区 `pictq` 的锁。因为事件循环调用我们的渲染函数时，渲染逻辑就会从 `pictq` 获取数据，同时解码逻辑又会往 `pictq` 写入数据，我们不知道谁会先到，所以这里需要通过锁机制来防止线程错乱。同时，我们这里把媒体文件路径也拷贝到 `VideoState` 中。
+
+
+
+```
+av_strlcpy(is->filename, argv[1], sizeof(is->filename));
+
+is->pictq_mutex = SDL_CreateMutex();
+is->pictq_cond = SDL_CreateCond();
+```
+
+`av_strlcpy` 是 FFmpeg 基于 `strncpy` 提供的一个字符串拷贝方法，增加了一些边界检查功能。
+
+
+## 第一个线程
+
+现在我们启动 `decode_thread()` 线程来开始工作：
+
+```
+schedule_refresh(is, 40);
+	
+is->parse_tid = SDL_CreateThread(decode_thread, is);
+if (!is->parse_tid) {
+	av_free(is);
+	return -1;
+}
+```
+
+我们将在后面实现 `schedule_refresh()` 函数，它的主要功能就是告诉系统在指定的延时后来推送一个 `FF_REFRESH_EVENT` 事件。这个事件将在事件队列里触发 video refresh 函数的调用。不过，现在我们还是先来看看 `SDL_CreateThread()` 函数。
+
+`SDL_CreateThread()` 函数会分发一个新的线程，这个线程有原进程的所有内存的访问权限，并从我们指定的函数开始运行。这个线程会给指定的函数传入一个用户定义的数据作为参数，在我们这里，我们调用的函数是 `decode_thread()` 传入的参数是前面初始化的 `VideoState`。`decode_thread()` 的前半部分没有什么新鲜的：打开媒体文件找到视频流和音频流的索引。这里与之前唯一的不同就是 `AVFormatContext` 被我们放到 `VideoState` 中去了。在找到了视频流和音频流后，我们接下来就调用另一个我们将实现的函数: `stream_component_open()`。这里我们就将代码模块化了，对重复的工作完成了一些代码复用。
+
+
+`stream_component_open()` 函数主要用于帮我们找到对应的解码器、创建对应的音频配置、保存关键信息到 `VideoState`、启动音频和视频线程。这个函数也是我们添加其他配置的地方，比如强制使用给定的 codec 而不是自动检测等等。代码如下：
+
+
+```
+int stream_component_open(VideoState *is, int stream_index) {
+	
+	AVFormatContext *pFormatCtx = is->pFormatCtx;
+	AVCodecContext *codecCtx = NULL;
+	AVCodec *codec = NULL;
+	AVDictionary *optionsDict = NULL;
+	SDL_AudioSpec wanted_spec, spec;
+	
+	if (stream_index < 0 || stream_index >= pFormatCtx->nb_streams) {
+		return -1;
+	}
+	
+	// Get a pointer to the codec context for the video stream.
+	codecCtx = pFormatCtx->streams[stream_index]->codec;
+	
+	if (codecCtx->codec_type == AVMEDIA_TYPE_AUDIO) {
+		// Set audio settings from codec info.
+		wanted_spec.freq = codecCtx->sample_rate;
+		wanted_spec.format = AUDIO_S16SYS;
+		wanted_spec.channels = codecCtx->channels;
+		wanted_spec.silence = 0;
+		wanted_spec.samples = SDL_AUDIO_BUFFER_SIZE;
+		wanted_spec.callback = audio_callback;
+		wanted_spec.userdata = is;
+		
+		if (SDL_OpenAudio(&wanted_spec, &spec) < 0) {
+			fprintf(stderr, "SDL_OpenAudio: %s\n", SDL_GetError());
+			return -1;
+		}
+	}
+	codec = avcodec_find_decoder(codecCtx->codec_id);
+	if (!codec || (avcodec_open2(codecCtx, codec, &optionsDict) < 0)) {
+		fprintf(stderr, "Unsupported codec!\n");
+		return -1;
+	}
+	
+	switch(codecCtx->codec_type) {
+		case AVMEDIA_TYPE_AUDIO:
+			is->audioStream = stream_index;
+			is->audio_st = pFormatCtx->streams[stream_index];
+			is->audio_buf_size = 0;
+			is->audio_buf_index = 0;
+			memset(&is->audio_pkt, 0, sizeof(is->audio_pkt));
+			packet_queue_init(&is->audioq);
+			SDL_PauseAudio(0);
+			break;
+		case AVMEDIA_TYPE_VIDEO:
+			is->videoStream = stream_index;
+			is->video_st = pFormatCtx->streams[stream_index];
+			
+			packet_queue_init(&is->videoq);
+			is->video_tid = SDL_CreateThread(video_thread, is);
+			is->sws_ctx = sws_getContext(is->video_st->codec->width, is->video_st->codec->height, is->video_st->codec->pix_fmt, is->video_st->codec->width, is->video_st->codec->height, AV_PIX_FMT_YUV420P, SWS_BILINEAR, NULL, NULL, NULL);
+			break;
+		default:
+			break;
+	}
+	return 0;
+}
+```
+
+上面的函数主要是服务于音频和视频，这里把 `VideoState` 作为回调函数的参数数据。同时，我们保存了 `audio_st` 和 `video_st`，还初始化了视频队列 `videoq` 和音频队列 `audioq`。最重要的是，我们在这里启动了音频线程和视频线程。
+
+
+```
+SDL_PauseAudio(0);
+break;
+
+// ...... 
+
+is->video_tid = SDL_CreateThread(video_thread, is);
+```
+
+
+我们接着看看 `decode_thread()` 的后半部分，这部分的主要工作是通过一个循环来读取 packet 并把它放入正确的队列：
+
+
+```
+int decode_thread(void *arg) {
+
+	// ... code ...
+
+	// Main decode loop.
+	for (;;) {
+		if (is->quit) {
+			break;
+		}
+		// Seek stuff goes here.
+		if (is->audioq.size > MAX_AUDIOQ_SIZE || is->videoq.size > MAX_VIDEOQ_SIZE) {
+			SDL_Delay(10);
+			continue;
+		}
+		if (av_read_frame(is->pFormatCtx, packet) < 0) {
+			if (is->pFormatCtx->pb->error == 0) {
+				SDL_Delay(100); // No error; wait for user input.
+				continue;
+			} else {
+				break;
+			}
+		}
+		// Is this a packet from the video stream?
+		if (packet->stream_index == is->videoStream) {
+			packet_queue_put(&is->videoq, packet);
+		} else if (packet->stream_index == is->audioStream) {
+			packet_queue_put(&is->audioq, packet);
+		} else {
+			av_packet_unref(packet);
+		}
+	}
+
+	// All done - wait for it.
+	while (!is->quit) {
+		SDL_Delay(100);
+	}
+
+	fail:
+	if (1) {
+		SDL_Event event;
+		event.type = FF_QUIT_EVENT;
+		event.user.data1 = is;
+		SDL_PushEvent(&event);
+	}
+	return 0;
+}
+```
+
+
+上面代码的 for 循环中，我们为音频队列和视频队列添加了 max size，还增加了对读数据错误的检查。`AVFormatContext *pFormatCtx` 有一个 `ByteIOContext` 成员，这个成员会记录所有底层文件信息。
+
+在循环完成后，接下来的逻辑就是等待其他任务结束，以及发出通知告诉其他任务我们这已经结束了。这段扫尾代码也演示了如何发事件。
+
+我们通过 SDL 提供的常量 `SDL_USEREVENT` 来取得用户事件，第一个用户事件的值为 `SDL_USEREVENT`，往后则都是累加 1。比如，`FF_QUIT_EVENT` 事件在我们的程序中的值是 `SDL_USEREVENT + 1`。我们还可以给事件附加上用户数据，我们的程序中，我们把用户数据的指针指向了 `is`。最后我们调用 `SDL_PushEvent()` 函数将事件发布出去。在后续的事件处理逻辑中，我们将遍历和处理事件。现在要明确的就是我们这里发出了 `FF_QUIT_EVENT` 事件，我们将获取这个事件并将 `quit` 标志置为 1。
+
+
+
+## 获取帧：video_thread
+
+在 codec 准备好后，我们启动 video thread。这个线程从 video queue 中读取数据包 packet，解码为视频帧，然后调用 `queue_picture()` 函数将处理好的帧添加到 picture queue。
+
+
+```
+int video_thread(void *arg) {
+	VideoState *is = (VideoState *) arg;
+	AVPacket pkt1, *packet = &pkt1;
+	int frameFinished;
+	AVFrame *pFrame;
+	
+	pFrame = av_frame_alloc();
+	
+	for (;;) {
+		if (packet_queue_get(&is->videoq, packet, 1) < 0) {
+			// Means we quit getting packets.
+			break;
+		}
+		// Decode video frame.
+		avcodec_decode_video2(is->video_st->codec, pFrame, &frameFinished, packet);
+		
+		// Did we get a video frame?
+		if (frameFinished) {
+			if (queue_picture(is, pFrame) < 0) {
+				break;
+			}
+		}
+		av_packet_unref(packet);
+	}
+	av_free(pFrame);
+	return 0;
+}
+```
+
+这里的代码还是比较清晰的，我们把 `avcodec_decode_video2()` 函数挪到了这里，由于很多信息被我们放到了 `VideoState` 中，所以这里的参数我们做了改变，比如：我们通过 `is->video_st->codec` 从 `VideoState` 中获取视频的 codec。我们持续从 video queue 中获取 packet 数据包，直到有人告诉我们 quit 或者遇到错误。
+
+
+## 帧队列
+
+接着，我们看一下存储解码帧的函数 `queue_picture()`，由于我们的 picture queue 里放的是 SDL overlay，所以我们需要把视频帧转换为 SDL overlay。
+
+
+```
+typedef struct VideoPicture {
+	SDL_Overlay *bmp;
+	int width, height; // Source height & width..
+	int allocated;
+} VideoPicture;
+```
+
+
+`VideoState` 中有个缓冲区用来存储 `VideoPicture`，但是我们需要自己创建和分配 `SDL_Overlay` 的内存，注意，`allocated` 就是用来标记我们有没有做这件事。
+
+
+我们需要两个指针来帮助我们使用这个队列：写索引和读索引。我们同时也记录缓冲区有多少图像。当要往队列写入数据时，我们首先要等缓冲区清理出空间来存放 `VideoPicture`。然后我们检查我们是否在写索引位置创建了 SDL overlay，如果没有则需要分配对应的内存。如果窗口的尺寸发生改变了，我们还要重新创建缓冲区。
+
+
+```
+int queue_picture(VideoState *is, AVFrame *pFrame) {
+	
+	VideoPicture *vp;
+	AVFrame pict;
+	
+	// Wait until we have space for a new pic.
+	SDL_LockMutex(is->pictq_mutex);
+	while (is->pictq_size >= VIDEO_PICTURE_QUEUE_SIZE && !is->quit) {
+		SDL_CondWait(is->pictq_cond, is->pictq_mutex);
+	}
+	SDL_UnlockMutex(is->pictq_mutex);
+	
+	if (is->quit) {
+		return -1;
+	}
+	
+	// windex is set to 0 initially.
+	vp = &is->pictq[is->pictq_windex];
+	
+	// Allocate or resize the buffer!
+	if (!vp->bmp || vp->width != is->video_st->codec->width || vp->height != is->video_st->codec->height) {
+		SDL_Event event;
+		
+		vp->allocated = 0;
+		// We have to do it in the main thread.
+		event.type = FF_ALLOC_EVENT;
+		event.user.data1 = is;
+		SDL_PushEvent(&event);
+		
+		// Wait until we have a picture allocated.
+		SDL_LockMutex(is->pictq_mutex);
+		while (!vp->allocated && !is->quit) {
+			SDL_CondWait(is->pictq_cond, is->pictq_mutex);
+		}
+		SDL_UnlockMutex(is->pictq_mutex);
+		if (is->quit) {
+			return -1;
+		}
+	}
+	
+	// ... code ...
+
+}
+```
+
+这里我们发送了一个事件 `FF_ALLOC_EVENT`，处理这个事件的代码在主线程中：
+
+```
+case FF_ALLOC_EVENT:
+	alloc_picture(event.user.data1);
+	break;
+```
+
+这里调用了 `alloc_picture()` 函数，我们来看一下这个函数：
+
+```
+void alloc_picture(void *userdata) {
+	
+	VideoState *is = (VideoState *)userdata;
+	VideoPicture *vp;
+	
+	vp = &is->pictq[is->pictq_windex];
+	if (vp->bmp) {
+		// We already have one make another, bigger/smaller.
+		SDL_FreeYUVOverlay(vp->bmp);
+	}
+	// Allocate a place to put our YUV image on that screen.
+	SDL_LockMutex(screen_mutex);
+	vp->bmp = SDL_CreateYUVOverlay(is->video_st->codec->width, is->video_st->codec->height, SDL_YV12_OVERLAY, screen);
+	SDL_UnlockMutex(screen_mutex);
+	vp->width = is->video_st->codec->width;
+	vp->height = is->video_st->codec->height;
+	
+	SDL_LockMutex(is->pictq_mutex);
+	vp->allocated = 1;
+	SDL_CondSignal(is->pictq_cond);
+	SDL_UnlockMutex(is->pictq_mutex);
+	
+}
+```
+
+我们把 `SDL_CreateYUVOverlay()` 从 main 函数中移到了这里，现在我们对这个函数加了锁，因为有两个线程可以同时往屏幕写数据，这样能防止 `alloc_picture()` 函数和显示视频的函数发生冲突。需要注意我们在 `VideoPicture` 中记录了视频的宽度和高度，因为我们需要确保我们的视频尺寸不会发生改变。
+
+
+现在我们已经创建了 YUV overlay 并分配了内存，我们做好了接收图像的准备。现在我们回到 `queue_picture()` 函数来看看拷贝视频帧到 YUV overlay 的这部分代码：
+
+
+```
+int queue_picture(VideoState *is, AVFrame *pFrame) {
+
+	// Allocate a frame if we need it... 
+	// ... code ...
+	// We have a place to put our picture on the queue 
+
+	// We have a place to put our picture on the queue.
+	if (vp->bmp) {
+		
+		SDL_LockYUVOverlay(vp->bmp);
+		
+		// Point pict at the queue.
+		pict.data[0] = vp->bmp->pixels[0];
+		pict.data[1] = vp->bmp->pixels[2];
+		pict.data[2] = vp->bmp->pixels[1];
+		
+		pict.linesize[0] = vp->bmp->pitches[0];
+		pict.linesize[1] = vp->bmp->pitches[2];
+		pict.linesize[2] = vp->bmp->pitches[1];
+		
+		// Convert the image into YUV format that SDL uses.
+		sws_scale(is->sws_ctx, (uint8_t const * const *)pFrame->data, pFrame->linesize, 0, is->video_st->codec->height, pict.data, pict.linesize);
+		
+		SDL_UnlockYUVOverlay(vp->bmp);
+		// Now we inform our display thread that we have a pic ready.
+		if (++is->pictq_windex == VIDEO_PICTURE_QUEUE_SIZE) {
+			is->pictq_windex = 0;
+		}
+		SDL_LockMutex(is->pictq_mutex);
+		is->pictq_size++;
+		SDL_UnlockMutex(is->pictq_mutex);
+	}
+	return 0;
+}
+```
+
+这段代码主要是用视频帧来填充 YUV overlay 的逻辑。最后一段代码就是向队列添加数据，这个队列工作的方式就是不断地往里添加数据直到队列满掉，然后不断从中读取数据只要里面还有数据，所以读写操作都会依赖 `is->pictq_size` 的值，所以这里我们要给它加锁。我们在这里做的就是，将写指针递增，然后锁住队列并增加它的 size。然后读数据方会知道队列中有数据了，如果队列满了，我们写数据方也会知道。
+
+
+
+
+
+## 显示视频
 
 
 

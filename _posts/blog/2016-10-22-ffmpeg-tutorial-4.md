@@ -449,6 +449,149 @@ int queue_picture(VideoState *is, AVFrame *pFrame) {
 
 ## 显示视频
 
+上面介绍完了 video thread，我们接下来来看看 `schedule_refresh()`：
+
+
+```
+// Schedule a video refresh in 'delay' ms.
+static void schedule_refresh(VideoState *is, int delay) {
+	SDL_AddTimer(delay, sdl_refresh_timer_cb, is);
+}
+```
+
+`SDL_AddTimer()` 是一个 SDL 的函数，用来在指定的时间(ms)后回调用户指定的函数，当然还可以选择带上用户指定的数据。我们将用 `schedule_refresh` 这个函数来做图像更新：每次我们调用这个函数，它就会设置一个定时器，这个定时器会触发一个事件来让 main 函数的事件处理逻辑去从 picture queue 取得一帧数据来显示出来。
+
+
+```
+static Uint32 sdl_refresh_timer_cb(Uint32 interval, void *opaque) {
+	SDL_Event event;
+	event.type = FF_REFRESH_EVENT;
+	event.user.data1 = opaque;
+	SDL_PushEvent(&event);
+	return 0; // 0 means stop timer.
+}
+```
+
+`sdl_refresh_timer_cb()` 就是定时器会触发调用的那个用于发事件的函数，`FF_REFRESH_EVENT` 事件被定义为了 `SDL_USEREVENT + 1`。主要注意的是当我们在这里返回 0 时，SDL 会停止这个定时器，这样也就停止去调用这个回调了。
+
+
+既然我们这里发出了 `FF_REFRESH_EVENT` 事件，那么就需要有地方处理它，这个地方就在 main 函数的 event loop 中：
+
+```
+for (;;) {
+	
+	SDL_WaitEvent(&event);
+	switch(event.type) {
+
+		// ... code ...
+		
+		case FF_REFRESH_EVENT:
+			video_refresh_timer(event.user.data1);
+			break;
+
+		// ... code ...
+
+	}
+}
+```
+
+从这里可以看到，处理这个事件的函数是 `video_refresh_timer()`：
+
+
+```
+void video_refresh_timer(void *userdata) {
+	
+	VideoState *is = (VideoState *)userdata;
+	// vp is used in later tutorials for synchronization.
+	VideoPicture *vp;
+	
+	if (is->video_st) {
+		if (is->pictq_size == 0) {
+			schedule_refresh(is, 1);
+		} else {
+			vp = &is->pictq[is->pictq_rindex];
+
+			// Now, normally here goes a ton of code about timing, etc. we're just going to guess at a delay for now. You can increase and decrease this value and hard code the timing - but I don't suggest that, We'll learn how to do it for real later.
+			schedule_refresh(is, 80);
+			
+			// Show the picture!
+			video_display(is);
+			
+			// Update queue for next picture!
+			if (++is->pictq_rindex == VIDEO_PICTURE_QUEUE_SIZE) {
+				is->pictq_rindex = 0;
+			}
+			SDL_LockMutex(is->pictq_mutex);
+			is->pictq_size--;
+			SDL_CondSignal(is->pictq_cond);
+			SDL_UnlockMutex(is->pictq_mutex);
+		}
+	} else {
+		schedule_refresh(is, 100);
+	}
+}
+```
+
+这是一个比较简单的函数：当 `pictq` 队列有数据时就取出 `VideoPicture`，设置显示下一帧图像的 timer，调用 `video_display()` 来将视频显示出来，增加队列的计数器，更新队列的 size。你可能注意到了，这里我们虽然取出了一个 `VideoPicture` 但并没有使用它，原因是我们后面会用到。后面我们会用这个 `VideoPicture` 的时间信息来做音视频同步相关的工作，其中的时间信息将告诉我们该何时显示下一帧图像，我们会把这个时间信息传给 `schedule_refresh()`。而现在，我们只是简单的传了一个 80。
+
+
+现在我们要做的最后一件事就是 `video_display()` 函数：
+
+```
+void video_display(VideoState *is) {
+	SDL_Rect rect;
+	VideoPicture *vp;
+	float aspect_ratio;
+	int w, h, x, y;
+	
+	vp = &is->pictq[is->pictq_rindex];
+	if (vp->bmp) {
+		if (is->video_st->codec->sample_aspect_ratio.num == 0) {
+			aspect_ratio = 0;
+		} else {
+			aspect_ratio = av_q2d(is->video_st->codec->sample_aspect_ratio) * is->video_st->codec->width / is->video_st->codec->height;
+		}
+		if (aspect_ratio <= 0.0) {
+			aspect_ratio = (float) is->video_st->codec->width / (float) is->video_st->codec->height;
+		}
+		h = screen->h;
+		w = ((int)rint(h * aspect_ratio)) & -3;
+		if (w > screen->w) {
+			w = screen->w;
+			h = ((int)rint(w / aspect_ratio)) & -3;
+		}
+		x = (screen->w - w) / 2;
+		y = (screen->h - h) / 2;
+		
+		rect.x = x;
+		rect.y = y;
+		rect.w = w;
+		rect.h = h;
+		SDL_LockMutex(screen_mutex);
+		SDL_DisplayYUVOverlay(vp->bmp, &rect);
+		SDL_UnlockMutex(screen_mutex);
+	}
+}
+```
+
+由于我们的屏幕可以是任意尺寸（我们自己设置的是 640x480，但是这个对用户应该是可以改变的），所以我们需要能够动态地计算我们要显示图像的尺寸。首先，我们需要计算出视频的 **aspect ratio**，即宽度和高度的比例(width/height)。但是有一些 codec 有很奇怪的 **sample aspect ration**，即单像素(单采样)的宽高比(width/height)，又由于我们的 `AVCodecContext` 中的宽度和高度是以像素为单位来表示的，那么这时候 actual aspect ratio 应该是 aspect ratio 乘上 sample aspect ratio。有的 codec 的 aspect ratio 值是 0，这表示的是每个像素的尺寸是 1x1。
+
+接下来，我们放大视频来尽量适配我们的屏幕。代码中的 `& -3` 位操作可以将数值调整到最接近 4 的倍数，然后我们将视频居中，并调用 `SDL_DisplayYUVOverlay()`，这里要确保我们通过 `screen_mutex` 来加锁。
+
+
+到这里，我们还需要用新的 `VideoState` 来重写音频处理的代码，但这里的工作还是比较少的，参见样例代码。最后我们要修改一下 FFmpeg 的内部退出回调对应的函数：
+
+
+```
+// Since we only have one decoding thread, the Big Struct can be global in case we need it.
+VideoState *global_video_state;
+
+int decode_interrupt_cb(void *opaque) {
+	return (global_video_state && global_video_state->quit);
+}
+```
+
+我们在主函数设置 `global_video_state` 为 `VideoState *is`。
 
 
 

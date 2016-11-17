@@ -176,4 +176,4 @@ $ tutorial02 myvideofile.mp4
 [4]: https://en.wikipedia.org/wiki/YCbCr
 [5]: https://en.wikipedia.org/wiki/Chroma_subsampling
 [6]: https://github.com/samirchen/TestFFmpeg
-
+[7]: http://dranger.com/ffmpeg/tutorial02.html

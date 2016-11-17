@@ -382,4 +382,4 @@ $ tutorial03 myvideofile.mp4
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/ffmpeg-tutorial-3
-
+[3]: http://dranger.com/ffmpeg/tutorial03.html

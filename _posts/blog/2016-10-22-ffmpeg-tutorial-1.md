@@ -331,7 +331,7 @@ return 0;
 你可以看到，这里我们用 `av_free()` 函数来释放我们用 `av_malloc()` 分配的内存。
 
 
-以上便是我们这节教程的全部代码，你可以从这里获得：[https://github.com/samirchen/TestFFmpeg][6]
+以上便是我们这节教程的全部内容，其中的完整代码你可以从这里获得：[https://github.com/samirchen/TestFFmpeg][6]
 
 
 ## 编译执行

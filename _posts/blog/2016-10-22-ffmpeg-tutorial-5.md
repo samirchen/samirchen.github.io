@@ -373,7 +373,7 @@ double get_audio_clock(VideoState *is) {
 
 
 
-以上便是我们这节教程的全部代码，你可以从这里获得：[https://github.com/samirchen/TestFFmpeg][6]
+以上便是我们这节教程的全部内容，其中的完整代码你可以从这里获得：[https://github.com/samirchen/TestFFmpeg][6]
 
 ## 编译执行
 
@@ -398,3 +398,4 @@ $ tutorial05 myvideofile.mp4
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/ffmpeg-tutorial-5
 [3]: http://dranger.com/ffmpeg/tutorial05.html
+[6]: https://github.com/samirchen/TestFFmpeg

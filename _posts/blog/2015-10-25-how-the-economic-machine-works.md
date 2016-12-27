@@ -17,12 +17,12 @@ tag: ecomomic, Ray Dalio
 
 中文版：[http://v.qq.com/page/z/2/f/z01685nf12f.html](http://v.qq.com/page/z/2/f/z01685nf12f.html)
 
-<embed src="http://static.video.qq.com/TPout.swf?vid=z01685nf12f&auto=0" allowFullScreen="true" quality="high" width="480" height="400" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed>
+<embed src="http://static.video.qq.com/TPout.swf?vid=z01685nf12f&auto=0" allowFullScreen="true" quality="high" width="480" height="400" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash" />
 
 
 英文版：[http://v.qq.com/boke/page/t/0/4/t0123ryxmc4.html](http://v.qq.com/boke/page/t/0/4/t0123ryxmc4.html)
 
-<embed src="http://static.video.qq.com/TPout.swf?vid=t0123ryxmc4&auto=0" allowFullScreen="true" quality="high" width="480" height="400" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed>
+<embed src="http://static.video.qq.com/TPout.swf?vid=t0123ryxmc4&auto=0" allowFullScreen="true" quality="high" width="480" height="400" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash" />
 
 
 ## 笔记

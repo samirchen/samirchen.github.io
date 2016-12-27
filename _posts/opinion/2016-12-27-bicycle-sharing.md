@@ -28,7 +28,7 @@ tag: mobike, ofo, bicycle sharing
 
 ---------------------------------
 
-[胡玮炜在一席的演讲][https://v.qq.com/x/cover/7qm4vff0bszr5m0/t0357ld2173.html]
+[胡玮炜在一席的演讲](https://v.qq.com/x/cover/7qm4vff0bszr5m0/t0357ld2173.html)
 
 <embed src="https://imgcache.qq.com/tencentvideo_v1/playerv3/TPout.swf?max_age=86400&v=20161117&vid=t0357ld2173&auto=0" allowFullScreen="true" quality="high" width="480" height="400" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed>
 
@@ -37,7 +37,7 @@ tag: mobike, ofo, bicycle sharing
 
 ---------------------------------
 
-[愚人节的谷歌自动驾驶自行车][https://v.qq.com/x/page/m0192y5jp5k.html]
+[愚人节的谷歌自动驾驶自行车](https://v.qq.com/x/page/m0192y5jp5k.html)
 
 <embed src="https://imgcache.qq.com/tencentvideo_v1/playerv3/TPout.swf?max_age=86400&v=20161117&vid=m0192y5jp5k&auto=0" allowFullScreen="true" quality="high" width="480" height="400" align="middle" allowScriptAccess="always" type="application/x-shockwave-flash"></embed>
 

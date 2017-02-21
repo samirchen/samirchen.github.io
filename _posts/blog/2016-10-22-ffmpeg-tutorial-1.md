@@ -112,8 +112,21 @@ av_dump_format(pFormatCtx, 0, argv[1], 0);
 - AVStream **streams; // 一个结构体数组，每个对象记录了一路流的详细信息
 - int64_t start_time; // 第一帧的时间戳
 - int64_t duration; // 码流的总时长
-- int bit_rate; // 码流的总码率，bps
+- int64_t bit_rate; // 码流的总码率，bps
 - AVDictionary *metadata; // 一些文件信息头，key/value 字符串
+
+你拿到这些数据后，与 `av_dump_format` 的输出对比可能会发现一些不同，这时候可以去看看 FFmpeg 源码中 `av_dump_format` 的实现，里面对打印出来的数据是有一些处理逻辑的。比如对于 `start_time` 的处理代码如下：
+
+```
+if (ic->start_time != AV_NOPTS_VALUE) {
+    int secs, us;
+    av_log(NULL, AV_LOG_INFO, ", start: ");
+    secs = ic->start_time / AV_TIME_BASE;
+    us = llabs(ic->start_time % AV_TIME_BASE);
+    av_log(NULL, AV_LOG_INFO, "%d.%06d", secs, (int) av_rescale(us, 1000000, AV_TIME_BASE));
+}
+
+```
 
 由此可见，经过 `avformat_find_stream_info` 的处理，我们可以拿到媒体资源的封装格式、总时长、总码率了。此外 `pFormatCtx->streams` 是一个 `AVStream` 指针的数组，里面包含了媒体资源的每一路流信息，数组的大小为 `pFormatCtx->nb_streams`。
 

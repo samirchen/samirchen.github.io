@@ -74,6 +74,7 @@ tag: iOS, Objective-C, Instruments, Xcode
 5、除此之外，我们还能在 Instruments 选择使用 `Counters`、`Activity Monitor`、`System Trace` 等 Profiling Template 对程序做 CPU 性能考量。
 
 
+6、需要注意的是，有时候如果你使用 Instruments 查看调用堆栈时可能看到的都是地址而不是函数名，这样就不太好定位问题了。这时候你可以把相关项目的 Build Settings - Debug Information Format 的 Debug 和 Release 都设置为 `DWARF with dSYM File`，这样就能将对应的堆栈信息符号化显示了。
 
 
 ## 图形性能

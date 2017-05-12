@@ -201,7 +201,7 @@ mutableVideoComposition.animationTool = [AVVideoCompositionCoreAnimationTool vid
 
 
 
-## 一个完整实例
+## 一个完整示例
 
 
 这里的实例将展示如何合并两个 video asset tracks 和一个 audio asset track 到一个视频文件，其中大体步骤如下：
@@ -280,11 +280,11 @@ mutableVideoComposition.instructions = @[firstVideoCompositionInstruction, secon
 CGSize naturalSizeFirst, naturalSizeSecond;
 // If the first video asset was shot in portrait mode, then so was the second one if we made it here.
 if (isFirstVideoAssetPortrait) {
-	// Invert the width and height for the video tracks to ensure that they display properly.
+    // Invert the width and height for the video tracks to ensure that they display properly.
     naturalSizeFirst = CGSizeMake(firstVideoAssetTrack.naturalSize.height, firstVideoAssetTrack.naturalSize.width);
     naturalSizeSecond = CGSizeMake(secondVideoAssetTrack.naturalSize.height, secondVideoAssetTrack.naturalSize.width);
 } else {
-	// If the videos weren't shot in portrait mode, we can just use their natural sizes.
+    // If the videos weren't shot in portrait mode, we can just use their natural sizes.
     naturalSizeFirst = firstVideoAssetTrack.naturalSize;
     naturalSizeSecond = secondVideoAssetTrack.naturalSize;
 }

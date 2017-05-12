@@ -335,6 +335,9 @@ exporter.videoComposition = mutableVideoComposition;
 ```
 
 
+## 其他参考
+
+- [一个简单的视频编辑 Demo][4]
 
 
 

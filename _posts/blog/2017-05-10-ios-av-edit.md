@@ -1,6 +1,6 @@
 ---
 layout: post
-title: iOS 上的音视频编辑
+title: AVAudioFoundation(3)：音视频编辑
 description: 介绍在 iOS 上做音视频录制相关开发的一些基本概念。
 category: blog
 tag: Audio, Video, Live, iOS, Recorder

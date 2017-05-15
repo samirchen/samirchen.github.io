@@ -1,6 +1,6 @@
 ---
 layout: post
-title: 响应音频中断事件
+title: AVAudioSession(4)：响应音频中断事件
 description: 介绍在 iOS 上做音视频相关开发时与 AVAudioSession 相关的知识。
 category: blog
 tag: Audio, Video, Live, iOS, AVAudioSession

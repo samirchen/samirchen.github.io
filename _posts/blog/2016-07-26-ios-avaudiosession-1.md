@@ -1,6 +1,6 @@
 ---
 layout: post
-title: iOS Audio Session 概览
+title: AVAudioSession(1)：iOS Audio Session 概览
 description: 介绍在 iOS 上做音视频相关开发时与 AVAudioSession 相关的知识。
 category: blog
 tag: Audio, Video, Live, iOS, AVAudioSession

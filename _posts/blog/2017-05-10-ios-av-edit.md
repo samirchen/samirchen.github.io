@@ -9,26 +9,6 @@ tag: Audio, Video, Live, iOS, Recorder
 
 本文主要内容来自 [AVFoundation Programming Guide][7]。
 
-
-要了解 iOS 上的音视频编辑相关的内容，首先需要了解的就是 `AVFoundation` 这个框架。
-
-下图是 `AVFoundation` 框架大的层级结构：
-
-![image](../../images/ios-av-edit/avfoundation-stack-on-ios.png)
-
-下图是 `AVFoundation` 框架中各个类的关系结构：
-
-![image](../../images/ios-av-edit/media_trunk_graph.svg)
-
-在 `AVFoundation` 框架中，最主要的表示媒体的类就是 `AVAsset`，甚至可以认为 `AVFoundation` 框架的大部分能力都是围绕着 `AVAsset` 展开的。
-
-一个 `AVAsset` 实例表示的是一份或多份音视频数据（audio and video tracks）的集合，它描述的是这个集合作为一个整体对象的一些属性，比如：标题、时长、大小等，而不与具体的数据格式绑定。通常，在实际使用时我们可能会基于某个 URL 创建对应的媒体资源对象（AVURLAsset），或者直接创建 compositions（AVComposition），这些类都是 `AVAsset` 的子类。
-
-一个 `AVAsset` 中的每一份音频或视频数据都称为一个**轨道（track）**。在最简单的情况下，一个媒体文件中可能只有两个轨道，一个音频轨道，一个视频轨道。而复杂的组合中，可能包含多个重叠的音频轨道和视频轨道。此外 `AVAsset` 也可能包含**元数据（metadata）**。
-
-在 `AVFoundation` 中另一个非常重要的概念是，初始化一个 `AVAsset` 或者一个 `AVAssetTrack` 时并不一定意味着它已经可以立即使用，因为这需要一段时间来做计算，而这个计算可能会阻塞当前线程，所以通常你可以选用异步的方式来初始化，并通过回调来得到异步返回。
-
-
 ## 音视频编辑
 
 上面简单了解了下 `AVFoundation` 框架后，我们来看看跟音视频编辑相关的接口。
@@ -37,22 +17,22 @@ tag: Audio, Video, Live, iOS, Recorder
 
 下面这张图反映了一个新的 composition 是怎么从已有的 asset 中获取对应的 track 并进行拼接形成新的 asset。
 
-![image](../../images/ios-av-edit/avmutablecomposition.png)
+![image](../../images/ios-avfoundation/avmutablecomposition.png)
 
 在处理音频时，你可以在使用 `AVMutableAudioMix` 类的接口来做一些自定义的操作，如下图所示。现在，你可以做到指定一个最大音量或设置一个音频轨道的音量渐变。
 
-![image](../../images/ios-av-edit/avmutableaudiomix.png)
+![image](../../images/ios-avfoundation/avmutableaudiomix.png)
 
 
 如下图所示，我们还可以使用 `AVMutableVideoComposition` 来直接处理 composition 中的视频轨道。处理一个单独的 video composition 时，你可以指定它的渲染尺寸、缩放比例、帧率等参数并输出最终的视频文件。通过一些针对 video composition 的指令（AVMutableVideoCompositionInstruction 等），我们可以修改视频的背景颜色、应用 layer instructions。这些 layer instructions（AVMutableVideoCompositionLayerInstruction 等）可以用来对 composition 中的视频轨道实施图形变换、添加图形渐变、透明度变换、增加透明度渐变。此外，你还能通过设置 video composition 的 `animationTool` 属性来应用 Core Animation Framework 框架中的动画效果。
 
 
-![image](../../images/ios-av-edit/avmutablevideocomposition.png)
+![image](../../images/ios-avfoundation/avmutablevideocomposition.png)
 
 
 如下图所示，你可以使用 `AVAssetExportSession` 相关的接口来合并你的 composition 中的 audio mix 和 video composition。你只需要初始化一个 `AVAssetExportSession` 对象，然后将其 `audioMix` 和 `videoComposition` 属性分别设置为你的 audio mix 和 video composition 即可。
 
-![image](../../images/ios-av-edit/puttingitalltogether.png)
+![image](../../images/ios-avfoundation/puttingitalltogether.png)
 
 
 ## 创建 Composition

@@ -23,6 +23,18 @@ tag: Audio, Video, Live, iOS, Recorder, AVFoundation, AVAsset, Playback
 需要注意的是，你可以从一个 `AVPlayer` 实例创建多个 `AVPlayerLayer` 对象，但是只有最新创建的那个才会渲染画面到屏幕。
 
 
+对于 `AVPlayer` 来说，虽然最终播放的是 asset，但是我们并不直接提供一个 `AVAsset` 给它，而是提供一个 `AVPlayerItem` 实例。`AVPlayerItem` 是用来管理与之关联的 asset 的播放状态的，一个 `AVPlayerItem` 包含了一组 `AVPlayerItemTrack` 实例，对应着 asset 中的音视频轨道。它们直接的关系大致如下图所示：
+
+![image](../../images/ios-avfoundation/avplayer_layer.png)
+
+注意：该图的原图是苹果官方文档上的，但是原图是有错的，把 `AVPlayerItemTrack` 所属的框标成了 `AVAsset`，这里做了修正。
+
+
+
+
+
+
+
 
 
 

@@ -31,7 +31,15 @@ tag: Audio, Video, Live, iOS, Recorder, AVFoundation, AVAsset, Playback
 
 
 
+这种实现方式就意味着，我们可以用多个播放器同时播放一个 asset，并且各个播放器可以使用不同的模式来渲染。下图就展示了一种用两个不同的 `AVPlayer` 采用不同的设置播放同一个 `AVAsset` 的场景。在播放中，还可以禁掉某些 track 的播放。
 
+![image](../../images/ios-avfoundation/player_objects.png)
+
+
+我们可以通过网络来加载 asset，通常简单的初始化 `AVPlayerItem` 后并不意味着它就直接能播放，所以我们可以 KVO `AVPlayerItem` 的 `status` 属性来监听它是否已经可播再决定后续的行为。
+
+
+## 处理不同类型的 Asset
 
 
 

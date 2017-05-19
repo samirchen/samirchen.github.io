@@ -42,6 +42,21 @@ tag: Audio, Video, Live, iOS, Recorder, AVFoundation, AVAsset, Playback
 ## 处理不同类型的 Asset
 
 
+我们配置 asset 来播放的方式多多少少会依赖 asset 的类型，一般我们有两种不同类型的 asset：
+
+- 1）基于文件的 asset，一般可以来源于本地视频文件、相册资源库等等。
+- 2）流式 asset，比如 HLS 格式的视频。
+
+
+加载基于文件的 asset 一般分为如下几步：
+
+- 基于文件路径的 URL 创建 `AVURLAsset` 实例。
+- 基于 `AVURLAsset` 实例创建 `AVPlayerItem` 实例。
+- 将 `AVPlayerItem` 实例与一个 `AVPlayer` 实例关联。
+- KVO `AVPlayerItem` 的 `status` 属性来等待其已经可播，即加载完成。
+
+
+
 
 
 

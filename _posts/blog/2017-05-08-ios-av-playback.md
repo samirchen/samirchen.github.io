@@ -53,10 +53,12 @@ tag: Audio, Video, Live, iOS, Recorder, AVFoundation, AVAsset, Playback
 - 基于文件路径的 URL 创建 `AVURLAsset` 实例。
 - 基于 `AVURLAsset` 实例创建 `AVPlayerItem` 实例。
 - 将 `AVPlayerItem` 实例与一个 `AVPlayer` 实例关联。
-- KVO `AVPlayerItem` 的 `status` 属性来等待其已经可播，即加载完成。
+- KVO 监测 `AVPlayerItem` 的 `status` 属性来等待其已经可播，即加载完成。
 
 
+创建并加载一个 HTTP Live Stream（HLS）格式的资源来播放时，可以按照下面几步来做：
 
+- 基于资源的 URL 初始化一个 `AVPlayerItem` 实例。
 
 
 

@@ -58,7 +58,31 @@ tag: Audio, Video, Live, iOS, Recorder, AVFoundation, AVAsset, Playback
 
 创建并加载一个 HTTP Live Stream（HLS）格式的资源来播放时，可以按照下面几步来做：
 
-- 基于资源的 URL 初始化一个 `AVPlayerItem` 实例。
+- 基于资源的 URL 初始化一个 `AVPlayerItem` 实例，因为你无法直接创建一个 `AVAsset` 来表示 HLS 资源。
+- 当你将 `AVPlayerItem` 和 `AVPlayer` 实例关联起来后，他就开始为播放做准备，当一切就绪时 `AVPlayerItem` 会创建出  `AVAsset` 和 `AVAssetTrack` 实例以用来对接 HLS 视频流的音视频内容。
+- 要获取视频流的时长，你需要 KVO 监测 `AVPlayerItem` 的 `duration` 属性，当资源可以播放时，它会被更新为正确的值。
+
+
+```
+NSURL *url = [NSURL URLWithString:@"<#Live stream URL#>];
+// You may find a test stream at <http://devimages.apple.com/iphone/samples/bipbop/bipbopall.m3u8>.
+self.playerItem = [AVPlayerItem playerItemWithURL:url];
+[playerItem addObserver:self forKeyPath:@"status" options:0 context:&ItemStatusContext];
+self.player = [AVPlayer playerWithPlayerItem:playerItem];
+```
+
+当你不知道一个 URL 对应的是什么类型的 asset 时，你可以这样做：
+
+- 尝试基于 URL 来初始化一个 `AVURLAsset`，并加载它的 `tracks` 属性。如果 `tracks` 属性加载成功，就基于 asset 来创建一个 `AVPlayerItem` 实例。
+- 如果 `tracks` 属性加载失败，那么就直接基于 URL 创建一个 `AVPlayerItem` 实例，并 KVO 监测 `AVPlayer` 的 `status` 属性来看它何时可以播放。
+- 如果上述尝试都失败，那就清理掉 `AVPlayerItem`。
+
+
+## 播放一个 AVPlayerItem
+
+
+
+
 
 
 

@@ -175,12 +175,215 @@ if ([queuePlayer canInsertItem:anItem afterItem:nil]) {
 
 
 
+### 响应 status 属性的变化
+
+通过 KVO 监测 `AVPlayer` 和正在播放的 `AVPlayerItem` 的 `status` 属性，可以获得对应的通知，比如当播放出现错误时，你可能会收到 `AVPlayerStatusFailed` 或 `AVPlayerItemStatusFailed` 通知，这时你就可以做相应的处理。
+
+需要注意的是，由于 `AVFoundation` 不会指定在哪个线程发送通知，所以如果你需要在收到通知后更新用户界面的话，你需要切到主线程。
+
+
+```
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+ 
+    if (context == <#Player status context#>) {
+        AVPlayer *thePlayer = (AVPlayer *) object;
+        if ([thePlayer status] == AVPlayerStatusFailed) {
+            NSError *error = [<#The AVPlayer object#> error];
+            // Respond to error: for example, display an alert sheet.
+            return;
+        }
+        // Deal with other status change if appropriate.
+    }
+    // Deal with other change notifications if appropriate.
+    [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    return;
+}
+```
+
+### 跟踪视觉内容就绪状态
+
+
+我们可以监测 `AVPlayerLayer` 实例的 `readyForDisplay` 属性来获得播放器已经可以开始渲染视觉内容的通知。
+
+基于这个能力，我们就能实现在播放器的视觉内容就绪时才将 player layer 插入到 layer 树中去展示给用户。
+
+
+### 追踪播放时间变化
+
+
+我们可以使用 `AVPlayer` 的 `addPeriodicTimeObserverForInterval:queue:usingBlock:` 和 `addBoundaryTimeObserverForTimes:queue:usingBlock:` 这两个接口来追踪当前播放位置的变化，这样我们就可以在用户界面上做出更新，反馈给用户当前的播放时间和剩余的播放时间等等。
+
+- `addPeriodicTimeObserverForInterval:queue:usingBlock:`，这个接口将会在播放时间发生变化时在回调 block 中通知我们当前播放时间。
+- `addBoundaryTimeObserverForTimes:queue:usingBlock:`，这个接口允许我们传入一组时间（CMTime 数组）当播放器播到这些时间时会在回调 block 中通知我们。
+
+
+这两个接口都会返回一个 observer 角色的对象给我们，我们需要在监测时间的这个过程中强引用这个对象，同时在不需要使用它时调用 `removeTimeObserver:` 接口来移除它。
+
+此外，AVFoundation 也不保证在每次时间变化或设置时间到达时都回调 block 来通知你。比如当上一次回调 block 还没完成的情况时，又到了此次回调 block 的时机，AVFoundation 这次就不会调用 block。所以我们需要确保不要在 block 回调里做开销太大、耗时太长的任务。
+
+
+```
+// Assume a property: @property (strong) id playerObserver;
+ 
+Float64 durationSeconds = CMTimeGetSeconds([<#An asset#> duration]);
+CMTime firstThird = CMTimeMakeWithSeconds(durationSeconds/3.0, 1);
+CMTime secondThird = CMTimeMakeWithSeconds(durationSeconds*2.0/3.0, 1);
+NSArray *times = @[[NSValue valueWithCMTime:firstThird], [NSValue valueWithCMTime:secondThird]];
+ 
+self.playerObserver = [<#A player#> addBoundaryTimeObserverForTimes:times queue:NULL usingBlock:^{
+ 
+    NSString *timeDescription = (NSString *)
+        CFBridgingRelease(CMTimeCopyDescription(NULL, [self.player currentTime]));
+    NSLog(@"Passed a boundary at %@", timeDescription);
+}];
+```
 
 
 
+### 播放结束
+
+监听 `AVPlayerItemDidPlayToEndTimeNotification` 这个通知即可。上文有提到，这里不再重复。
 
 
 
+## 一个完整示例
+
+
+
+这里的示例将展示如果使用 `AVPlayer` 来播放一个视频文件，主要包括下面几个步骤：
+
+- 配置一个使用 `AVPlayerLayer` layer 的 `UIView`。
+- 创建一个 `AVPlayer` 实例。
+- 基于文件类型的 asset 创建一个 `AVPlayerItem` 实例，并用 KVO 监测其 `status` 属性。
+- 响应 `AVPlayerItem` 实例可以播放的通知，显示出一个按钮。
+- 播放 `AVPlayerItem` 并播放完成后将其播放位置调整到开始位置。
+
+
+首先是 PlayerView：
+
+```
+#import <UIKit/UIKit.h>
+#import <AVFoundation/AVFoundation.h>
+ 
+@interface PlayerView : UIView
+@property (nonatomic) AVPlayer *player;
+@end
+ 
+@implementation PlayerView
++ (Class)layerClass {
+    return [AVPlayerLayer class];
+}
+- (AVPlayer*)player {
+    return [(AVPlayerLayer *)[self layer] player];
+}
+- (void)setPlayer:(AVPlayer *)player {
+    [(AVPlayerLayer *)[self layer] setPlayer:player];
+}
+@end
+```
+
+一个简单的 PlayerViewController：
+
+```
+@class PlayerView;
+@interface PlayerViewController : UIViewController
+ 
+@property (nonatomic) AVPlayer *player;
+@property (nonatomic) AVPlayerItem *playerItem;
+@property (nonatomic, weak) IBOutlet PlayerView *playerView;
+@property (nonatomic, weak) IBOutlet UIButton *playButton;
+- (IBAction)loadAssetFromFile:sender;
+- (IBAction)play:sender;
+- (void)syncUI;
+@end
+```
+
+同步 UI 的方法：
+
+```
+- (void)syncUI {
+    if ((self.player.currentItem != nil) &&
+        ([self.player.currentItem status] == AVPlayerItemStatusReadyToPlay)) {
+        self.playButton.enabled = YES;
+    }
+    else {
+        self.playButton.enabled = NO;
+    }
+}
+```
+
+在 `viewDidLoad` 时先调用一下 `syncUI`：
+
+
+```
+- (void)viewDidLoad {
+    [super viewDidLoad];
+    [self syncUI];
+}
+```
+
+创建并加载 `AVURLAsset`，在加载成功时，创建 item、初始化播放器以及添加各种监听：
+
+```
+static const NSString *ItemStatusContext;
+
+- (IBAction)loadAssetFromFile:sender {
+ 
+    NSURL *fileURL = [[NSBundle mainBundle] URLForResource:<#@"VideoFileName"#> withExtension:<#@"extension"#>];
+ 
+    AVURLAsset *asset = [AVURLAsset URLAssetWithURL:fileURL options:nil];
+    NSString *tracksKey = @"tracks";
+ 
+    [asset loadValuesAsynchronouslyForKeys:@[tracksKey] completionHandler: ^{
+        // The completion block goes here.
+        dispatch_async(dispatch_get_main_queue(), ^{
+            NSError *error;
+            AVKeyValueStatus status = [asset statusOfValueForKey:tracksKey error:&error];
+
+            if (status == AVKeyValueStatusLoaded) {
+                self.playerItem = [AVPlayerItem playerItemWithAsset:asset];
+                 // ensure that this is done before the playerItem is associated with the player
+                [self.playerItem addObserver:self forKeyPath:@"status" options:NSKeyValueObservingOptionInitial context:&ItemStatusContext];
+                [[NSNotificationCenter defaultCenter] addObserver:self selector:@selector(playerItemDidReachEnd:) name:AVPlayerItemDidPlayToEndTimeNotification object:self.playerItem];
+                self.player = [AVPlayer playerWithPlayerItem:self.playerItem];
+                [self.playerView setPlayer:self.player];
+            } else {
+                // You should deal with the error appropriately.
+                NSLog(@"The asset's tracks were not loaded:\n%@", [error localizedDescription]);
+            }
+        });
+    }];
+}
+```
+
+响应 `status` 的监听通知：
+
+```
+- (void)observeValueForKeyPath:(NSString *)keyPath ofObject:(id)object change:(NSDictionary *)change context:(void *)context {
+ 
+    if (context == &ItemStatusContext) {
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [self syncUI];
+        });
+        return;
+    }
+    [super observeValueForKeyPath:keyPath ofObject:object change:change context:context];
+    return;
+}
+```
+
+播放，以及播放完成时的处理：
+
+```
+- (IBAction)play:sender {
+    [self.player play];
+}
+
+
+- (void)playerItemDidReachEnd:(NSNotification *)notification {
+    [self.player seekToTime:kCMTimeZero];
+}
+```
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"

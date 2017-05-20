@@ -184,7 +184,7 @@ mutableVideoComposition.animationTool = [AVVideoCompositionCoreAnimationTool vid
 ## 一个完整示例
 
 
-这里的实例将展示如何合并两个 video asset tracks 和一个 audio asset track 到一个视频文件，其中大体步骤如下：
+这里的示例将展示如何合并两个 video asset tracks 和一个 audio asset track 到一个视频文件，其中大体步骤如下：
 
 - 创建一个 `AVMutableComposition` 对象，添加多个 `AVMutableCompositionTrack` 对象
 - 在各个 composition tracks 中添加 `AVAssetTrack` 对应的时间范围

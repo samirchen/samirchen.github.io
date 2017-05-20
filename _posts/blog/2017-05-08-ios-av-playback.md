@@ -80,6 +80,100 @@ self.player = [AVPlayer playerWithPlayerItem:playerItem];
 
 ## 播放一个 AVPlayerItem
 
+调用 `AVPlayer` 的 `play` 接口即可开始播放。
+
+```
+- (IBAction)play:sender {
+    [player play];
+}
+```
+
+除了简单的播放，还可以通过设置 `rate` 属性设置播放速率。
+
+```
+player.rate = 0.5;
+player.rate = 2.0;
+``
+
+播放速率设置为 1.0 表示正常播放，设置为 0.0 表示暂停（等同调用 `pause` 效果）。
+
+除了正向播放，有的音视频还能支持倒播，不过需要需要检查几个属性：
+
+- `canPlayReverse`：支持设置播放速率为 -1.0。
+- `canPlaySlowReverse`：支持设置播放速率为 -1.0 到 0.0。
+- `canPlayFastReverse`：支持设置播放速率为小于 -1.0 的值。
+
+
+可以通过 `seekToTime:` 接口来调整播放位置。但是这个接口主要是为性能考虑，不保证精确。
+
+```
+CMTime fiveSecondsIn = CMTimeMake(5, 1);
+[player seekToTime:fiveSecondsIn];
+```
+
+如果要精确调整，可以用 `seekToTime:toleranceBefore:toleranceAfter:` 接口。
+
+```
+CMTime fiveSecondsIn = CMTimeMake(5, 1);
+[player seekToTime:fiveSecondsIn toleranceBefore:kCMTimeZero toleranceAfter:kCMTimeZero];
+```
+
+需要注意的是，设置 tolerance 为 zero 会耗费较大的计算性能，所以一般只在编写复杂的音视频编辑功能是这样设置。
+
+
+我们可以通过监听 `AVPlayerItemDidPlayToEndTimeNotification` 来获得播放结束事件，在播放结束后可以用 `seekToTime:` 调整播放位置到 zero，否则调用 `play` 会无效。
+
+```
+// Register with the notification center after creating the player item.
+[[NSNotificationCenter defaultCenter] 
+	addObserver:self 
+	   selector:@selector(playerItemDidReachEnd:)
+    	   name:AVPlayerItemDidPlayToEndTimeNotification
+         object:<#The player item#>];
+ 
+- (void)playerItemDidReachEnd:(NSNotification *)notification {
+    [player seekToTime:kCMTimeZero];
+}
+```
+
+此外，我们还能设置播放器的 `actionAtItemEnd` 属性来设置其在播放结束后的行为，比如 `AVPlayerActionAtItemEndPause` 表示播放结束后会暂停。
+
+
+
+## 播放多个 AVPlayerItem
+
+我们可以用 `AVQueuePlayer` 来顺序播放多个 `AVPlayerItem`。`AVQueuePlayer` 是 `AVPlayer` 的子类。
+
+```
+NSArray *items = <#An array of player items#>;
+AVQueuePlayer *queuePlayer = [[AVQueuePlayer alloc] initWithItems:items];
+```
+
+通过调用 `play` 即可顺序播放，也可以调用 `advanceToNextItem` 跳到下个 item。除此之外，我们还可以用 `insertItem:afterItem:`、`removeItem:`、`removeAllItems` 来控制播放资源。
+
+当插入一个 item 的时候，可以需要用 `canInsertItem:afterItem:` 检查下是否可以插入， 对 afterItem 传入 nil，则检查是否可以插入到队尾。
+
+
+```
+AVPlayerItem *anItem = <#Get a player item#>;
+if ([queuePlayer canInsertItem:anItem afterItem:nil]) {
+    [queuePlayer insertItem:anItem afterItem:nil];
+}
+```
+
+
+## 监测播放状态
+
+我们可以监测一些 `AVPlayer` 的状态和正在播放的 `AVPlayerItem` 的状态，这对于处理那些不在你直接控制下的 state 是很有用的，比如：
+
+- 如果用户使用多任务处理切换到另一个应用程序，播放器的 rate 属性将下降到 0.0。
+- 当播放远程媒体资源（比如网络视频）时，监测 `AVPlayerItem` 的 `loadedTimeRanges` 和 `seekableTimeRanges` 可以知道可以播放和 seek 的资源时长。
+- 当播放 HTTP Live Stream 时，播放器的 `currentItem` 可能发生变化。
+- 当播放 HTTP Live Stream 时，`AVPlayerItem` 的 `tracks` 可能发生变化。这种情况可能发生在播放流切换了编码。
+- 当播放失败时，`AVPlayer` 或 `AVPlayerItem` 的 `status` 可能发生变化。
+
+
+
 
 
 

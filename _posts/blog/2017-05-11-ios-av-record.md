@@ -16,6 +16,16 @@ tag: Audio, Video, Live, iOS, Recorder, AVFoundation, AVAsset
 - 一个 `AVCaptureOutput` 具体子类的实例可以用来将音视频数据输出到一个视频文件或静态图片。
 - 一个 `AVCaptureSession` 实例用来协调输入输出的数据流。
 
+在录制视频时，为了让用户看到预览效果，我们可以使用 `AVCaptureVideoPreviewLayer`。
+
+下图展示了通过一个 capture session 实例来协调多路输入输出数据：
+
+![image](../../images/ios-avfoundation/capture_overview.png)
+
+
+对于大多数应用场景，这些细节已经足够我们用了。但是对于有些操作，比如当我们想要监测一个音频通道的强度，我们需要了解不同的输入设备的端口对应的对象，以及这些端口和输出是如何连接起来的。
+
+
 
 
 

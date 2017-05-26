@@ -333,7 +333,7 @@ git archive --format=zip --prefix=nb1.0/ HEAD>nb.zip
 ```
 git clone <giturl> //克隆，如：git clone https://github.com/me/test.git
 git clone <giturl> <dirname> //将远程库克隆到本地<dirname>目录下
-···
+```
 
 克隆之后会自动添加四个config：
 

@@ -62,11 +62,11 @@ Git 采用这样的设计带来了这些好处：
 当我们从某个地方 git clone 一份代码后，通常这时你的 work directory 是 clean 的，所有代码都是 commited 状态，在图中表示为 `Commited-1` 状态，我们就从这里开始解释接下来文件状态的切换：
 
 - `Commited-1 ===> Modified`，我们拿到代码开始干活，当我们**修改**了文件后，文件状态发生变化，由 Commited-1 变为 Modified。
-- `Modified ===> Commited-1`，发现文件改的不对，一处一处恢复太麻烦，用 **git checkout <f>** 命令便可以把对文件的修改恢复到原 Commited-1 的状态。
-- `Modified ===> Staged`，文件修改的差不多了，想提交对这个文件的修改到本地 git 版本库保存起来，在这时你直接用 git commit 是提交不了的，因为 git commit 是对文件暂存区域的文件快照进行提交。所以，你需要先把文件快照一下放到暂存区域，用 **git stage <f>** 命令搞定，另外，用 **git add <f>** 也是一样的。
-- `Staged ===> Modified`，发现目前不想在下次 commit 时提交文件暂存区域的某个文件，还想再改改或再缓缓，这时你需要把它的快照撤回来，用 **git reset <f>** 命令搞定。
+- `Modified ===> Commited-1`，发现文件改的不对，一处一处恢复太麻烦，用 **git checkout** 命令便可以把对文件的修改恢复到原 Commited-1 的状态。
+- `Modified ===> Staged`，文件修改的差不多了，想提交对这个文件的修改到本地 git 版本库保存起来，在这时你直接用 git commit 是提交不了的，因为 git commit 是对文件暂存区域的文件快照进行提交。所以，你需要先把文件快照一下放到暂存区域，用 **git stage** 命令搞定，另外，用 **git add** 也是一样的。
+- `Staged ===> Modified`，发现目前不想在下次 commit 时提交文件暂存区域的某个文件，还想再改改或再缓缓，这时你需要把它的快照撤回来，用 **git reset** 命令搞定。
 - `Staged ===> 囧`，已经把某个文件快照后放到暂存区域了，但是又对它进行了**修改**。这时文件的状态就很囧了。这时你如果使用 git commit 提交，那么提交的是放在暂存区域的快照，而这之后的修改是不会提交的。
-- `囧 ===> Staged`，当然你可以用 **git checkout <f>** 命令从这种比较囧的状态撤销修改，这时文件状态就又回到了 Staged。这里多说一句，看了上节介绍的 Git 总是保存文件更新时的快照，这里就可以这样理解：Git 管理下的文件在我们的折腾下，不停的在各种状态下流转，在不同的情况下，我们使用一些 Git 命令时会对文件拍快照，Git 就可以操作文件的快照了，这些快照对应的是一个文件的不同时刻的照片，文件是流动的，而快照则是某一时刻的永恒。
+- `囧 ===> Staged`，当然你可以用 **git checkout** 命令从这种比较囧的状态撤销修改，这时文件状态就又回到了 Staged。这里多说一句，看了上节介绍的 Git 总是保存文件更新时的快照，这里就可以这样理解：Git 管理下的文件在我们的折腾下，不停的在各种状态下流转，在不同的情况下，我们使用一些 Git 命令时会对文件拍快照，Git 就可以操作文件的快照了，这些快照对应的是一个文件的不同时刻的照片，文件是流动的，而快照则是某一时刻的永恒。
 - `Staged ===> Commited-2`，使用 **git commit** 命令就可以把暂存区域的文件快照提交到 Git 版本库永久存储了，这时文件状态转变为 Commited-2。记得养成写 commit message 的良好习惯。
 - `Modified ===> Commited-2`，看了上面的流程，有人会问了，我每次改了都要先 stage 才能提交还麻烦啊，有没有便捷点的方法？答案是：有。用 **git commit -a** 就可以把 Git 管理下的文件的修改都提交了。这里要注意的是，新增的文件是不在 Git 管理下的，需要 git add(stage) 一下才行。
 - 撤回提交。上面一切进行的还算顺利，各种状态跳来跳去都能搞定了，现在问题来了：我已经 commit 了后才发现，天啊，提交错了，我要撤回！别急，这也是可以搞定的，而且这里有两种选择，但是需要搞清楚它们的区别。另外，这两种撤回提交都可以指定撤回几次，感兴趣的可以再深入研究。
@@ -85,15 +85,19 @@ Git 采用这样的设计带来了这些好处：
 
 上面多处出现了一个叫 `HEAD` 的东西，这里简要介绍一下。HEAD 文件是一个指向你当前所在分支的引用标识符。这样的引用标识符——它看起来并不像一个普通的引用——其实并不包含 SHA-1 值，而是一个指向另外一个引用的指针。如果你看一下这个文件，通常你将会看到这样的内容：
 
-	$ cat .git/HEAD
-	ref: refs/heads/master
+```
+$ cat .git/HEAD
+ref: refs/heads/master
+```
 
 当你执行 `git branch <分支名称>` 这条命令的时候，Git 怎么知道最后一次提交的 SHA-1 值呢？答案就是 HEAD 文件。
 
 如果你执行 `git checkout test`，Git 就会更新这个文件，看起来像这样：
 
-	$ cat .git/HEAD
-	ref: refs/heads/test
+```
+$ cat .git/HEAD
+ref: refs/heads/test
+```
 
 当你再执行 `git commit` 命令，它就创建了一个 commit 对象，把这个 commit 对象的父级设置为 HEAD 指向的引用的 SHA-1 值。
 
@@ -107,8 +111,10 @@ Git 采用这样的设计带来了这些好处：
 
 这样的设计有什么好处呢？我们来修改文件并做一次提交试试：
 
-	$ vim test.rb
-	$ git commit -a -m 'made a change'
+```
+$ vim test.rb
+$ git commit -a -m 'made a change'
+```
 
 提交后发生的变化如下图所示，现在 testing 分支向前移动了一格，而 master 分支仍然指向原先 git checkout 时所在的 commit 对象。
 
@@ -123,9 +129,8 @@ Git 采用这样的设计带来了这些好处：
 
 参考：
 
-[Git 内部原理 - Git References](https://git-scm.com/book/zh/v1/Git-%E5%86%85%E9%83%A8%E5%8E%9F%E7%90%86-Git-References)
-
-[Git 分支 - 何谓分支](https://git-scm.com/book/zh/v1/Git-%E5%88%86%E6%94%AF-%E4%BD%95%E8%B0%93%E5%88%86%E6%94%AF)
+- [Git 内部原理 - Git References](https://git-scm.com/book/zh/v1/Git-%E5%86%85%E9%83%A8%E5%8E%9F%E7%90%86-Git-References)
+- [Git 分支 - 何谓分支](https://git-scm.com/book/zh/v1/Git-%E5%88%86%E6%94%AF-%E4%BD%95%E8%B0%93%E5%88%86%E6%94%AF)
 
 ## 常用 Git 命令
 
@@ -137,15 +142,23 @@ Git 采用这样的设计带来了这些好处：
 
 #### 1.1、全局变量
 
-	git config --global user.name "your_name"
-	git config --global user.email "your@email.com"
-	git config --list //列出git在该处找到的所有设置
-	git config --global core.editor vim //设置你的缺省编辑器，Git在需要你输入一些消息时会使用该文本编辑器
-	git config --global merge.tool diffmerge //设置merge工具
+示例：
+
+```
+git config --global user.name "your_name"
+git config --global user.email "your@email.com"
+git config --list //列出git在该处找到的所有设置
+git config --global core.editor vim //设置你的缺省编辑器，Git在需要你输入一些消息时会使用该文本编辑器
+git config --global merge.tool diffmerge //设置merge工具
+```
 
 #### 1.2、初始化新版本库
 
-	git init // 只会在根目录下创建 .git 文件夹
+示例：
+
+```
+git init // 只会在根目录下创建 .git 文件夹
+```
 
 #### 1.3、设置忽略文件
 
@@ -160,83 +173,103 @@ Git 采用这样的设计带来了这些好处：
 
 #### 1.4、添加新文件到版本库
 
-	git add somefile.txt //添加单个文件
-	git add *.txt //添加所有 txt 文件
-	git add . //添加所有文件，包括子目录，但不包括空目录
+示例：
+
+```
+git add somefile.txt //添加单个文件
+git add *.txt //添加所有 txt 文件
+git add . //添加所有文件，包括子目录，但不包括空目录
+```
 
 #### 1.5、提交
 
-	git commit -m "add all txt files"
+示例：
+
+```
+git commit -m "add all txt files"
+```
 
 #### 2、日常操作
 
 
 #### 2.1、提交
 
-	git commit -m "some msg" -a //提交所有修改
-	git commit -m "add msg to readme.txt" readme.txt //提交单个文件
-	git commit --amend -m "new commit message" // 提交了，发现提交信息写错了，修改上次提交的信息可以用这条命令
-	git commit -C HEAD -a --amend //不会产生新的提交历史记录，复用HEAD留言，增补提交，而不增加提交记录
+示例：
+
+```
+git commit -m "some msg" -a //提交所有修改
+git commit -m "add msg to readme.txt" readme.txt //提交单个文件
+git commit --amend -m "new commit message" // 提交了，发现提交信息写错了，修改上次提交的信息可以用这条命令
+git commit -C HEAD -a --amend //不会产生新的提交历史记录，复用HEAD留言，增补提交，而不增加提交记录
+```
 
 #### 2.2、撤销修改
 
 撤销尚未提交的修改（即没有commit的）：
 
-	git checkout HEAD readme.txt todo.txt //撤销1、2个文件
-	git checkout HEAD *.txt //撤销所有txt文件
-	git checkout HEAD . //撤销所有文件
+```
+git checkout HEAD readme.txt todo.txt //撤销1、2个文件
+git checkout HEAD *.txt //撤销所有txt文件
+git checkout HEAD . //撤销所有文件
+```
 
 撤销提交：
 
-	//反转提交：
-	git revert --no-commit HEAD //反转提交，相当于提交最近一次提交的反操作。--no-commit 是让你不用输入 commit 信息，这不是个好习惯！
-	
-	//复位：
-	git reset HEAD //复位，取消暂存
-	git reset HEAD <filename> //复位，取消暂存
-	git reset --hard HEAD^ //复位到HEAD之前的那个版本，不会在版本库中留下痕迹
+
+```
+//反转提交：
+git revert --no-commit HEAD //反转提交，相当于提交最近一次提交的反操作。--no-commit 是让你不用输入 commit 信息，这不是个好习惯！
+
+//复位：
+git reset HEAD //复位，取消暂存
+git reset HEAD <filename> //复位，取消暂存
+git reset --hard HEAD^ //复位到HEAD之前的那个版本，不会在版本库中留下痕迹
+```
 
 #### 2.3、分支
 
+示例：
 
-	git branch //列出本地分支
-	git branch -a //列出所有分支
-	git branch <branchname> //基于当前分支末梢创建新分支
-	git checkout <branchname> //检出分支
-	git checkout -b <branchname> //基于当前分支末梢创建新分支并检出分支
-	
-	//基于某次提交、分支或标签创建新分支
-	git branch emputy bfe57de0 //用来查看某个历史断面很方便
-	git branch emputy2 emputy
+```
+git branch //列出本地分支
+git branch -a //列出所有分支
+git branch <branchname> //基于当前分支末梢创建新分支
+git checkout <branchname> //检出分支
+git checkout -b <branchname> //基于当前分支末梢创建新分支并检出分支
 
-	//普通合并
-	git merge <branchname> //合并分支<branchname>到当前所在分支并提交，如果发生了冲突就不会自动提交，不想立即解决这些冲突的话，可以用 git checkout HEAD . 撤销
-	git merge --no-commit <branchname> //合并但不提交
-	//压合合并
-	git merge --squash <branchname> //压合合并后直接提交
-	git merge --squash --no-commit <branchname> //当两个人合作开发一个新功能时，需要在一个分支提交多次，开发完成之后再压合成一次提交
-	//拣选合并
-	git cherry-pick --no-commit 5b62b6 //挑选某次提交合并但并不提交
-	
-	// rebase: 现有 origin 分支(c1-c2-c3-c4)和 mywork 分支(c1-c2-c5-c6)，在 mywork 分支和 origin 分支上各有提交，即：origin 上有 c3-c4，mywork 上又 c5-c6
-	git checkout mywork
-	git rebase origin // 这些命令会把"mywork"分支里的每个提交(commit)取消掉，并且把它们临时保存为补丁(patch)(这些补丁放到".git/rebase"目录中),然后把"mywork"分支更新到最新的"origin"分支，最后把保存的这些补丁应用到"mywork"分支上。
-	// 在 rebase 的过程中如果出现冲突，那么 Git 会停止让你解决冲突。解决好冲突后：
-	git add <fixed-conflict-file> // 更新这些文件的索引
-	git rebase --continue // 继续 rebase
-	// 如果你觉得当前的冲突无需修改，那么可以跳过，这样会直接使用 origin 分支的这部分内容：
-	git rebase --skip
-	// 在任何时候，你可以用 --abort 参数来终止 rebase 的行动，并且"mywork" 分支会回到rebase开始前的状态。
-	git rebase --abort // 终止 rebase
-	
+//基于某次提交、分支或标签创建新分支
+git branch emputy bfe57de0 //用来查看某个历史断面很方便
+git branch emputy2 emputy
 
-	//重命名分支
-	git branch -m <branchname> <newname> //不会覆盖已存在的同名分支
-	git branch -M <branchname> <newname> //会覆盖已存在的同名分支
+//普通合并
+git merge <branchname> //合并分支<branchname>到当前所在分支并提交，如果发生了冲突就不会自动提交，不想立即解决这些冲突的话，可以用 git checkout HEAD . 撤销
+git merge --no-commit <branchname> //合并但不提交
+//压合合并
+git merge --squash <branchname> //压合合并后直接提交
+git merge --squash --no-commit <branchname> //当两个人合作开发一个新功能时，需要在一个分支提交多次，开发完成之后再压合成一次提交
+//拣选合并
+git cherry-pick --no-commit 5b62b6 //挑选某次提交合并但并不提交
 
-	//删除分支
-	git branch -d new2 //如果分支没有被合并会删除失败
-	git branch -D new2 //即使分支没有被合并也照删不误
+// rebase: 现有 origin 分支(c1-c2-c3-c4)和 mywork 分支(c1-c2-c5-c6)，在 mywork 分支和 origin 分支上各有提交，即：origin 上有 c3-c4，mywork 上又 c5-c6
+git checkout mywork
+git rebase origin // 这些命令会把"mywork"分支里的每个提交(commit)取消掉，并且把它们临时保存为补丁(patch)(这些补丁放到".git/rebase"目录中),然后把"mywork"分支更新到最新的"origin"分支，最后把保存的这些补丁应用到"mywork"分支上。
+// 在 rebase 的过程中如果出现冲突，那么 Git 会停止让你解决冲突。解决好冲突后：
+git add <fixed-conflict-file> // 更新这些文件的索引
+git rebase --continue // 继续 rebase
+// 如果你觉得当前的冲突无需修改，那么可以跳过，这样会直接使用 origin 分支的这部分内容：
+git rebase --skip
+// 在任何时候，你可以用 --abort 参数来终止 rebase 的行动，并且"mywork" 分支会回到rebase开始前的状态。
+git rebase --abort // 终止 rebase
+
+
+//重命名分支
+git branch -m <branchname> <newname> //不会覆盖已存在的同名分支
+git branch -M <branchname> <newname> //会覆盖已存在的同名分支
+
+//删除分支
+git branch -d new2 //如果分支没有被合并会删除失败
+git branch -D new2 //即使分支没有被合并也照删不误
+```
 
 #### 2.4、解决冲突
 
@@ -251,6 +284,9 @@ Git 采用这样的设计带来了这些好处：
 
 #### 2.5、标签
 
+示例：
+
+```
 	//创建标签
 	git tag 1.0 //为当前分支最后一次提交创建标签，标签无法重命名
 	git tag contacts_1.1 contacts //为contacts分支最近一次提交创建标签
@@ -264,18 +300,27 @@ Git 采用这样的设计带来了这些好处：
 	git checkout -b b1.0 1.0
 
 	git tag -d 1.0 //删除标签
+```
 
 #### 2.6、查看状态
 
-	git status // 当前状态
-	git log //历史记录
-	git branch -v //每个分支最后的提交
+示例：
+
+```
+git status // 当前状态
+git log //历史记录
+git branch -v //每个分支最后的提交
+```
 
 #### 2.7、其他
 
-	//导出版本库
-	git archive --format=zip HEAD>nb.zip
-	git archive --format=zip --prefix=nb1.0/ HEAD>nb.zip
+示例：
+
+```
+//导出版本库
+git archive --format=zip HEAD>nb.zip
+git archive --format=zip --prefix=nb1.0/ HEAD>nb.zip
+```
 
 ### 远端(Remote)
 
@@ -285,8 +330,10 @@ Git 采用这样的设计带来了这些好处：
 
 1）当已经有一个远程版本库，只需要在本地克隆一份：
 
-	git clone <giturl> //克隆，如：git clone https://github.com/me/test.git
-	git clone <giturl> <dirname> //将远程库克隆到本地<dirname>目录下
+```
+git clone <giturl> //克隆，如：git clone https://github.com/me/test.git
+git clone <giturl> <dirname> //将远程库克隆到本地<dirname>目录下
+···
 
 克隆之后会自动添加四个config：
 
@@ -297,20 +344,26 @@ Git 采用这样的设计带来了这些好处：
 
 2）当在本地创建了一个工作目录，想把这个目录用 Git 管理，并初始化到远程版本库，可以在远程服务器上创建一个目录，并把URL记录下来。在本地进入工作目录，然后执行：
 	
-	git init //初始化，对本地工作目录下的文件进行版本控制
-	git remote add origin https://github.com/me/another_test.git //将本地工作目录放到远程服务器上。这样会添加URL地址为https://github.com/me/another_test.git，别名为origin的远程库
+```
+git init //初始化，对本地工作目录下的文件进行版本控制
+git remote add origin https://github.com/me/another_test.git //将本地工作目录放到远程服务器上。这样会添加URL地址为https://github.com/me/another_test.git，别名为origin的远程库
 
-	//将本地的文件都推到远程库
-	git add .
-	git commit -am "init commit"
-	git push origin master 
+//将本地的文件都推到远程库
+git add .
+git commit -am "init commit"
+git push origin master 
+```
 
 #### 1.2、别名
 
-	git remote add <别名> <远程版本库URL> //添加远程版本库别名
-	git remote rm <别名> //删除远程库的别名和相关分支
+示例：
 
-	git remote set-url --push <name> <newURL> //修改远程库
+```
+git remote add <别名> <远程版本库URL> //添加远程版本库别名
+git remote rm <别名> //删除远程库的别名和相关分支
+
+git remote set-url --push <name> <newURL> //修改远程库
+```
 
 添加别名后会自动添加两个config：
 
@@ -319,53 +372,70 @@ Git 采用这样的设计带来了这些好处：
 
 #### 1.3、创建一个无本地分支的库
 
-	git init --bare //当需要一个公用的中央库时，非常适合把它建成bare库
+示例：
 
+```
+git init --bare //当需要一个公用的中央库时，非常适合把它建成bare库
+```
 
 #### 2、日常操作
 
 #### 2.1、分支
 
 
-	git branch -r //列出远程分支
-	git branch -a //列出所有分支（本地和远程）
-	git remote prune origin //删除远程库中已经不存在的分支
-	
-	git push origin --delete <branchName> //删除远程分支
-	git push origin :<branchName> //推送一个空分支到远程分支，相当于删除远程分支
+示例：
+
+```
+git branch -r //列出远程分支
+git branch -a //列出所有分支（本地和远程）
+git remote prune origin //删除远程库中已经不存在的分支
+
+git push origin --delete <branchName> //删除远程分支
+git push origin :<branchName> //推送一个空分支到远程分支，相当于删除远程分支
+```
 
 #### 2.2、从远程库获取
 
 
-	git remote -v //查看远程仓库
+示例：
 
-	//获取但不合并
-	git fetch <远程版本库> 
-	//如：
-	git fetch origin //origin是远程库的默认别名
-	git fetch https://github.com/me/test.git
+```
+git remote -v //查看远程仓库
 
-	//获取并合并到当前本地分支
-	git pull //等价于git pull origin，origin是远程库的默认别名
-	git pull https://github.com/me/test.git master //当不是从默认远程库获取时，需要指定获取哪个分支，这里就是指定获取master分支
+//获取但不合并
+git fetch <远程版本库> 
+//如：
+git fetch origin //origin是远程库的默认别名
+git fetch https://github.com/me/test.git
 
-	git pull <remoteName> <localBranchName> //拉取远程库到本地分支
-	git pull origin test //拉取远程库到本地test分支
+//获取并合并到当前本地分支
+git pull //等价于git pull origin，origin是远程库的默认别名
+git pull https://github.com/me/test.git master //当不是从默认远程库获取时，需要指定获取哪个分支，这里就是指定获取master分支
+
+git pull <remoteName> <localBranchName> //拉取远程库到本地分支
+git pull origin test //拉取远程库到本地test分支
 	
+```
+
 **推荐用下列方式从远程库获取代码：**
 
-	git fetch origin master:tmp //从远程库origin的master分支获取版本库到本地tmp分支
-	git diff tmp //比较本地tmp分支和当前所在分支（一般为本地master分支）
-	git merge tmp //合并本地tmp分支到当前分支（一般为本地master分支）
-	//如果这里遇到冲突，则参考“本地（Local） 2.4 解决冲突”来解决冲突
+```
+git fetch origin master:tmp //从远程库origin的master分支获取版本库到本地tmp分支
+git diff tmp //比较本地tmp分支和当前所在分支（一般为本地master分支）
+git merge tmp //合并本地tmp分支到当前分支（一般为本地master分支）
+//如果这里遇到冲突，则参考“本地（Local） 2.4 解决冲突”来解决冲突
+```
 
 #### 2.3、推入远程库
 
-	git push origin master //推入远程库，这里远程库默认别名origin，本地默认分支master
+示例：
 
-	git push origin test:master //将本地test分支推入远程库，并作为远程库的master分支
-	git push origin test:test //将本地test分支推入远程库，并作为远程库的test分支
+```
+git push origin master //推入远程库，这里远程库默认别名origin，本地默认分支master
 
+git push origin test:master //将本地test分支推入远程库，并作为远程库的master分支
+git push origin test:test //将本地test分支推入远程库，并作为远程库的test分支
+```
 
 ## 几个 Git 使用场景
 
@@ -387,37 +457,38 @@ Git 采用这样的设计带来了这些好处：
 - 命令：git reflog 和 git reset
 - 解释：我们对 git log 命令比较熟悉，它能显示提交列表，而 git reflog 则显示的 HEAD 变更列表。ref log 嘛，字面上也能理解。知道了 HEAD 变更的信息列表，那我们就可以用 git reset 来做我们想重做了。但是需要注意的是：git reflog 不会永远存储，Git 将定期清理那些**不可达(unreachable)**的对象，所以不要期望能在 reflog 里找到数据前的 HEAD 变更记录。
 
->
-	// 我提交了一些内容
-	$ git commit -m "commit 17"
->	
-	// 接着我撤销了这些更改
-	$ git reset HEAD^ --hard
->	
-	// 额，我这时发现我得还原这些更改
-	// Step 1: 用 git reflog 查看
-	$ git reflog
-	2750087 HEAD@{0}: reset: moving to HEAD^
-	ad14ba3 HEAD@{1}: commit: commit 17
-	...
-	// 发现了刚才的那次撤销以及前面那次提交的信息
-	// Step 2: 用 git reset 回到那次提交
-	$ git reset ad14ba3
-	HEAD is now at ad14ba3 commit 17
-	// 打印出来的信息显示，我们做到了，更改被还原过来了
-	// 再看看 reflog 信息和 log 信息
-	$ git reflog
-	ad14ba3 HEAD@{0}: reset: moving to ad14ba3
-	2750087 HEAD@{1}: reset: moving to HEAD^
-	ad14ba3 HEAD@{2}: commit: commit 17
-	...
-	$ git log
-	commit ad14ba39c57b4b43b913ebc273500afa815bb0e3
-	Author: sc <sc@sc-MacBookPro.local>
-	Date:   Tue Jul 14 22:55:24 2015 +0800
->	
-	    commit 17
 
+```
+// 我提交了一些内容
+$ git commit -m "commit 17"
+
+// 接着我撤销了这些更改
+$ git reset HEAD^ --hard
+
+// 额，我这时发现我得还原这些更改
+// Step 1: 用 git reflog 查看
+$ git reflog
+2750087 HEAD@{0}: reset: moving to HEAD^
+ad14ba3 HEAD@{1}: commit: commit 17
+...
+// 发现了刚才的那次撤销以及前面那次提交的信息
+// Step 2: 用 git reset 回到那次提交
+$ git reset ad14ba3
+HEAD is now at ad14ba3 commit 17
+// 打印出来的信息显示，我们做到了，更改被还原过来了
+// 再看看 reflog 信息和 log 信息
+$ git reflog
+ad14ba3 HEAD@{0}: reset: moving to ad14ba3
+2750087 HEAD@{1}: reset: moving to HEAD^
+ad14ba3 HEAD@{2}: commit: commit 17
+...
+$ git log
+commit ad14ba39c57b4b43b913ebc273500afa815bb0e3
+Author: sc <sc@sc-MacBookPro.local>
+Date:   Tue Jul 14 22:55:24 2015 +0800
+
+    commit 17
+```
 
 ### 在master做了本该在分支上做的提交
 
@@ -429,7 +500,7 @@ Git 采用这样的设计带来了这些好处：
 
 - 场景：经常有这样的事情发生，当你正在进行项目中某一部分的工作，里面的东西处于一个比较杂乱的状态，而你想转到其他分支上进行一些工作。问题是，你不想提交进行了一半的工作，否则以后你无法回到这个工作点。解决这个问题的办法就是 git stash 命令。
 - 命令：git stash
-- 解释：储藏可以获取你工作目录的中间状态——也就是你修改过的被追踪的文件和暂存的变更——并将它保存到一个未完结变更的堆栈中，随时可以重新应用。你可以使用 git stash list 来看储藏列表，可以用 git stash apply <stash-id> 来把之前储藏的工作拿出来继续。更详细的信息参见 [Git 工具 - 储藏（Stashing）](https://git-scm.com/book/zh/v1/Git-%E5%B7%A5%E5%85%B7-%E5%82%A8%E8%97%8F%EF%BC%88Stashing%EF%BC%89)
+- 解释：储藏可以获取你工作目录的中间状态——也就是你修改过的被追踪的文件和暂存的变更——并将它保存到一个未完结变更的堆栈中，随时可以重新应用。你可以使用 git stash list 来看储藏列表，可以用 git stash apply <stash-id> 来把之前储藏的工作拿出来继续。
 
 
 ### 停止跟踪一个已经被跟踪的文件

@@ -55,6 +55,58 @@ AVCaptureSession *session = [[AVCaptureSession alloc] init];
 ```
 
 
+### 配置 Session
+
+You use a preset on the session to specify the image quality and resolution you want. A preset is a constant that identifies one of a number of possible configurations; in some cases the actual configuration is device-specific:
+
+
+我们可以给 session 设置我们需要的图像质量和分辨率。以下是其中的几个配置选项：
+
+- AVCaptureSessionPresetHigh，高分辨率，具体值取决于设备能提供的最高分辨率。
+- AVCaptureSessionPresetMedium，中等分辨率，具体值取决于设备。
+- AVCaptureSessionPresetLow，低分辨率，具体指取决于设备。
+- AVCaptureSessionPreset640x480，分辨率为 640x480，常称为 480P。
+- AVCaptureSessionPreset1280x720，分辨率为 1280x720，常称为 720P。
+- AVCaptureSessionPresetPhoto，全尺寸相片的分辨率，这个选项不支持输出视频。
+
+
+如果要使用某种分辨率选项，我们需要先测试一下设备是否支持：
+
+
+```
+if ([session canSetSessionPreset:AVCaptureSessionPreset1280x720]) {
+    session.sessionPreset = AVCaptureSessionPreset1280x720;
+}
+else {
+    // Handle the failure.
+}
+```
+
+
+
+如果想对 session 的配置参数做更细粒度的控制，或者想修改已经在运行状态的 session 的配置参数，我们需要在 `beginConfiguration` 和 `commitConfiguration` 方法直接做修改。这两个方法的配合，可以使得我们队设备的修改是以一个 group 的方式提交，从而尽量避免视觉或者状态上的不一致性。在调用了 `beginConfiguration` 之后，我们可以增加或删除输出端，修改 `sessionPreset` 值，单独配置视频捕获的输入或输出参数。知道我们调用了 `commitConfiguration`，这些修改采用被提交并一起应用。
+
+
+```
+[session beginConfiguration];
+// Remove an existing capture device.
+// Add a new capture device.
+// Reset the preset.
+[session commitConfiguration];
+```
+
+
+### 监控 Session 状态
+
+
+录制过程中 session 会发出通知来告知其对应的状态，比如 session 开始、结束、被打断。我们可以从 `AVCaptureSessionRuntimeErrorNotification` 来接收 session 运行时的错误。我们也可以差选 session 的运行时属性来获取其状态是在运行中还是被打断。此外，这些属性都是支持 KVO 监测的，并且通知会被发送到主线程。
+
+
+
+## 使用 AVCaptureDevice 来表示输入设备
+
+
+
 
 
 

@@ -27,6 +27,36 @@ tag: Audio, Video, Live, iOS, Recorder, AVFoundation, AVAsset
 
 
 
+在音视频录制时，输入和输出之间的连接是用 `AVCaptureConnection` 来表示的。输入方(`AVCaptureInput`)包含一个或多个输入端口(`AVCaptureInputPort`)，输出端(`AVCaptureOutput`)可以从一个或多个数据源接收数据，比如一个 `AVCaptureMovieFileOutput` 就可以同时接收视频和音频数据。
+
+
+当你往一次录制 session 中添加一个输入或输出时，这个 session 会生成所有兼容的输入和输出端口间的连接，由 `AVCaptureConnection` 对象表示。
+
+
+![image](../../images/ios-avfoundation/capture_detail.png)
+
+
+You can use a capture connection to enable or disable the flow of data from a given input or to a given output. You can also use a connection to monitor the average and peak power levels in an audio channel.
+
+我们可以用 connetion 对象来控制输入输出端之间的数据流的断开或连接，我们还能用它来监控 audio 通道的平均值和峰值。
+
+
+
+## 使用 Capture Session 来协调数据流
+
+
+
+`AVCaptureSession` 是我们用来管理数据捕获的核心协调者，我们用它来协调音视频输入和输出端的数据流。我们可以将我们需要的捕获设备添加到 session 中，然后用 `startRunning` 接口启动数据流，用 `stopRunning` 停止数据流。
+
+```
+AVCaptureSession *session = [[AVCaptureSession alloc] init];
+// Add inputs and outputs.
+[session startRunning];
+```
+
+
+
+
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"

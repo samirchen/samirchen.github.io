@@ -57,8 +57,6 @@ AVCaptureSession *session = [[AVCaptureSession alloc] init];
 
 ### 配置 Session
 
-You use a preset on the session to specify the image quality and resolution you want. A preset is a constant that identifies one of a number of possible configurations; in some cases the actual configuration is device-specific:
-
 
 我们可以给 session 设置我们需要的图像质量和分辨率。以下是其中的几个配置选项：
 
@@ -104,6 +102,28 @@ else {
 
 
 ## 使用 AVCaptureDevice 来表示输入设备
+
+
+`AVCaptureDevice` 是由我们现实中物理的提供输入数据（比如音频或视频输入）的设备抽象而来，每个 `AVCaptureDevice` 对象都对应着一个输入设备，比如我们常见的前置摄像头、后置摄像头、麦克风。它们采集的数据将会输出给 `AVCaptureSession` 实例。
+
+我们可以使用 `AVCaptureDevice` 的 `devices` 和 `devicesWithMediaType:` 类方法来检查哪些是当前可用的设备。如果需要，我们还可以获取设备支持哪些功能。当前可用的设备列表是会动态变化的，有些设备会因为被别的应用使用而变得不可用，有的设备也有可能突然就可用了，所以我们需要注册 `AVCaptureDeviceWasConnectedNotification` 和 `AVCaptureDeviceWasDisconnectedNotification` 通知来感知当前可用设备的变化情况。
+
+我们可以使用 capture input 来想向一个 `AVCaptureSession` 中添加输入设备。
+
+
+### 设备特性
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

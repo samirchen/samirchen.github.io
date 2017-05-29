@@ -93,7 +93,7 @@ self.player = [AVPlayer playerWithPlayerItem:playerItem];
 ```
 player.rate = 0.5;
 player.rate = 2.0;
-``
+```
 
 播放速率设置为 1.0 表示正常播放，设置为 0.0 表示暂停（等同调用 `pause` 效果）。
 

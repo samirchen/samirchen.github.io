@@ -114,10 +114,10 @@ else {
 ### 设备特性
 
 
+我们可以查询采集设备的不同特性。比如，我们可以使用 `hasMediaType:` 接口来判断采集设备是否支持某种媒体类型，也可以使用 `supportsAVCaptureSessionPreset:` 接口来判断采集设备是否支持预设的 session preset。我们还能获取设备的位置、本地化命名等信息以便于展示给用户。
 
 
-
-
+![image](../../images/ios-avfoundation/cameras.png)
 
 
 

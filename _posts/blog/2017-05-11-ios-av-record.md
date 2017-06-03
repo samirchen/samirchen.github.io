@@ -119,10 +119,31 @@ else {
 
 ![image](../../images/ios-avfoundation/cameras.png)
 
+下面的示例代码展示了如何遍历设备，并打印设备名：
+
+```
+NSArray *devices = [AVCaptureDevice devices];
+ 
+for (AVCaptureDevice *device in devices) {
+ 
+    NSLog(@"Device name: %@", [device localizedName]);
+ 
+    if ([device hasMediaType:AVMediaTypeVideo]) {
+ 
+        if ([device position] == AVCaptureDevicePositionBack) {
+            NSLog(@"Device position : back");
+        }
+        else {
+            NSLog(@"Device position : front");
+        }
+    }
+}
+```
+
+此外，你还能查出设备的 model ID 和 unique ID。
 
 
-
-
+### 设备录制设置
 
 
 

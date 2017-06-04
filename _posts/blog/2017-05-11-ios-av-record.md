@@ -145,6 +145,100 @@ for (AVCaptureDevice *device in devices) {
 
 ### 设备录制设置
 
+不同的设备有不同的能力，比如有些设备支持不同的对焦或刷新模式。下面的代码展示了如何找到一个支持手电筒以及预设的 preset 的设备。
+
+
+```
+NSArray *devices = [AVCaptureDevice devicesWithMediaType:AVMediaTypeVideo];
+NSMutableArray *torchDevices = [[NSMutableArray alloc] init];
+ 
+for (AVCaptureDevice *device in devices) {
+    [if ([device hasTorch] &&
+         [device supportsAVCaptureSessionPreset:AVCaptureSessionPreset640x480]) {
+        [torchDevices addObject:device];
+    }
+}
+```
+
+如果你找到多个设备，你可以向用户展示设备的 `localizedName` 来让用户选择他们需要的设备。在使用对应的设备时，我们可以设置设备的各种工作模式，但是有一点需要注意的是在设置前需要对设备加锁。
+
+
+#### 聚焦模式
+
+目前支持的聚焦模式有以下几种：
+
+- `AVCaptureFocusModeLocked`：聚焦点固定。通常以拍摄场景的中点作为焦点。
+- `AVCaptureFocusModeAutoFocus`：自动聚焦。这种模式可以让用户选择一件事物来进行对焦，即使对于的位置不是拍摄场景的中点。
+- `AVCaptureFocusModeContinuousAutoFocus`：相机将持续自动对焦。
+
+
+我们可以使用 `isFocusModeSupported:` 接口来检查设备是否支持相应的聚焦模式，然后设置对应的 `focusMode` 属性。
+
+我们还能用 `focusPointOfInterestSupported` 来检查设备是否支持指定焦点，如果支持，我们就可以设置对应的 `focusPointOfInterest` 属性。其中 `{0, 0}` 表示左上角，`{1, 1}` 表示右下角。
+
+我们可以访问 `adjustingFocus` 属性来获知相机是否正在对焦，这个属性是支持 KVO 的，所以我们可以监测它来获知对焦状态的变化。
+
+如果你修改过了相机的对焦模式相关的设置，你可以用下面的代码将其恢复到默认状态：
+
+```
+if ([currentDevice isFocusModeSupported:AVCaptureFocusModeContinuousAutoFocus]) {
+    CGPoint autofocusPoint = CGPointMake(0.5f, 0.5f);
+    [currentDevice setFocusPointOfInterest:autofocusPoint];
+    [currentDevice setFocusMode:AVCaptureFocusModeContinuousAutoFocus];
+}
+```
+
+
+#### 曝光模式
+
+目前支持的曝光模式有以下几种：
+
+
+- `AVCaptureExposureModeLocked`，曝光等级锁定。
+- `AVCaptureExposureModeAutoExpose`，相机自动根据情况调整一次曝光等级，然后将曝光模式切换到 `AVCaptureExposureModeLocked`。
+- `AVCaptureExposureModeContinuousAutoExposure`，相机随时根据情况调整曝光等级。
+- `AVCaptureExposureModeCustom`，用户自定义曝光等级。
+
+我们可以通过 `isExposureModeSupported:` 来检查设备是否支持对应的模式，然后设置对应的 `exposureMode` 属性。
+
+
+
+我们还能用 `exposurePointOfInterestSupported` 来检查设备是否支持指定曝光点，如果支持，我们就可以设置对应的 `exposurePointOfInterest` 属性。其中 `{0, 0}` 表示左上角，`{1, 1}` 表示右下角。
+
+我们可以访问 `adjustingExposure` 属性来获知相机是否正在改变曝光设置，这个属性是支持 KVO 的，所以我们可以监测它来获知曝光状态的变化。
+
+如果你修改过了相机的曝光模式相关的设置，你可以用下面的代码将其恢复到默认状态：
+
+```
+if ([currentDevice isExposureModeSupported:AVCaptureExposureModeContinuousAutoExposure]) {
+    CGPoint exposurePoint = CGPointMake(0.5f, 0.5f);
+    [currentDevice setExposurePointOfInterest:exposurePoint];
+    [currentDevice setExposureMode:AVCaptureExposureModeContinuousAutoExposure];
+}
+```
+
+
+#### 闪光灯模式
+
+目前支持的闪光灯模式有如下几种：
+
+- `AVCaptureFlashModeOff`，不会闪光。
+- `AVCaptureFlashModeOn`，会闪光。
+- `AVCaptureFlashModeAuto`，根据具体情况决定是否闪光。
+
+我们可以通过 `hasFlash` 检查设备是否有闪光灯，可以通过 `isFlashModeSupported:` 检查设备是否支持对应的模式，通过 `flashMode` 设置对应的模式。
+
+
+
+
+
+
+#### 手电筒模式
+
+
+
+
+
 
 
 

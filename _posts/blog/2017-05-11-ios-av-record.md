@@ -235,12 +235,55 @@ if ([currentDevice isExposureModeSupported:AVCaptureExposureModeContinuousAutoEx
 
 #### 手电筒模式
 
+在手电筒模式下，闪光灯会以低耗电量模式持续打开来为图像录制来照明。目前支持的模式有以下几种：
+
+- `AVCaptureTorchModeOff`，关闭。
+- `AVCaptureTorchModeOn`，开启。
+- `AVCaptureTorchModeAuto`，自动。
+
+
+我们可以通过 `hasTorch` 检查设备是否有闪光灯，可以通过 `isTorchModeSupported:` 检查设备是否支持对应的手电筒模式，通过 `torchMode` 设置对应的模式。
+
+
+#### 视频防抖
+
+视频防抖主要依赖于硬件，虽然如此，也不是所有的视频格式和分辨率都能支持。此外，开启防抖也会带来为视频录制带来一定的延迟。我们可以通过 `videoStabilizationEnabled` 来检查是否启动了防抖，通过 `enablesVideoStabilizationWhenAvailable` 来允许应用在条件支持的情况下自动开启防抖。
+
+
+#### 白平衡
+
+
+目前支持面几种白平衡模式：
+
+
+- `AVCaptureWhiteBalanceModeLocked`，固定模式。
+- `AVCaptureWhiteBalanceModeAutoWhiteBalance`，自动模式。相机根据情况调整一次白平衡，然后切换至 `AVCaptureWhiteBalanceModeLocked` 模式。
+- `AVCaptureWhiteBalanceModeContinuousAutoWhiteBalance`，相机随时根据情况调整白平衡。
 
 
 
+我们可以通过 `isWhiteBalanceModeSupported:` 检查是否支持给定的模式，然后通过 `whiteBalanceMode` 设置对应模式。
 
 
+我们可以访问 `adjustingWhiteBalance` 属性来获知相机是否正在改变白平衡设置，这个属性是支持 KVO 的，所以我们可以监测它来获知白平衡状态的变化。
 
+
+#### 设置方向
+
+
+我们可以通过 `AVCaptureConnection` 实例来设置想要在 AVCaptureOutput(AVCaptureMovieFileOutput, AVCaptureStillImageOutput, AVCaptureVideoDataOutput) 获得的图像方向。
+
+我们通过 `isVideoOrientationSupported` 检查是否支持改变视频方向，通过 `videoOrientation` 设置方向。
+
+下面是示例代码：
+
+```
+AVCaptureConnection *captureConnection = <#A capture connection#>;
+if ([captureConnection isVideoOrientationSupported]) {
+    AVCaptureVideoOrientation orientation = AVCaptureVideoOrientationLandscapeLeft;
+    [captureConnection setVideoOrientation:orientation];
+}
+```
 
 
 

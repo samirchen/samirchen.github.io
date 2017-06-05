@@ -286,6 +286,81 @@ if ([captureConnection isVideoOrientationSupported]) {
 ```
 
 
+### 配置设备
+
+在设置设备的相关属性前，我们需要使用 `lockForConfiguration:` 来获取一个对设备操作的锁，这样可以避免你在使用设备时被别的应用更改了设置而导致不兼容等问题。
+
+```
+if ([device isFocusModeSupported:AVCaptureFocusModeLocked]) {
+    NSError *error = nil;
+    if ([device lockForConfiguration:&error]) {
+        device.focusMode = AVCaptureFocusModeLocked;
+        [device unlockForConfiguration];
+    }
+    else {
+        // Respond to the failure as appropriate.
+```
+
+你应该只在希望设备的设置不能被修改时保持设备锁，不正确的持有设备锁可能会影响其他程序的录制质量。
+
+
+### 设备切换
+
+有时候你可能需要在使用时切换设备，比如切换前后摄像头。这时为了避免卡顿或者闪屏，我们可以重新配置一个正在执行的 session，但是我们在修改前后需要分别使用 `beginConfiguration` 和 `commitConfiguration`：
+
+```
+AVCaptureSession *session = <#A capture session#>;
+[session beginConfiguration];
+ 
+[session removeInput:frontFacingCameraDeviceInput];
+[session addInput:backFacingCameraDeviceInput];
+ 
+[session commitConfiguration];
+```
+
+
+当最外的 `commitConfiguration` 被调用时，所有的配置修改会被一起提交，这样可以保证平滑的切换。
+
+
+## 使用 Capture Inputs 来给一个 Session 添加设备
+
+
+我们可以用 `AVCaptureDeviceInput` 来给一个 session 添加设备。`AVCaptureDeviceInput` 是用来管理设备的端口。
+
+
+```
+NSError *error;
+AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
+if (!input) {
+    // Handle the error appropriately.
+}
+```
+
+我们用 `addInput:` 来添加设备。我们还可以在添加前用 `canAddInput:` 来检查一下。
+
+
+```
+AVCaptureSession *captureSession = <#Get a capture session#>;
+AVCaptureDeviceInput *captureDeviceInput = <#Get a capture device input#>;
+if ([captureSession canAddInput:captureDeviceInput]) {
+    [captureSession addInput:captureDeviceInput];
+}
+else {
+    // Handle the failure.
+}
+```
+
+
+`AVCaptureInput` 声明一个或者多个媒体数据流。例如，输入设备可以同时提供音频和视频数据。输入提供的每个媒体流都被一个 `AVCaptureInputPort` 所表示。一个会话使用 `AVCaptureConnection` 对象来定义一组 `AVCaptureInputPort` 对象和一个 `AVCaptureOutput` 之间的映射。
+
+
+
+## 使用 Capture Outputs 来从一个 Session 获取输出
+
+
+
+
+
 
 
 

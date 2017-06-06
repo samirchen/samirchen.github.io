@@ -357,7 +357,25 @@ else {
 
 ## 使用 Capture Outputs 来从一个 Session 获取输出
 
+要从一个 capture session 中获取输出，我们需要给它添加一个或多个输出实例，输出实例都是 `AVCaptureOutput` 的子类。比如：
 
+- `AVCaptureMovieFileOutput`，输出电影文件。
+- `AVCaptureVideoDataOutput`，当我们需要处理录制得到的视频帧时（比如创建自定义的渲染层），可以用这个。
+- `AVCaptureAudioDataOutput`，当我们需要处理录制到的音频数据时，可以用这个。
+- `AVCaptureStillImageOutput`，当我们需要获取静态图片以及对应的 metadata 时，可以用这个。
+
+
+我们可以使用 `addOutput:` 向 session 中添加输出实例，我们也可以在加之前，通过 `canAddOutput:` 来检测要添加的输出实例是否是兼容的。我们可以往一个正在运行状态的 session 中添加输出实例。
+
+```
+AVCaptureSession *captureSession = <#Get a capture session#>;
+AVCaptureMovieFileOutput *movieOutput = <#Create and configure a movie output#>;
+if ([captureSession canAddOutput:movieOutput]) {
+    [captureSession addOutput:movieOutput];
+} else {
+    // Handle the failure.
+}
+```
 
 
 

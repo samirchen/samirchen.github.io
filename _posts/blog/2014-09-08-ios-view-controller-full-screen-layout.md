@@ -30,7 +30,7 @@ tag: iOS, layout
 我们可以在 View Controller 的 `- (void)viewWillLayoutSubviews` 方法中打印出 self.view 的 frame 来观察这个属性带来的影响。我们以 iPhone 4s 的 320*480 的屏幕尺寸为例：
 
 - 设置 edgesForExtendedLayout 为 UIRectEdgeAll，不管是有 NavigationBar、TabBar、TooBar 哪一种 Bar，self.view 的 frame 均为 (0, 0, 320, 480)。
-- 设置 edgesForExtendedLayout 为 UIRectEdgeAll：
+- 设置 edgesForExtendedLayout 为 UIRectEdgeNone：
 	- 有 NavigationBar 和 TabBar，self.view 的 frame 为 (0, 64, 320, 367)。即 self.view 的布局的起点从 NavigationBar 下开始，高度去掉了 StatusBar、NavigationBar 和 TabBar 的高度：20、44、49。
 	- 有 NavigationBar 和 ToolBar，self.view 的 frame 为 (0, 64, 320, 372)。即 self.view 的布局的起点从 NavigationBar 下开始，高度去掉了 StatusBar、NavigationBar 和 ToolBar 的高度：20、44、44。
 

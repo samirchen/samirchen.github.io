@@ -377,6 +377,10 @@ if ([captureSession canAddOutput:movieOutput]) {
 }
 ```
 
+### 保存电影文件
+
+
+
 
 
 

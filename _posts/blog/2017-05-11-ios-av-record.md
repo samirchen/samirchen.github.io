@@ -489,6 +489,17 @@ if ([captureSession canAddOutput:videoDataOutput]) {
 
 #### 处理视频的性能问题
 
+对于我们的应用，设置够用的分辨率就好了，不要太高，那样性能会降低。
+
+我们需要确保，在 `captureOutput:didOutputSampleBuffer:fromConnection:` 中处理视频帧的时间开销不要超过分配给一帧的处理时长。如果这里处理的太长，那么 AV Foundation 将会停止发送视频帧给代理，也会停止发给其他输出端，比如 preview layer。
+
+你可以使用 `AVCaptureVideoDataOutput` 的 `minFrameDuration` 属性来确保你有足够的时间来处理一帧。同时，我们还可以设置 `alwaysDiscardsLateVideoFrames` 为 YES 来确保晚到的帧会被丢掉来避免延迟。如果你不介意延迟，而更想要处理更多的帧，那就设置这个值为 NO，但是这并不意味着不会丢帧，只是不会被那么早或那么高效的丢掉。
+
+
+
+
+### 截取静态图片
+
 
 
 

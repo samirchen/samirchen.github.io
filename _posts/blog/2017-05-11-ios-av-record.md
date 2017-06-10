@@ -379,6 +379,120 @@ if ([captureSession canAddOutput:movieOutput]) {
 
 ### 保存电影文件
 
+使用 `AVCaptureMovieFileOutput` 将音视频数据保存到文件中时，我们可以做一些输出设置，比如最大录制时长、最大文件尺寸等等。我们还能够在硬盘空间不够时停止录制。
+
+```
+AVCaptureMovieFileOutput *aMovieFileOutput = [[AVCaptureMovieFileOutput alloc] init];
+CMTime maxDuration = <#Create a CMTime to represent the maximum duration#>;
+aMovieFileOutput.maxRecordedDuration = maxDuration;
+aMovieFileOutput.minFreeDiskSpaceLimit = <#An appropriate minimum given the quality of the movie format and the duration#>;
+```
+
+
+录制时输出的分辨率和码率是根据 capture session 的 `sessionPreset` 属性而定的。其中视频的编码类型是 H.264，音频的编码类型是 AAC，这个也是由不同的设备类型决定的。
+
+
+#### 开始录制
+
+我们通过 `startRecordingToOutputFileURL:recordingDelegate:` 来开始录制，这时你需要提供一个文件 URL 和一个 delegate。这个 URL 不能指向已存在的文件，因为这里的音视频输出不会去覆盖已有的资源。同时我们也必须要有对这个 URL 指向位置的写权限。这里的 delegate 必须遵循 `AVCaptureFileOutputRecordingDelegate` 协议，而且必须实现 `captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:` 方法。
+
+
+```
+AVCaptureMovieFileOutput *aMovieFileOutput = <#Get a movie file output#>;
+NSURL *fileURL = <#A file URL that identifies the output location#>;
+[aMovieFileOutput startRecordingToOutputFileURL:fileURL recordingDelegate:<#The delegate#>];
+```
+
+在 `captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:` 方法中，delegate 可以将最终输出的文件写入相册，同时也需要检查和处理各种可能出现的错误。
+
+
+#### 确保文件写入成功
+
+要确保文件是否成功，我们可以在 `captureOutput:didFinishRecordingToOutputFileAtURL:fromConnections:error:` 方法中检查 `AVErrorRecordingSuccessfullyFinishedKey`。
+
+```
+- (void)captureOutput:(AVCaptureFileOutput *)captureOutput didFinishRecordingToOutputFileAtURL:(NSURL *)outputFileURL fromConnections:(NSArray *)connections error:(NSError *)error {
+ 
+    BOOL recordedSuccessfully = YES;
+    if ([error code] != noErr) {
+        // A problem occurred: Find out if the recording was successful.
+        id value = [[error userInfo] objectForKey:AVErrorRecordingSuccessfullyFinishedKey];
+        if (value) {
+            recordedSuccessfully = [value boolValue];
+        }
+    }
+    // Continue as appropriate...
+```
+
+我们需要检查 error 的 `userInfo` 的 `AVErrorRecordingSuccessfullyFinishedKey` 对应的值，因为有时候即使我们收到了错误，文件也可能是保存成功的，这时候，有可能是触及了我们设置的某些限制，比如 `AVErrorMaximumDurationReached` 或者 `AVErrorMaximumFileSizeReached`，其他的原因还有：
+
+- `AVErrorDiskFull`，磁盘空间不够。
+- `AVErrorDeviceWasDisconnected`，录制设备断开连接。
+- `AVErrorSessionWasInterrupted`，录制 session 被打断了，比如来电话了。
+
+
+#### 给文件添加 Metadata
+
+我们可以在任何时候给录制的文件设置 metadata，即使是在录制过程中。文件的 metadata 是由一系列的 `AVMetadataItem` 对象表示，我们可以用 `AVMutableMetadataItem` 来创建我们自己的 metadata。
+
+```
+AVCaptureMovieFileOutput *aMovieFileOutput = <#Get a movie file output#>;
+NSArray *existingMetadataArray = aMovieFileOutput.metadata;
+NSMutableArray *newMetadataArray = nil;
+if (existingMetadataArray) {
+    newMetadataArray = [existingMetadataArray mutableCopy];
+} else {
+    newMetadataArray = [[NSMutableArray alloc] init];
+}
+ 
+AVMutableMetadataItem *item = [[AVMutableMetadataItem alloc] init];
+item.keySpace = AVMetadataKeySpaceCommon;
+item.key = AVMetadataCommonKeyLocation;
+ 
+CLLocation *location - <#The location to set#>;
+item.value = [NSString stringWithFormat:@"%+08.4lf%+09.4lf/" location.coordinate.latitude, location.coordinate.longitude];
+ 
+[newMetadataArray addObject:item];
+ 
+aMovieFileOutput.metadata = newMetadataArray;
+```
+
+
+### 处理视频帧
+
+`AVCaptureVideoDataOutput` 对象使用代理来对外暴露视频帧，我们通过 `setSampleBufferDelegate:queue:` 来设置代理。除了设置代理以外，还需要设置一个 serial queue 来供代理调用，这里必须使用 serial queue 来保证传给 delegate 的帧数据的顺序正确。我们可以使用这个 queue 来分发和处理视频帧，这里可以参考一下例子 [SquareCam][4]。
+
+`captureOutput:didOutputSampleBuffer:fromConnection:` 中输出的视频帧数据是用 `CMSampleBufferRef` 来表示的。默认情况下，这个 buffer 的数据格式来自于相机能最高效处理的格式。我们可以通过 `videoSettings` 来设置一个自定义的输出格式，这个值是一个字典，现在支持的键包括 `kCVPixelBufferPixelFormatTypeKey`。推荐的 pixel formats 可以通过 `availableVideoCVPixelFormatTypes` 属性获得，此外还能通过 `availableVideoCodecTypes` 获得支持编码类型。Core Graphics 和 OpenGL 都能很好地处理 `BGRA` 格式。
+
+
+```
+AVCaptureVideoDataOutput *videoDataOutput = [AVCaptureVideoDataOutput new];
+NSDictionary *newSettings = @{(NSString *) kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA)};
+videoDataOutput.videoSettings = newSettings;
+ 
+ // discard if the data output queue is blocked (as we process the still image
+[videoDataOutput setAlwaysDiscardsLateVideoFrames:YES];)
+ 
+// create a serial dispatch queue used for the sample buffer delegate as well as when a still image is captured
+// a serial dispatch queue must be used to guarantee that video frames will be delivered in order
+// see the header doc for setSampleBufferDelegate:queue: for more information
+videoDataOutputQueue = dispatch_queue_create("VideoDataOutputQueue", DISPATCH_QUEUE_SERIAL);
+[videoDataOutput setSampleBufferDelegate:self queue:videoDataOutputQueue];
+ 
+AVCaptureSession *captureSession = <#The Capture Session#>;
+ 
+if ([captureSession canAddOutput:videoDataOutput]) {
+    [captureSession addOutput:videoDataOutput];
+}
+ 
+```
+
+#### 处理视频的性能问题
+
+
+
+
+
 
 
 
@@ -390,3 +504,4 @@ if ([captureSession canAddOutput:movieOutput]) {
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/ios-av-asset
 [3]: https://developer.apple.com/library/content/documentation/AudioVideo/Conceptual/AVFoundationPG/Articles/00_Introduction.html
+[4]: https://developer.apple.com/library/content/samplecode/SquareCam/Introduction/Intro.html#//apple_ref/doc/uid/DTS40011190

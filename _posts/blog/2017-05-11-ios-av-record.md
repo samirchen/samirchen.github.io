@@ -501,6 +501,65 @@ if ([captureSession canAddOutput:videoDataOutput]) {
 ### 截取静态图片
 
 
+当我们想要截取带着 metadata 的静态图片时，我们可以用 `AVCaptureStillImageOutput`。截出的图的分辨率依赖于 session 的 preset 和具体的设备。
+
+
+#### 像素和编码类型
+
+
+不同的类型支持不同的图片格式。我们可以用 `availableImageDataCVPixelFormatTypes` 和 `availableImageDataCodecTypes` 来检查当前的设备支持的像素类型和编码类型。然后，我们可以通过设置 `outputSettings` 属性指定图片的格式。
+
+
+```
+AVCaptureStillImageOutput *stillImageOutput = [[AVCaptureStillImageOutput alloc] init];
+NSDictionary *outputSettings = @{AVVideoCodecKey: AVVideoCodecJPEG};
+[stillImageOutput setOutputSettings:outputSettings];
+```
+
+
+如果我们要截取一张 JPEG 图片，你最好不要指定你自己的压缩格式，相反，你需要做的是让 `AVCaptureStillImageOutput` 帮你做压缩，因为它使用硬件加速来压缩。如果这时你需要图像的数据，可以用 `jpegStillImageNSDataRepresentation:` 来获取对应的 `NSData` 对象，这个数据是未经压缩的，甚至你都可以修改它。
+
+
+#### 捕获图像
+
+
+当截图时，我们使用 `captureStillImageAsynchronouslyFromConnection:completionHandler:` 方法，其中的第一个参数是对应的 connection，这是你需要查找一下哪个 connection 的输出端口是在手机视频：
+
+
+
+```
+AVCaptureConnection *videoConnection = nil;
+for (AVCaptureConnection *connection in stillImageOutput.connections) {
+    for (AVCaptureInputPort *port in [connection inputPorts]) {
+        if ([[port mediaType] isEqual:AVMediaTypeVideo] ) {
+            videoConnection = connection;
+            break;
+        }
+    }
+    if (videoConnection) { break; }
+}
+```
+
+
+
+第二个参数是一个 block 回调，其中带回两个参数：一个包含图像数据的 `CMSampleBuffer`，一个 `NSError`。这个 sample buffer 中可能包含着 metadata，比如一个 EXIF 字典作为附属信息。我们可以去修改附属信息，但是需要注意针对 JPEG 图像的像素和编码上的优化。
+
+
+```
+[stillImageOutput captureStillImageAsynchronouslyFromConnection:videoConnection completionHandler:^(CMSampleBufferRef imageSampleBuffer, NSError *error) {
+    CFDictionaryRef exifAttachments =
+        CMGetAttachment(imageSampleBuffer, kCGImagePropertyExifDictionary, NULL);
+    if (exifAttachments) {
+        // Do something with the attachments.
+    }
+    // Continue as appropriate.
+}];
+```
+
+
+## 预览
+
+
 
 
 

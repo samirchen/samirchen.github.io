@@ -560,12 +560,224 @@ for (AVCaptureConnection *connection in stillImageOutput.connections) {
 ## 预览
 
 
+### 视频预览
+
+我们可以用 `AVCaptureVideoPreviewLayer` 来给用户提供预览，我们不需要任何 output 对象来展示预览。此外，我们可以使用 `AVCaptureVideoDataOutput` 来在给用户预览之前获取到图像像素级别的数据。
+
+
+Unlike a capture output, a video preview layer maintains a strong reference to the session with which it is associated. This is to ensure that the session is not deallocated while the layer is attempting to display video. This is reflected in the way you initialize a preview layer:
+
+
+不像 capture output，一个 video preview layer 会持有一个关联 session 的强引用。这样来防止 layer 在展示预览时而 session 被释放引起问题。
+
+
+```
+AVCaptureSession *captureSession = <#Get a capture session#>;
+CALayer *viewLayer = <#Get a layer from the view in which you want to present the preview#>;
+ 
+AVCaptureVideoPreviewLayer *captureVideoPreviewLayer = [[AVCaptureVideoPreviewLayer alloc] initWithSession:captureSession];
+[viewLayer addSublayer:captureVideoPreviewLayer];
+```
+
+
+一般来说，preview layer 和其他 `CALayer` 对象一样，我们可以缩放它的图像，执行变换，旋转。一个不同的地方是，我们需要设置 layer 的 `orientation` 属性来指定它改如何旋转从相机获得的图像。此外，我们可以用 `supportsVideoMirroring` 来测试设备是否支持视频镜面效果(左右翻转)，我们可以设置 `videoMirrored` 来配置是否开启镜面效果，即使 `automaticallyAdjustsVideoMirroring` 被设置为默认的 YES 也没问题(这个值是在配置 session 时被自动设置的)。
+
+
+#### 视频重力模式
+
+我们可以通过 `videoGravity` 属性设置视频重力模式，比如：
+
+- `AVLayerVideoGravityResizeAspect`，保持视频的宽高比；不一定完全填充，可能留黑边；不裁剪视频，。
+- `AVLayerVideoGravityResizeAspectFill`，保持视频的宽高比；完全填充，不留黑边；可能裁剪视频。
+- `AVLayerVideoGravityResize`，不保持视频宽高比，可能扭曲画面；完全填充；不裁剪视频。
+
+
+#### 使用预览时的点击聚焦
+
+需要注意的是，在实现点击聚焦时必须考虑到该层的预览方向和重力，并考虑预览变为镜像显示的可能性。可以参考实例项目：[AVCam-iOS: Using AVFoundation to Capture Images and Movies][5]。
+
+
+### 显示音频等级
+
+
+To monitor the average and peak power levels in an audio channel in a capture connection, you use an AVCaptureAudioChannel object. Audio levels are not key-value observable, so you must poll for updated levels as often as you want to update your user interface (for example, 10 times a second).
+
+
+要监测 capture connection 中音频通道的平均强度和峰值强度，我们可以用 `AVCaptureAudioChannel`。音频等级是不支持 KVO 监测的，所以当我们想更新用户界面时，我们需要去查询。
 
 
 
+```
+AVCaptureAudioDataOutput *audioDataOutput = <#Get the audio data output#>;
+NSArray *connections = audioDataOutput.connections;
+if ([connections count] > 0) {
+    // There should be only one connection to an AVCaptureAudioDataOutput.
+    AVCaptureConnection *connection = [connections objectAtIndex:0];
+ 
+    NSArray *audioChannels = connection.audioChannels;
+ 
+    for (AVCaptureAudioChannel *channel in audioChannels) {
+        float avg = channel.averagePowerLevel;
+        float peak = channel.peakHoldLevel;
+        // Update the level meter user interface.
+    }
+}
+```
+
+
+## 一个完整示例
+
+
+这里的示例代码将展示如何获取视频并转化为 `UIImage`。大概包括下面几步：
+
+
+- 创建一个 `AVCaptureSession` 对象来协调输入设备到输出的数据流。
+- 找到我们想要的 `AVCaptureDevice`。
+- 为 device 创建一个 `AVCaptureDeviceInput` 对象。
+- 创建 `AVCaptureVideoDataOutput` 来输出视频帧。
+- 实现 `AVCaptureVideoDataOutput` 的 `delegate` 方法来处理视频帧。
+- 在实现的代理方法中将 `CMSampleBuffer` 转为 `UIImage`。
+
+
+代码如下：
 
 
 
+```
+// 创建并配置 Capture Session：
+AVCaptureSession *session = [[AVCaptureSession alloc] init];
+session.sessionPreset = AVCaptureSessionPresetMedium;
+
+// 创建和配置 Device 和 Device Input：
+AVCaptureDevice *device = [AVCaptureDevice defaultDeviceWithMediaType:AVMediaTypeVideo];
+ 
+NSError *error = nil;
+AVCaptureDeviceInput *input = [AVCaptureDeviceInput deviceInputWithDevice:device error:&error];
+if (!input) {
+    // Handle the error appropriately.
+}
+[session addInput:input];
+
+// 创建和配置 Video Data Output：
+AVCaptureVideoDataOutput *output = [[AVCaptureVideoDataOutput alloc] init];
+[session addOutput:output];
+output.videoSettings = @{(NSString *) kCVPixelBufferPixelFormatTypeKey: @(kCVPixelFormatType_32BGRA)};
+output.minFrameDuration = CMTimeMake(1, 15);
+// 设置 Video Data Output 的 delegate 和处理队列：
+dispatch_queue_t queue = dispatch_queue_create("MyQueue", NULL);
+[output setSampleBufferDelegate:self queue:queue];
+
+```
+
+代理方法实现：
+
+```
+- (void)captureOutput:(AVCaptureOutput *)captureOutput didOutputSampleBuffer:(CMSampleBufferRef)sampleBuffer fromConnection:(AVCaptureConnection *)connection {
+ 
+    UIImage *image = imageFromSampleBuffer(sampleBuffer);
+    // Add your code here that uses the image.
+}
+```
+
+开始录制：
+
+
+录制前，还需要注意申请相机权限：
+
+```
+// 申请权限：
+NSString *mediaType = AVMediaTypeVideo;
+ 
+[AVCaptureDevice requestAccessForMediaType:mediaType completionHandler:^(BOOL granted) {
+    if (granted) {
+        //Granted access to mediaType
+        [self setDeviceAuthorized:YES];
+    } else {
+        //Not granted access to mediaType
+        dispatch_async(dispatch_get_main_queue(), ^{
+            [[[UIAlertView alloc] initWithTitle:@"AVCam!"
+                                    message:@"AVCam doesn't have permission to use Camera, please change privacy settings"
+                                   delegate:self
+                          cancelButtonTitle:@"OK"
+                          otherButtonTitles:nil] show];
+            [self setDeviceAuthorized:NO];
+        });
+    }
+}];
+```
+
+开始录制方法：
+
+```
+[session startRunning];
+```
+
+停止录制方法：
+
+```
+[session stopRunning];
+```
+
+
+
+## 高帧率视频获取
+
+
+iOS 7 以后在一些设备中引入了高帧率视频捕获的支持。我们可以通过 `AVCaptureDeviceFormat` 来查询设备支持的媒体类型、帧率、缩放比、视频防抖等。在 AVFoundation 中：
+
+- 支持捕获分辨率 720p 及以上、帧率 60 fps、视频防抖、P 帧丢帧。
+- 播放方面增强了对音频加速和慢速播放的支持。
+- 编辑方面提供了全面的编辑能力支持。
+- 输出方面支持两种方式输出帧率达 60 fps 的影视文件。一种是输出为可变帧率，支持慢速或快速播放。另一种是输出为任意指定帧率，比如 30 fps。
+
+
+需要注意的是，现在最新的 iOS 版本支持的能力会比以上这些更多更强大。
+
+
+### 播放
+
+播放时，可以通过 `AVPlayer` 设置 `rate` 属性来设置播放速率。
+
+
+`AVPlayerItem` 可以支持通过 `audioTimePitchAlgorithm` 属性来设置当你用不同的速率播放视频时，该如何播放音频。以下是相关选项：
+
+- `AVAudioTimePitchAlgorithmLowQualityZeroLatency`，较低音质，适应多种播放速率。适宜的速率：0.5, 0.666667, 0.8, 1.0, 1.25, 1.5, 2.0.
+- `AVAudioTimePitchAlgorithmTimeDomain`，普通音质。适宜的速率：0.5–2x。
+- `AVAudioTimePitchAlgorithmSpectral`，最高音质，性能消耗较大。适宜的速率：1/32–32。
+- `AVAudioTimePitchAlgorithmVarispeed`，高音质。适宜的速率：1/32–32。
+
+
+### 编辑
+
+通常使用 `AVMutableComposition` 来做音视频编辑：
+
+- 使用 `composition` 类方法类创建 `AVMutableComposition` 对象。
+- 使用 `insertTimeRange:ofAsset:atTime:error:` 来插入音视频数据。
+- 使用 `scaleTimeRange:toDuration:` 来设置音视频数据的时间区间。
+
+
+### 导出
+
+可以使用 `AVAssetExportSession` 来导出 60 fps 的视频，可以用以下两种方式：
+
+- 使用 `AVAssetExportPresetPassthrough` preset 来编码重新编码视频。它会重新处理那些标记为 60 fps、降速、加速区域的时间。
+- 使用一个固定帧率来保证导出视频的最大兼容性。比如设置 video composition 的 `frameDuration` 为 30 fps。比如设置 export session 的 `audioTimePitchAlgorithm` 来配置音频播放选项。
+
+
+
+### 录制
+
+我们用 `AVCaptureMovieFileOutput` 来录制高帧率的视频，它会默认支持高帧率的视频录制，会默认选择正确的 H264 pitch level 和比特率。
+
+如果想要做一些自定义录制，我们必须使用 `AVAssetWriter`，这个则需要一些额外的创建过程。
+
+通常我们需要设置一下：
+
+```
+assetWriterInput.expectsMediaDataInRealTime = YES;
+```
+
+来保证视频捕获能跟得上传入的数据。
 
 
 
@@ -575,3 +787,4 @@ for (AVCaptureConnection *connection in stillImageOutput.connections) {
 [2]: http://www.samirchen.com/ios-av-asset
 [3]: https://developer.apple.com/library/content/documentation/AudioVideo/Conceptual/AVFoundationPG/Articles/00_Introduction.html
 [4]: https://developer.apple.com/library/content/samplecode/SquareCam/Introduction/Intro.html#//apple_ref/doc/uid/DTS40011190
+[5]: https://developer.apple.com/library/content/samplecode/AVCam/Introduction/Intro.html#//apple_ref/doc/uid/DTS40010112

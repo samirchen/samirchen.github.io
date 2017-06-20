@@ -20,7 +20,12 @@ tag: Audio, Video, Live, iOS, Recorder, AVFoundation, AVAsset
 
 ## 读取 Asset
 
-每一个 `AVAssetReader` 一次只能与一个 asset 关联，但是这个 asset 可以包含多个轨道。
+每一个 `AVAssetReader` 一次只能与一个 asset 关联，但是这个 asset 可以包含多个轨道。由于这个原因通常我们需要为 `AVAssetReader` 指定一个 `AVAssetReaderOutput` 的具体子类来具体操作 asset 的读取，比如：
+
+
+- `AVAssetReaderTrackOutput`
+- `AVAssetReaderAudioMixOutput`
+- `AVAssetReaderVideoCompositionOutput`
 
 
 

@@ -1,7 +1,7 @@
 ---
 layout: post
-title: AVAudioFoundation(6)：时间和媒体展现
-description: 介绍 iOS 上的音视频时间和媒体展现。
+title: AVAudioFoundation(6)：时间和媒体表示
+description: 介绍 iOS 上的音视频时间和媒体表示。
 category: blog
 tag: Audio, Video, Live, iOS, Recorder, AVFoundation, AVAsset
 ---

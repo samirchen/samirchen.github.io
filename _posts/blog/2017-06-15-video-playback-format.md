@@ -50,6 +50,18 @@ ffmpeg -i bad.mp4 -movflags faststart good.mp4
 
 MP4 文件的数据都是封装一个又一个的名为 Box 的单元中，一个 MP4 文件由若干个 Box 组成，Box 有不同的类型，Box 中又可以包含其他 Box。
 
+下面的图是对 MP4 文件结构的基本描述：
+
+![image](../../images/video-playback-format/mp4-structure.gif)
+
+MP4 文件由许多 Box 或 FullBox 组成。其中，每个 Box 包含了 Header 和 Data。FullBox 是 Box 的扩展，其包含的 Header 增加了 version(8bits) 和 flags(24bits) 部分。
+
+Header 部分包含了 size 和 type 部分。size 用于描述整个 Box 的长度，type 用于描述 Box 的类型。当 size 为 0 时，表示这是文件中最后一个 Box；当 size 为 1 时，表示 Box 长度需要更多 bits 来描述，这时在后面会定义一个 64bits 的 largesize 来描述 Box 的长度。当 type 是 uuid 时，代表 Box 中的数据是用户自定义扩展类型。
+
+Data 部分是 Box 的实际数据，可以是纯数据也可以是更多的子 Boxes。
+
+当一个 Box 的 Data 部分是一系列子 Boxes 时，这个 Box 又可称为 Container Box。
+
 
 
 

@@ -48,6 +48,8 @@ ffmpeg -i bad.mp4 -movflags faststart good.mp4
 
 如上文介绍，MP4 是现在用的比较多的视频封装格式，它为了播放流式媒体的高质量视频而专门设计的，以求使用最少的数据获得最佳的图像质量。但是它的文件格式复杂，索引慢，时长较长的 MP4 视频在线播放时加载较慢。那么它的格式到底有着怎样的特点呢？
 
+MP4 文件的数据都是封装一个又一个的名为 Box 的单元中，一个 MP4 文件由若干个 Box 组成，Box 有不同的类型，Box 中又可以包含其他 Box。
+
 
 
 
@@ -60,4 +62,5 @@ ffmpeg -i bad.mp4 -movflags faststart good.mp4
 [3]: http://www.samirchen.com/video-concept/
 [4]: http://www.360doc.com/content/13/0822/21/153944_309197656.shtml
 [5]: http://www.samirchen.com/about-pts-dts/ 
+[6]: http://l.web.umkc.edu/lizhu/teaching/2016sp.video-communication/ref/mp4.pdf
 

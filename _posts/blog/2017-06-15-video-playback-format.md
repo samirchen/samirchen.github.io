@@ -63,6 +63,59 @@ Data 部分是 Box 的实际数据，可以是纯数据也可以是更多的子 
 当一个 Box 的 Data 部分是一系列子 Boxes 时，这个 Box 又可称为 Container Box。
 
 
+由于 MP4 文件的 Box 类型非常多，[http://mp4ra.org/atoms.html][8] 列出了当前注册过的一些 Box 类型，这么多的 Box 类型要完全支持还是很复杂的。好在大部分 MP4 文件不会包含这么多的 Box 类型，常见的主要是：ftyp、moov、mdat 三种。
+
+- ftyp：File Type Box，包含文件的类型、版本、兼容信息等。
+- moov：Movie Box，包含文件中所有媒体数据的宏观描述信息。实际的音视频数据都存储在 mdat 中，那么多的数据，我们怎么确定每一帧数据的位置呢，这就需要解析 moov 中的数据。moov 通常包含一个 mvhd 和若干个 trak。
+	- mvhd：Movie Header Box，包含与具体媒体数据无关，但与整体播放相关的信息，比如 timescale、duration 等信息。
+	- trak：Track Box，包含媒体轨道数据信息。有两种类型的 trak：media track 和 hint track，media track 包含媒体轨道的信息，一个文件至少会包含一个 media track 类型的 Box；hint track 包含用于流媒体协议的打包信息。每个 trak 都是独立的，包含自己的空域和时域信息。每个 trak 包含一个 tkhd 和 mdia。
+		- tkhd：Track Header Box，包含该轨道的创建时间、标识该轨道 的 ID、轨道的播放时长、音量、宽高等信息。
+		- mdia：Media Box，包含声明当前轨道信息的所有对象。这个 Box 下面包含众多类型的子 Boxes，其中比较重要的包括：
+			- hdlr：Handler Reference Box，包含了表明该轨道类型的信息：Video Track、Audio Track 或者 Hint Track。
+			- minf：Media Information Box，包含了描述该轨道媒体数据的所有特征信息。其中 minf 下 最重要的 Box 是 stbl。
+				- stbl：Sample Tables Box，是包含媒体数据信息最多的 Box，也是最复杂的 Box。主要包含了时间和媒体采样数据的映射表，使用这部分数据可以按照时间检索出采样数据的位置、类型、大小、实际偏移位置。其下最重要的 Box 分别是：stts、stss、stsc、stsz、stco。
+					- stts：Decoding Time to Sample Box，包含时间戳与 Sample 序号的映射关系。
+					- stsc：Sample To Chunk Box，包含 Sample 和 Chunk 的映射关系。
+					- stsz：Sample Size Boxes，包含每个 Sample 的大小。
+					- stz2：Sample Size Boxes，包含另一种 Sample 大小的存储算法，压缩，更节省空间。
+					- stss：Sync Sample Box，包含可随机访问的 Sample 列表，即关键帧列表。
+					- stco：Chunk Offset Box，每个 Chunk 的偏移。
+					- co64：Chunk Offset Box，64-bit Chunk 的偏移。
+- mdat：Media Data Box，包含具体的媒体数据，即实际的音视频数据。比如我们需要的第一帧图片的数据就存放在这个 Box 里。这个 Box 中的数据是没有结构的，所以依赖于 moov 中的 trak 信息来进行索引。对于一个 track 的媒体数据来说，它包含多个 chunk，而每个 chunk 又包含多个 sample。
+
+此外，文件的元数据信息 metadata 存储在 meta Box 中。
+
+- meta：Meta Box，包含文件的元数据信息，它的位置比较灵活，可以放在文件中作为一级 Box，也可以放在  moov(Movie Box) 或者 trak(Track Box) 中。通常对于播放器来说，可能需要读取到 MP4 的 metadata 才能开始进行下一步的解码工作，所以在网络点播中通常需要把 meta Box 位置放在文件靠前的位置以加快开始播放的速度，如上文所介绍的那样。
+
+![image](../../images/video-playback-format/mp4-structure-2.jpg)
+
+
+关于 MP4 文件格式更加完整的信息参见：[MP4 格式文档][6]。
+
+
+## 操作 MP4 文件
+
+### Seek
+
+那么我们如果对 MP4 文件做 Seek 操作呢？步骤如下：
+
+- 1、根据 mvhd(Movie Header Box) 中的 timescale 确定给定时间 t 在媒体时间坐标系统中的位置 p，即 t * timescale。
+- 2、根据 stts(Decoding Time to Sample Box) 查询指定 track 在时间坐标 p 之前的第一个 sample number。
+- 3、根据 stss(Sync Sample Box) 查询 sample number 前的第一个关键帧 sync sample。
+- 4、根据 stsc(Sample To Chunk Box) 查询对应 sync sample 的 chunk。
+- 5、根据 stco(Chunk Offset Box) 查询该 chunk 的在文件中的偏移量。
+- 6、根据 stsc(Sample To Chunk Box) 和 stsz(Sample Size Boxes) 的信息计算出该 chunk 中需要读取的 sample 数据，即完成 seek。
+
+### 分割 MP4 文件
+
+通过上面对 Seek 操作的介绍，我们不难发现其实我们可以将一个 MP4 文件中的所有关键帧的信息提取出来，也就是获得这个 MP4 文件的「关键帧列表」。在这个基础上我们就可以对 MP4 文件进行分割了，把大文件分割成小文件。这样对于优化 MP4 长视频的网络点播，是一种思路。
+
+分割 MP4 文件的步骤大致如下：
+
+- 1、获取关键帧列表。
+- 2、选择分割的时间段。注意需要从各个时间段的第一个关键帧开始分割。
+- 3、重新生成 moov Box。注意所有相关的 Box 以及 box size 都要做修改。
+- 4、拷贝对应的数据，生成新的文件。
 
 
 
@@ -75,4 +128,6 @@ Data 部分是 Box 的实际数据，可以是纯数据也可以是更多的子 
 [4]: http://www.360doc.com/content/13/0822/21/153944_309197656.shtml
 [5]: http://www.samirchen.com/about-pts-dts/ 
 [6]: http://l.web.umkc.edu/lizhu/teaching/2016sp.video-communication/ref/mp4.pdf
+[7]: https://www.cnblogs.com/haibindev/archive/2011/10/17/2214518.html
+[8]: http://mp4ra.org/atoms.html
 

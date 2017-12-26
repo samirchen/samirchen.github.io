@@ -19,8 +19,22 @@ ffmpeg -i bad.mp4 -movflags faststart good.mp4
 
 ## 优化 FFmpeg 的播放参数
 
+基于 FFmpeg 实现的播放器，在播放视频时都会调用到一个 `avformat_find_stream_info` (libavformat/utils.c) 函数，该函数的作用是读取一定长度的码流数据，来分析码流的基本信息，为视频中各个媒体流的 AVStream 结构体填充好相应的数据。这个函数中做了查找合适的解码器、打开解码器、读取一定的音视频帧数据、尝试解码音视频帧等工作，基本上完成了解码的整个流程。在不清楚视频数据的格式又要做到较好的兼容性时，这个过程是比较耗时的，从而会影响到播放器首屏秒开。
 
-## 选择合适的缓冲算法
+在外部可以通过设置 `probesize` 和 `analyzeduration` 两个参数来控制该函数读取的数据量大小和分析时长为比较小的值来降低 `avformat_find_stream_info` 的耗时，从而优化播放器首屏秒开。但是，需要注意的是这两个参数设置过小时，可能会造成预读数据不足，无法解析出码流信息，从而导致播放失败、无音频或无视频的情况。所以，在服务端对视频格式进行标准化转码，从而确定视频格式，进而再去推算 `avformat_find_stream_info` 分析码流信息所兼容的最小的 `probesize` 和 `analyzeduration`，就能在保证播放成功率的情况下最大限度地区优化首屏秒开。
+
+在我们能控制视频格式达到标准化后，我们可以直接修改 `avformat_find_stream_info` 的实现逻辑，针对该视频格式做优化，进而优化首屏秒开。比如，你可以试试将函数中用到的一个变量 `fps_analyze_framecount` 初始化为 0 试试效果。
+
+甚至，我们可以进一步直接去掉 `avformat_find_stream_info` 这个过程，自定义完成解码环境初始化。参见：[VLC优化（1） avformat_find_stream_info 接口延迟降低][4] 和 [FFMPEG avformat_find_stream_info 替换][5]。
+
+
+对 `avformat_find_stream_info` 代码的分析，还可以看看这里：[FFmpeg源代码简单分析：avformat_find_stream_info()][3]。
+
+
+
+
+## 选择合适的缓冲算法和缓冲区
+
 
 
 ## 使用 HTTP DNS 加快建连
@@ -36,3 +50,7 @@ ffmpeg -i bad.mp4 -movflags faststart good.mp4
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/video-playback-fast-play
+[3]: http://blog.csdn.net/leixiaohua1020/article/details/44084321
+[4]: https://jiya.io/archives/vlc_optimize_1.html
+[5]: http://blog.csdn.net/leo2007608/article/details/53421528
+

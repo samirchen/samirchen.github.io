@@ -35,6 +35,13 @@ ffmpeg -i bad.mp4 -movflags faststart good.mp4
 
 ## 选择合适的缓冲算法和缓冲区
 
+在点播场景下，为了减少播放过程中的卡顿，通常会缓冲一定的数据后再解码播放，这是一种播放策略。
+
+为了加快首屏播放速度，也可以选择降低首次缓冲的数据量。甚至在第一帧没有渲染出来的情况下，不做任何缓冲，有数据就直接塞给解码器解码播放。
+
+在 iOS 平台上，使用系统的 AVPlayer 时，属性 `automaticallyWaitsToMinimizeStalling` 就是控制播放器缓冲策略的。当该值为 YES 时，AVPlayer 会努力尝试延迟开始播放，加载足够的数据来保证整个播放过程中尽量卡顿最少。这个接口在 iOS 10 及以上版本才开放，在 iOS 10 之前的版本，在播放 HLS 这种流媒体视频时，效果如同 `automaticallyWaitsToMinimizeStalling` 为 YES，播放基于文件的视频资源，包括通过网络传输的网络视频文件，则效果如同 `automaticallyWaitsToMinimizeStalling` 为 NO。
+
+
 
 
 ## 使用 HTTP DNS 加快建连

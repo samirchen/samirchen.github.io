@@ -44,9 +44,29 @@ ffmpeg -i bad.mp4 -movflags faststart good.mp4
 
 
 
-## 使用 HTTP DNS 加快建连
+## 使用 HTTPDNS 加快建连
+
+在现在的网络视频播放场景中，对视频资源的访问通常都要经过 CDN 网络进行内容分发和调度。如果调度得当，将访问资源时的节点调度到离得近、速度快的节点，会大大加快首屏播放。
+
+这时候我们可以使用与 CDN 网络配套的 HTTPDNS 服务。HTTPDNS 使用 HTTP 协议进行域名解析，代替现有基于 UDP 的 DNS 协议，域名解析请求直接发送到相应的 HTTPDNS 服务器，从而绕过运营商的 Local DNS，能够避免 Local DNS 造成的域名劫持问题和调度不精准问题。
+
+以 iOS 上的 AVPlayer 为例，当使用 HTTPDNS 时，可以用视频资源 URL 对应的 Host 向 HTTPDNS 请求节点 IP，然后用节点 IP 替换 URL 中的 Host 部分，再在 HTTP Header 里设置原 Host。这样即可通过 IP 直连的方式访问 HTTPDNS 返回的较优节点。
+
+示例代码大致如下：
 
 
+```
+// 假设原视频 URL 是：http://wwww.example.com/abc.mp4
+// 假设从 HTTPDNS 服务获取的 wwww.example.com 这个 Host 对于的 IP 是：192.168.1.1
+// 那么处理后的 URL 是：http://192.168.1.1/abc.mp4
+
+NSMutableDictionary *headers = [NSMutableDictionary dictionary];
+[headers setObject:@"wwww.example.com" forKey:@"Host"];
+NSURL *videoURL = [NSURL URLWithString:@"http://192.168.1.1/abc.mp4"];
+AVAsset *asset = [AVURLAsset URLAssetWithURL:videoURL options:@{@"AVURLAssetHTTPHeaderFieldsKey": headers}];
+AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:asset];
+AVPlayer *player = [AVPlayer playerWithPlayerItem:playerItem];
+```
 
 
 

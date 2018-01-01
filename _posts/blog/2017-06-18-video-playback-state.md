@@ -1,3 +1,4 @@
+---
 layout: post
 title: 点播中的状态机完善
 description: 介绍在点播中完善播放器状态机的一些思路。

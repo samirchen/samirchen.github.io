@@ -10,6 +10,8 @@ tag: Audio, Video, MP4, Bandwidth Cost, Video Cache, H.265
 
 ## 视频缓存
 
+对于高频使用短视频的应用，缓存是一种节约流量成本非常有效的方式。
+
 
 
 

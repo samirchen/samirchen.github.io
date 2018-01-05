@@ -69,6 +69,9 @@ AVPlayer *player = [AVPlayer playerWithPlayerItem:playerItem];
 ```
 
 
+## 提升 CDN 命中率
+
+通常 CDN 的缓存命中策略是与访问资源的 URL 有关。如果命中策略是 URL 全匹配，那么就要尽量保证 URL 的变化性较低。比如：尽量不要在 URL 的参数中带上随机性的值，这样会造成 CDN 缓存命中下降，从而导致不断回源，这样访问资源耗时也就增加了。
 
 
 

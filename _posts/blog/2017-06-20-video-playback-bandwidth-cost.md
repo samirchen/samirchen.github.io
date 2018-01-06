@@ -21,7 +21,41 @@ tag: Audio, Video, MP4, Bandwidth Cost, Video Cache, H.265
 
 对于 iOS 端代理服务器的实现，可以参考和使用 [CocoaHTTPServer][4]。对于 iOS 端的视频缓存管理，可以参考和使用 [KTVHTTPCache][4]。
 
+![image](../../images/video-playback-bandwidth-cost/cache-structure.png)
 
+
+[CocoaAsyncSocket][6] 是 CocoaHTTPServer 底层的通信库，CocoaAsyncSocket 是一个可在 iOS 和 Mac OS 平台使用、比较成熟的 TCP/IP socket 库，它基于系统的 CFNetwork 框架、TCP/IP socket、GCD 框架进行封装，提供了对 iOS 开发者友好的接口形式。
+
+
+CocoaHTTPServer 则是一个可以在 iOS 和 Mac OS 平台使用、轻量级的 HTTP Server 实现。通过 CocoaHTTPServer 我们就可以在我们的应用里面起一个代理来接管服务器与播放器直接的数据流转。
+
+
+KTVHTTPCache 则是在代理层的基础上来实现对视频数据的下载、缓存和管理。
+
+
+![image](../../images/video-playback-bandwidth-cost/cache-structure-2.png)
+
+KTVHTTPCache 的大致结构如上图所示，其中主要包含两个模块：HTTPSever 和 DataStorage。HTTPServer 是基于 CocoaHTTPServer 封装的，负责处理应用内的 HTTP 请求；DataStorage 则负责加载资源和管理缓存，供给 HTTPServer 所需的数据。它的工作流程大致如下（参考[KTVHTTPCache 文档][5]）：
+
+1. 启动 HTTPServer。
+2. 当有来自于 Client 的 HTTP 请求时，在 HTTPServer 中首先创建 HTTPConnection 上下文对象，在这个上下文中创建对应的 HTTPRequest 对象，并创建与之绑定的 DataRequest 对象作为对 DataStorage 模块的请求。
+3. 同时，在当前的 HTTPConnection 上下文中，创建与 DataRequest 绑定的 HTTPResponse 对象作为对请求的响应。
+4. 创建与 DataRequest 绑定的 DataReader 对象作为从 DataStorage 中获取数据的通道。
+5. DataReader 分析 DataRequest 来决定是从网络读取数据还是从本地缓存读取数据，并创建网络数据源 DataNetworkSource 和文件数据源 DataFileSource，并通过 DataSourcer 进行管理。
+6. DataSourcer 加载数据。
+7. DataReader 从 DataSourcer 中读取数据，并交给当前 HTTPConnection 上下文中的 HTTPResponse 处理，最终由 HTTPResponse 将数据供给 Client。
+
+KTVHTTPCache 采取分段缓存的策略。其中有 NetworkSource 和 FileSource 两种用于加载数据的方式，分别用于下载网络数据和读取本地数据。通过分析 DataRequest 的 Range 和本地缓存状态来对应创建。
+
+比如，一次请求的 Range 为 0-999，本地缓存中已有 200-499 和 700-799 两段数据。那么会对应生成 5 个 Source，分别是：
+
+1. DataNetworkSource: 0-199
+2. DataFileSource: 200-499
+3. DataNetworkSource: 500-699
+4. DataFileSource: 700-799
+5. DataNetworkSource: 800-999
+
+它们由 DataSourcer 进行管理，对外仅暴露一个 ReadData 的接口，根据当前的 ReadOffset 自行选择向外界提供数据的 Source。
 
 
 ## H.265
@@ -38,3 +72,5 @@ tag: Audio, Video, MP4, Bandwidth Cost, Video Cache, H.265
 [3]: http://www.infoq.com/cn/presentations/one-billion-levels-of-video-playback-technology-optimization-secret
 [4]: https://github.com/robbiehanson/CocoaHTTPServer
 [5]: https://github.com/ChangbaDevs/KTVHTTPCache
+[6]: https://github.com/robbiehanson/CocoaAsyncSocket
+

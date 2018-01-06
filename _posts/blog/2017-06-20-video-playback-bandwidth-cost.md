@@ -60,8 +60,25 @@ KTVHTTPCache 采取分段缓存的策略。其中有 NetworkSource 和 FileSourc
 
 ## H.265
 
+H.265 又称作 HEVC（High Efficiency Video Coding），是 ITU-T H.264/MPEG-4 AVC 标准的继任者。H.265 在现有的 H.264 标准的基础上加以改进，使用先进的技术改善码流、编码质量、延时和算法复杂度之间的关系，达到最优设置。理论上，H.265 比 H.264 压缩效率提高 30%-50%。但是，与此同时，H.265 相对 H.264 的编码时间更长，约为 3-7 倍，解码复杂度也提高了 4 倍，更加消耗系统资源，本质上是拿时间换空间。
+
+如果要在客户端上使用 H.265 编码基本上是不可行的，目前尚无硬件能够支持 H.265 编码加速，耗时过长。所以 H.265 编码只有放在服务端去做。
+
+在客户端上使用 H.265 解码是可行的，使用软解相对 H.264 的耗时基本差别不大，但是对 CPU 的占用会比较高，会造成设备过热以及卡顿。目前支持 H.265 硬解的设备逐渐多了起来，在设备上使用 H.265 硬解是一种很不错的选择，可以在 CPU 占用较低的情况下来节省带宽。
+
+在[十亿级视频播放技术优化揭秘][3]一文中，介绍了腾讯 QQ 空间产品中使用 H.265 解码的策略：在合适时机，运行 1 次大规模的浮点数运算来评估当前机器的解码性能，并将评分结果上传后台服务器进行云适配。
+
+![image](../../images/video-playback-bandwidth-cost/h265-strategy.png)
 
 
+![image](../../images/video-playback-bandwidth-cost/h265-strategy-2.png)
+
+
+从 iOS 11 系统开始，系统将通过 VideoToolbox 来支持 HEVC 编解码，在新的 iOS 设备上也支持硬编硬解。
+
+参考：
+
+- [基于 iOS11 的 HEVC(H.265) 硬编码/硬解码功能开发指南][7]。
 
 
 
@@ -73,4 +90,4 @@ KTVHTTPCache 采取分段缓存的策略。其中有 NetworkSource 和 FileSourc
 [4]: https://github.com/robbiehanson/CocoaHTTPServer
 [5]: https://github.com/ChangbaDevs/KTVHTTPCache
 [6]: https://github.com/robbiehanson/CocoaAsyncSocket
-
+[7]: https://www.jianshu.com/p/cb93e618e041

@@ -68,6 +68,8 @@ AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:asset];
 AVPlayer *player = [AVPlayer playerWithPlayerItem:playerItem];
 ```
 
+这种方案在使用 HTTPS 时，是会失败的。因为 HTTPS 在证书验证的过程，会出现 domain 不匹配导致SSL/TLS握手不成功。这时候的方案参考[HTTPS（含SNI）业务场景“IP直连”方案说明][6]和[iOS HTTPS SNI 业务场景“IP直连”方案说明][7]。
+
 
 ## 提升 CDN 命中率
 
@@ -85,4 +87,5 @@ CDN 方面其实可以提供一些配置策略，比如：根据域名可配置�
 [3]: http://blog.csdn.net/leixiaohua1020/article/details/44084321
 [4]: https://jiya.io/archives/vlc_optimize_1.html
 [5]: http://blog.csdn.net/leo2007608/article/details/53421528
-
+[6]: https://help.aliyun.com/document_detail/30143.html
+[7]: https://help.aliyun.com/knowledge_detail/60147.html

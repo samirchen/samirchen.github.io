@@ -38,6 +38,7 @@ AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:asset];
 AVPlayer *player = [AVPlayer playerWithPlayerItem:playerItem];
 ```
 
+这种方案在使用 HTTPS 时，是会失败的。因为 HTTPS 在证书验证的过程，会出现 domain 不匹配导致SSL/TLS握手不成功。这时候的方案参考[HTTPS（含SNI）业务场景“IP直连”方案说明][3]和[iOS HTTPS SNI 业务场景“IP直连”方案说明][4]。
 
 ## 优化缓冲策略
 
@@ -66,5 +67,5 @@ AVPlayer *player = [AVPlayer playerWithPlayerItem:playerItem];
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/video-playback-stall
-
-
+[3]: https://help.aliyun.com/document_detail/30143.html
+[4]: https://help.aliyun.com/knowledge_detail/60147.html

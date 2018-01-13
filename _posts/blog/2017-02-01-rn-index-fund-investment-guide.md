@@ -214,7 +214,9 @@ tag: reading, investment
 对于卖出，则可以通过分批卖出策略，比如把手中持有的基金总份额分成 10 份，每次卖出 1 份，分 10 次卖掉，通过这种方式进一步分散风险。
 
 
-此外，对于定投年化收益率的计算，要使用 IRR 算法，可以参考：[定投的收益率该怎么算？][3]。
+此外，对于定投年化收益率的计算，可以使用 Excel 的 IRR 算法，可以参考：[定投的收益率该怎么算？][3]。
+
+![image](../../images/rn-index-fund-investment-guide/calculate-yield-rate.jpg)
 
 ### 结论
 

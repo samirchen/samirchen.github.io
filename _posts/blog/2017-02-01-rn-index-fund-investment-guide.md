@@ -172,7 +172,8 @@ tag: reading, investment
 
 - 1）关注雪球账号：[银行螺丝钉](http://xueqiu.com/3079173340)，每个交易日晚上会公布当天收盘后的指数基金市盈率与市净率估值。
 - 2）查询：[中证指数官网](http://www.csindex.com.cn/zh-CN/indices/index)(http://www.csindex.com.cn/zh-CN/indices/index)。
-- 3）查询：[申万历史数据](http://www.swsindex.com/idx0510.aspx)(http://www.swsindex.com/idx0510.aspx)。
+- 3）查询：[恒生指数官网](http://www.hsi.com.hk/HSI-Net/HSI-Net)(http://www.hsi.com.hk/HSI-Net/HSI-Net)
+- 4）查询：[申万历史数据](http://www.swsindex.com/idx0510.aspx)(http://www.swsindex.com/idx0510.aspx)。
 
 比如，当我们想要查看「红利ETF(SH:510880)」这只指数基金的指数及背后的成分股票，我们先查询指数基金追踪的指数是「红利指数」，我们在 [http://www.csindex.com.cn/zh-CN/search](http://www.csindex.com.cn/zh-CN/search) 查询「红利指数」。
 

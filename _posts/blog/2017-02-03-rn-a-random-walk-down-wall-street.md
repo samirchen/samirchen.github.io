@@ -191,6 +191,14 @@ tag: reading, investment
 
 
 
+## 三、新投资技术
+
+
+
+
+
+
+
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/rn-a-random-walk-down-wall-street/

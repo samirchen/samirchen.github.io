@@ -28,11 +28,29 @@ tag: Audio, Video, Live, First Screen Loading
 
 ## 流媒体服务器侧优化
 
+### 协议的选择
+
+当前流行的直播拉流协议主要有 RTMP 和 HTTP-FLV。经过大量的测试发现，移动端拉流时在相同的 CDN 策略以及播放器控制策略的条件下，HTTP-FLV 协议相比 RTMP 协议，首屏时间要减少 300～400ms 左右。主要是在 RTMP 协议建连过程中，与服务端的交互耗时会更久。所以我们应该优先使用 HTTP-FLV 协议。
+
+
+
+### 服务端 GOP 缓存
+
 除了客户端业务侧的优化外，我们还可以从流媒体服务器侧进行优化。我们都知道直播流中的图像帧分为：I 帧、P 帧、B 帧，其中只有 I 帧是能不依赖其他帧独立完成解码的，这就意味着当播放器接收到 I 帧它能马上渲染出来，而接收到 P 帧、B 帧则需要等待依赖的帧而不能立即完成解码和渲染，这个期间就是「黑屏」了。
 
 所以，**在服务器端可以通过缓存 GOP（以 I 帧开头的一组图像帧序列），保证播放端在接入直播时能先获取到 I 帧马上渲染出画面来，从而优化首屏加载的体验。**
 
 ![image](../../images/first-screen-loading/first-screen-loading-2.png)
+
+通常我们可以在 CDN 的边缘节点做 GOP 缓存。
+
+
+
+### 服务端快速下发策略
+
+快速启动优化则是会在 GOP 缓存基本上根据播放器缓冲区大小设定一定的 GOP 数量用于填充播放器缓冲区。
+
+这个优化项并不是客户端播放器来控制的，而是在 CDN 服务端来控制下发视频数据的带宽和速度。因为缓冲区耗时不仅跟缓冲需要的帧数有关，还跟下载数据的速度优化，以网宿 CDN 为例，他们可以配置快速启动后，在拉取直播流时，服务端将以 5 倍于平时带宽的速度下发前面缓存的 1s 的数据，这样的效果除了首屏速度更快以外，首屏秒开也会更稳定，因为有固定 1s 的缓存快速下发。这个优化的效果可以使首屏秒开速度提升 100ms 左右。
 
 
 
@@ -40,11 +58,103 @@ tag: Audio, Video, Live, First Screen Loading
 
 ## 直播播放器侧优化
 
+
+### 耗时分析
+
+HTTP-FLV 协议就是专门拉去 FLV 文件流的 HTTP 协议，所以它的请求流程就是一个 HTTP 的下载流程，如下图：
+
+![image](../../images/first-screen-loading/http-flv-flow.webp)
+
+从上图中可以看出，首屏耗时的组成主要以下基本组成：
+
+- DNS 解析耗时
+- TCP 建连耗时
+- HTTP 响应耗时
+- 音视频流探测耗时
+- Buffer 填充耗时
+
+下面我们来分别从这几个方面讨论如何优化。
+
+
+
+### 优化 DNS 解析耗时
+
+DNS 解析是网络请求的第一步，在我们用基于 FFmpeg 实现的播放器 ffplay 中，所有的 DNS 解析请求都是 FFmpeg 调用 `getaddrinfo` 方法来获取的。
+
+我们如何在 FFmpeg 中统计 DNS 耗时呢？
+
+可以在 `libavformat/tcp.c` 文件中的 `tcp_open` 方法中，按以下方法统计：
+
+```
+int64_t start = av_gettime();
+if (!hostname[0])
+    ret = getaddrinfo(NULL, portstr, &hints, &ai);
+else
+    ret = getaddrinfo(hostname, portstr, &hints, &ai);
+int64_t end = av_gettime();
+```
+
+
+如果在没有缓存的情况下，实测发现一次域名的解析会花费至少 300ms 左右的时间，有时候更长，如果本地缓存命中，耗时很短，几个 ms 左右，可以忽略不计。缓存的有效时间是在DNS 请求包的时候，每个域名会配置对应的缓存 TTL 时间，这个时间不确定，根据各域名的配置，有些长有些短，不确定性比较大。
+
+为什么 DNS 的请求这么久呢，一般理解，DNS 包的请求，会先到附近的运营商的 DNS 服务器上查找，如果没有，会递归到根域名服务器，这个耗时就很久。一般如果请求过一次，这些服务器都会有缓存，而且其他人也在不停的请求，会持续更新，下次再请求的时候就会比较快。
+
+
+在测试 DNS 请求的过程中，有时候通过抓包发现每次请求都会去请求 `A` 和 `AAAA` 查询，这是去请求 IPv6 的地址，但由于我们的域名没有 IPv6 的地址，所以每次都要回根域名服务器去查询。为什么会请求 IPV6 的地址呢，因为 FFmpeg 在配置 DNS 请求的时候是按如下配置的：
+
+```
+hints.ai_family = AF_UNSPEC;
+```
+
+它是一个兼容 IPv4 和 IPv6 的配置，如果修改成 `AF_INET`，那么就不会有 `AAAA` 的查询包了。通过实测发现，如果只有 IPv4 的请求，即使是第一次，也会在 100ms 内完成，后面会更短。这里是一个优化点，但是要考虑将来兼容 IPv6 的问题。
+
+
+DNS 的解析一直以来都是网络优化的首要问题，不仅仅有时间解析过长的问题，还有小运营商 DNS 劫持的问题，采用 HTTPDNS 是优化 DNS 解析的常用方案。HTTPDNS 在部分地区也可能存在准确性问题，综合各方面可以采用 HTTPDNS 和 LocalDNS 结合的方案，来提升解析的速度和准确率。大概思路是，App 启动的时候就会先预解析我们指定的域名，因为拉流域名是固定的几个，所以完全可以先缓存起来。然后会根据各个域名解析的时候返回的有效时间，过期后再去解析更新缓存。至于 DNS 劫持的问题，如果 LocalDNS 解析出来的 IP 无法正常使用，或者延时太高，就会切换到 HTTPDNS 重新解析。这样就保证了每次真正去拉流的时候，DNS 解析的耗时几乎为 0，因为可以定时更新缓存池，使每次获得的 DNS 都是来自缓存池。
+
+
+具体实现时，一种实现方式是：IP 直连。
+
+
+### 优化 TCP 建连耗时
+
+
+
+
+### 优化 HTTP 响应耗时
+
+
+
+
+
+
+### 优化音视频流探测耗时
+
 当我们做直播业务时，播放端需要一个播放器来播放视频流，当一个播放器支持的视频格式有很多种时，问题就来了。一个视频流来了，播放器是不清楚这个视频流是什么格式的，所以它需要去探测到一定量的视频流信息，去检测它的格式并决定如何去处理它。这就意味着在播放视频前有一个数据预读过程和一个分析过程。但是对于我们的直播业务来说，我们的提供的直播方案通常是固定的，这就意味着视频流的格式通常是固定的，所以一些数据预读和分析过程是不必要的。**在直播流协议格式固定的情况下，只需要读取固定的信息即可开始播放。这样就缩短了数据预读和分析的时间，使得播放器能够更快地渲染出首屏画面。**
 
 
 ![image](../../images/first-screen-loading/first-screen-loading-3.png)
 
+基于 FFmpeg 实现的播放器，在播放视频时都会调用到一个 `avformat_find_stream_info` (libavformat/utils.c) 函数，该函数的作用是读取一定长度的码流数据，来分析码流的基本信息，为视频中各个媒体流的 AVStream 结构体填充好相应的数据。这个函数中做了查找合适的解码器、打开解码器、读取一定的音视频帧数据、尝试解码音视频帧等工作，基本上完成了解码的整个流程。在不清楚视频数据的格式又要做到较好的兼容性时，这个过程是比较耗时的，从而会影响到播放器首屏秒开。
+
+在外部可以通过设置 `probesize` 和 `analyzeduration` 两个参数来控制该函数读取的数据量大小和分析时长为比较小的值来降低 `avformat_find_stream_info` 的耗时，从而优化播放器首屏秒开。但是，需要注意的是这两个参数设置过小时，可能会造成预读数据不足，无法解析出码流信息，从而导致播放失败、无音频或无视频的情况。所以，在服务端对视频格式进行标准化转码，从而确定视频格式，进而再去推算 `avformat_find_stream_info` 分析码流信息所兼容的最小的 `probesize` 和 `analyzeduration`，就能在保证播放成功率的情况下最大限度地区优化首屏秒开。
+
+在我们能控制视频格式达到标准化后，我们可以直接修改 `avformat_find_stream_info` 的实现逻辑，针对该视频格式做优化，进而优化首屏秒开。比如，你可以试试将函数中用到的一个变量 `fps_analyze_framecount` 初始化为 0 试试效果。
+
+甚至，我们可以进一步直接去掉 `avformat_find_stream_info` 这个过程，自定义完成解码环境初始化。参见：[VLC优化（1） avformat_find_stream_info 接口延迟降低][4] 和 [FFMPEG avformat_find_stream_info 替换][5]。
+
+
+对 `avformat_find_stream_info` 代码的分析，还可以看看这里：[FFmpeg源代码简单分析：avformat_find_stream_info()][3]。
+
+
+### 优化 Buffer 填充耗时
+
+
+
+
+## 参考
+
+- [https://github.com/ossrs/srs/wiki/v1_CN_LowLatency][5]
+- [https://mp.weixin.qq.com/s/hCsUKbkaO-254XVAT23wVg][6]
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
@@ -52,4 +162,4 @@ tag: Audio, Video, Live, First Screen Loading
 [2]: http://www.samirchen.com/first-screen-loading
 [4]: http://mp.weixin.qq.com/s?__biz=MzAwMDU1MTE1OQ==&mid=2653547042&idx=1&sn=26d8728548a6b5b657079eeab121e283&scene=2&srcid=0428msEitG9LJ3JaKGaRCEjg&from=timeline&isappinstalled=0
 [5]: https://github.com/ossrs/srs/wiki/v1_CN_LowLatency
-
+[6]: https://mp.weixin.qq.com/s/hCsUKbkaO-254XVAT23wVg

@@ -89,3 +89,4 @@ CDN 方面其实可以提供一些配置策略，比如：根据域名可配置�
 [5]: http://blog.csdn.net/leo2007608/article/details/53421528
 [6]: https://help.aliyun.com/document_detail/30143.html
 [7]: https://help.aliyun.com/knowledge_detail/60147.html
+[8]: https://mp.weixin.qq.com/s/hCsUKbkaO-254XVAT23wVg

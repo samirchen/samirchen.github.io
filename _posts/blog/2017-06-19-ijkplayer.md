@@ -905,10 +905,6 @@ int media_player_msg_loop(void* arg)
 
 
 
-## 参考
-
-- [ijkplayer框架深入剖析][3]
-- [美拍直播首屏耗时减少50%以上的优化实践][4]
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"

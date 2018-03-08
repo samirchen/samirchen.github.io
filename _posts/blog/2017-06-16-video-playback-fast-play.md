@@ -56,12 +56,12 @@ ffmpeg -i bad.mp4 -movflags faststart good.mp4
 
 
 ```
-// 假设原视频 URL 是：http://wwww.example.com/abc.mp4
-// 假设从 HTTPDNS 服务获取的 wwww.example.com 这个 Host 对于的 IP 是：192.168.1.1
+// 假设原视频 URL 是：http://www.example.com/abc.mp4
+// 假设从 HTTPDNS 服务获取的 www.example.com 这个 Host 对应的 IP 是：192.168.1.1
 // 那么处理后的 URL 是：http://192.168.1.1/abc.mp4
 
 NSMutableDictionary *headers = [NSMutableDictionary dictionary];
-[headers setObject:@"wwww.example.com" forKey:@"Host"];
+[headers setObject:@"www.example.com" forKey:@"Host"];
 NSURL *videoURL = [NSURL URLWithString:@"http://192.168.1.1/abc.mp4"];
 AVAsset *asset = [AVURLAsset URLAssetWithURL:videoURL options:@{@"AVURLAssetHTTPHeaderFieldsKey": headers}];
 AVPlayerItem *playerItem = [AVPlayerItem playerItemWithAsset:asset];

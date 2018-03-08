@@ -7,6 +7,8 @@ tag: Audio, Video, MP4, Fast Play
 ---
 
 
+点播的首屏秒开方案也可以先参考一下[直播中的首屏加载优化][9]。
+
 ## 前置 metadata
 
 播放器在网络点播场景下去请求 MP4 视频数据，需要先获取到文件的 metadata，解析出该文件的编码、帧率等信息后才能开始边下边播。如果 MP4 的 metadata 数据块被编码在文件尾部，这种情况会导致播放器只有下载完整个文件后才能成功解析并播放这个视频。对于这种视频，我们最好能够在服务端将其重新编码，将 metadata 数据块转移到靠近文件头部的位置，保证播放器在线请求时能较快播放。比如 FFmpeg 的下列命令就可以支持这个操作：
@@ -90,3 +92,4 @@ CDN 方面其实可以提供一些配置策略，比如：根据域名可配置�
 [6]: https://help.aliyun.com/document_detail/30143.html
 [7]: https://help.aliyun.com/knowledge_detail/60147.html
 [8]: https://mp.weixin.qq.com/s/hCsUKbkaO-254XVAT23wVg
+[9]: http://www.samirchen.com/first-screen-loading/

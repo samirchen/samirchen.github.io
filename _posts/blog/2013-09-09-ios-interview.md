@@ -77,7 +77,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 单层深复制(one-level-deep copy)：在单层深复制操作时，对于被复制对象，至少有一层是深复制。
 深复制(real-deep copy)：在深复制操作时，对于被复制对象的每一层都是对象复制。
 
-参考：[iOS 集合的深复制与浅复制][https://www.zybuluo.com/MicroCai/note/50592]
+参考：[iOS 集合的深复制与浅复制](https://www.zybuluo.com/MicroCai/note/50592)
 
 
 

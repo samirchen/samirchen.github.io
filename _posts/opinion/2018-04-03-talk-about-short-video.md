@@ -8,6 +8,13 @@ tag: video, live
 
 
 
+## 抖音的产品架构
+
+基于 iOS 1.7.6 版本。
+
+![image](../../images/talk-about-short-video/douyin-product-structure.png)
+
+
 
 ## 内容
 

@@ -312,8 +312,17 @@ tag: video, live
 <!-- Python 的 jiaba 库分词，导入 wordart 作图 -->
 
 
+## 相关内容
+
+- [抖音是怎么让你上瘾的][4]
+- [抖音是怎么让你上瘾的][5]
+
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://samirchen.com/talk-about-douyin/
 [3]: http://music.163.com/#/playlist?id=728438549
+[4]: https://zhuanlan.zhihu.com/p/34969930
+[5]: https://www.zhihu.com/question/270523976/answer/355597697
+
+

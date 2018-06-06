@@ -327,6 +327,7 @@ if (frame_queue_init(&is->pictq, &is->videoq, ffp->pictq_size, 1) < 0)
 
 - [SRS 低延时直播应用][5]
 - [美拍直播优化][6]
+- [FFmpeg之直播 IP 拉流优化][11]
 - [快手直播优化][8]
 - [移动直播技术秒开优化经验][9]
 - [低延时超清直播传输技术][10]
@@ -343,3 +344,4 @@ if (frame_queue_init(&is->pictq, &is->videoq, ffp->pictq_size, 1) < 0)
 [8]: https://mp.weixin.qq.com/s/Mn1qpE_mau_PQlN5mLpZCw
 [9]: https://mp.weixin.qq.com/s?__biz=MzAwMDU1MTE1OQ==&mid=2653547042&idx=1&sn=26d8728548a6b5b657079eeab121e283&scene=2&srcid=0428msEitG9LJ3JaKGaRCEjg&from=timeline&isappinstalled=0#wechat_redirect
 [10]: https://mp.weixin.qq.com/s?__biz=MzAwMDU1MTE1OQ==&mid=2653547697&idx=1&sn=acc748b7fcf0058b58e244970e51eabc&scene=0&from=groupmessage&isappinstalled=0#wechat_redirect
+[11]: https://www.jianshu.com/p/a0e72b319a70

@@ -133,7 +133,7 @@ av_dict_set(dict, "headers", "Host: www.example.com", 0);
 
 如果在客户端发出请求（如：http://www.example.com/abc.flv）的时候，服务端是通过 302/307 调度方式返回直播资源的真实地址（如：http://www.realservice.com/abc.flv），这时 IP 直连会有问题。因为客户端并不知道跳转逻辑，而客户端做了 IP 直连，用的是 www.example.com 获取到的直连 IP 并替换成了 http://192.168.1.1/abc.mp4，这个请求到达服务器，服务器又没有对应的资源，则会导致错误。这种情况可以让服务端采用不下发 302 跳转的方式，但这样就不通用了，会给将来留下隐患。所以常见的做法是做一层播控服务，客户端请求播控服务获取到实际的播放地址以及各种其他的信息，然后再走 IP 直连就没问题。
 
-还可以参考：[iOS 302 等重定向业务场景IP直连方案说明][7]。
+还可以参考：[iOS 302 等重定向业务场景IP直连方案说明][10]。
 
 
 2）使用 HTTPS 时，IP 直连会有问题。
@@ -325,23 +325,29 @@ if (frame_queue_init(&is->pictq, &is->videoq, ffp->pictq_size, 1) < 0)
 
 ## 参考
 
-- [SRS 低延时直播应用][5]
-- [美拍直播优化][6]
-- [FFmpeg之直播 IP 拉流优化][11]
-- [快手直播优化][8]
-- [移动直播技术秒开优化经验][9]
-- [低延时超清直播传输技术][10]
+- [SRS 低延时直播应用][11]
+- [美拍直播优化][12]
+- [FFmpeg之直播 IP 拉流优化][16]
+- [快手直播优化][13]
+- [移动直播技术秒开优化经验][14]
+- [低延时超清直播传输技术][15]
 
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/first-screen-loading
-[4]: http://mp.weixin.qq.com/s?__biz=MzAwMDU1MTE1OQ==&mid=2653547042&idx=1&sn=26d8728548a6b5b657079eeab121e283&scene=2&srcid=0428msEitG9LJ3JaKGaRCEjg&from=timeline&isappinstalled=0
-[5]: https://github.com/ossrs/srs/wiki/v1_CN_LowLatency
-[6]: https://mp.weixin.qq.com/s/hCsUKbkaO-254XVAT23wVg
-[7]: https://helpcdn.aliyun.com/knowledge_detail/60148.html
-[8]: https://mp.weixin.qq.com/s/Mn1qpE_mau_PQlN5mLpZCw
-[9]: https://mp.weixin.qq.com/s?__biz=MzAwMDU1MTE1OQ==&mid=2653547042&idx=1&sn=26d8728548a6b5b657079eeab121e283&scene=2&srcid=0428msEitG9LJ3JaKGaRCEjg&from=timeline&isappinstalled=0#wechat_redirect
-[10]: https://mp.weixin.qq.com/s?__biz=MzAwMDU1MTE1OQ==&mid=2653547697&idx=1&sn=acc748b7fcf0058b58e244970e51eabc&scene=0&from=groupmessage&isappinstalled=0#wechat_redirect
-[11]: https://www.jianshu.com/p/a0e72b319a70
+[3]: http://blog.csdn.net/leixiaohua1020/article/details/44084321
+[4]: https://jiya.io/archives/vlc_optimize_1.html
+[5]: http://blog.csdn.net/leo2007608/article/details/53421528
+[6]: https://help.aliyun.com/document_detail/30143.html
+[7]: https://help.aliyun.com/knowledge_detail/60147.html
+[8]: https://mp.weixin.qq.com/s/hCsUKbkaO-254XVAT23wVg
+[9]: http://www.samirchen.com/first-screen-loading/
+[10]: https://helpcdn.aliyun.com/knowledge_detail/60148.html
+[11]: https://github.com/ossrs/srs/wiki/v1_CN_LowLatency
+[12]: https://mp.weixin.qq.com/s/hCsUKbkaO-254XVAT23wVg
+[13]: https://mp.weixin.qq.com/s/Mn1qpE_mau_PQlN5mLpZCw
+[14]: https://mp.weixin.qq.com/s?__biz=MzAwMDU1MTE1OQ==&mid=2653547042&idx=1&sn=26d8728548a6b5b657079eeab121e283&scene=2&srcid=0428msEitG9LJ3JaKGaRCEjg&from=timeline&isappinstalled=0#wechat_redirect
+[15]: https://mp.weixin.qq.com/s?__biz=MzAwMDU1MTE1OQ==&mid=2653547697&idx=1&sn=acc748b7fcf0058b58e244970e51eabc&scene=0&from=groupmessage&isappinstalled=0#wechat_redirect
+[16]: https://www.jianshu.com/p/a0e72b319a70

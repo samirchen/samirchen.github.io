@@ -6,19 +6,25 @@ category: blog
 tag: Machine Learning
 ---
 
+更详细的笔记参见：
+
+[Coursera 机器学习笔记](http://daniellaah.github.io/2016/Machine-Learning-Andrew-Ng-My-Notes.html)
+
+
+这里只记一些偏概念性的笔记便于快速理解。
+
+
 Week 1: Introduction
 
 
-## 什么是机器学习
-
-### 机器学习的定义
+## 机器学习的定义
 
  一个程序被认为能从经验 E 中学习，解决任务 T，达到性能度量值 P，当且仅当，有了经验 E 后，经过 P 评判， 程序在处理 T 时的性能有所提升。
 
 以下西洋棋为例，经验 e 就是程序上万次的自我练习的经验，任务 t 就是下棋，性能度量值 p 就是它在与一些新的对手比赛时赢得比赛的概率。
 
 
-### 机器学习算法
+## 机器学习算法
 
 最常用的两种机器学习算法：
 
@@ -58,7 +64,38 @@ Week 1: Introduction
 
 
 
+## 假设函数、模型、代价函数
+
+训练集(Training Set)，是由训练样本组成的数据集合。
+
+
+假设函数(Hypothesis Function)，使用某种学习算法对训练集的数据进行训练，我们可以得到假设函数。在房价预测的例子中，假设函数就是一个房价关于房子面积的函数。有了这个假设函数之后，给定一个房子的面积我们就可以预测它的价格了。
+
+
+在房价预测的例子中，我们使用的模型叫单变量的线性回归模型(Linear Regression with One Variable/Univariate Linear Regression)。
+
+
+当我们得到了假设函数，我们就可以进行预测了，但是假设函数中有一些系数，当选择不同的系数时，我们得到的模型效果就会不一样。那么现在的问题就是该如何选择这些系数。我们的目标是得到对应的系数，使得对于训练样例 (x, y) 得到的 h(x) 最接近 y，越是接近（通常我们会选择使用 y 和 h(x) 的均方差来作为衡量标准），表示这个假设函数越是准确。而代价函数(Cost Function)则是描述 y 和 h(x) 接近程度的函数。那么上面的问题就转化为了：找出使得代价函数得到最小值的系数。
+
+
+「梯度下降算法」是一种帮助我们找到一个函数的局部极小值点的算法，它不仅仅可以用在线性回归模型中，在机器学习许多其他的模型中也可以使用它。对于单变量线性回归来说，我们可以使用梯度下降算法来找到最优的系数。
+
+
+事实上，用于线性回归的代价函数总是一个凸函数(Convex Function)。这样的函数没有局部最优解，只有一个全局最优解。所以我们在使用梯度下降的时候，总会得到一个全局最优解。
+
+
+
+
+
+
+
+
+
+
+
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
-[2]: http://www.samirchen.com/notes-of-andrew-ng-machine-learning-1
+[2]: http://www.samirchen.com/notes-of-andrew-ng-machine-learning
+
+

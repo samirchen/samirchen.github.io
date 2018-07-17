@@ -498,7 +498,7 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 - 死循环。
 
 
-30、 如何调试 BAD_ACCESS 错误？
+30、如何调试 BAD_ACCESS 错误？
 
 - 重写 object 的 respondsToSelector 方法，现实出现 EXEC_BAD_ACCESS 前访问的最后一个 object。
 - 通过 Zombie。
@@ -506,6 +506,27 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 - Xcode 7 已经集成了 BAD_ACCESS 捕获功能：Address Sanitizer。用法如下：在配置中勾选 Enable Address Sanitizer。
 
 
+31、动态计算文本高度的时候需要注意什么？
+
+```
++ (CGSize)contentSizeForContent:(NSString *)content withFixedWidth:(CGFloat)width {
+    CGSize maxSize = CGSizeMake(width, MAXFLOAT);
+
+    UIFont *font = [UIFont systemFontOfSize:14.0];
+
+    NSMutableParagraphStyle *paragraphStyle = [[NSMutableParagraphStyle alloc] init];
+    paragraphStyle.alignment = NSTextAlignmentLeft;
+
+    CGRect suggestRect = [content boundingRectWithSize:maxSize options:NSStringDrawingUsesLineFragmentOrigin attributes:@{NSFontAttributeName: font, NSParagraphStyleAttributeName: paragraphStyle} context:nil];
+    
+    CGSize resultSize = CGSizeMake(width, ceil(suggestRect.size.height));
+    
+    return resultSize;
+}
+
+```
+
+如上代码，需要注意算完高度需要用 `ceil` 来处理一下做向上取整。
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"

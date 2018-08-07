@@ -14,7 +14,7 @@ tag: reading
 
 案例 1：
 
-![image](../../imagesrn-predictably-irrational/compare-bait.png)
+![image](../../images/rn-predictably-irrational/compare-bait.png)
 
 驱动你选择「电子版加印刷版套餐」。「印刷版」是这种驱动的诱饵。
 

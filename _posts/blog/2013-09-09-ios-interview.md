@@ -19,8 +19,16 @@ weak 和 assign 的不同点：
 - assign 可以用非 OC 对象以及基本类型，而 weak 必须用于 OC 对象。
 
 
+2、runtime 如何实现 weak 属性？
 
-2、怎么用 copy 关键字？
+weak 此特质表明该属性定义了一种「非拥有关系」(nonowning relationship)。为这种属性设置新值时，设置方法既不持有新值，也不释放旧值。
+
+runtime 对注册的类，会进行内存布局，对于 weak 对象会放入一个 hash 表中。用 weak 指向的对象内存地址作为 key，当此对象的引用计数为 0 的时候会 dealloc，假如 weak 指向的对象内存地址是 a，那么就会以 a 为键，在这个 weak 表中搜索，找到所有以 a 为键的 weak 对象，从而设置为 nil。
+
+
+
+
+3、怎么用 copy 关键字？
 
 copy 的语义是将对象拷贝一份给新的引用，通过新的引用对它的修改不影响原来那个被拷贝的对象。
 
@@ -29,7 +37,7 @@ copy 的语义是将对象拷贝一份给新的引用，通过新的引用对它
 
 
 
-3、用 @property 声明的 NSString（或 NSArray，NSDictionary）经常使用 copy 关键字，为什么？如果改用 strong 关键字，可能造成什么问题？
+4、用 @property 声明的 NSString（或 NSArray，NSDictionary）经常使用 copy 关键字，为什么？如果改用 strong 关键字，可能造成什么问题？
 
 - 使用 copy 无论给我传入是一个可变对象还是不可对象，我本身持有的就是一个不可变的副本。
 - 如果使用 strong，那么这个属性就有可能指向一个可变对象，如果这个可变对象在外部被修改了，那么会影响该属性。
@@ -52,7 +60,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 
 
-4、怎么理解浅拷贝与深拷贝？
+5、怎么理解浅拷贝与深拷贝？
 
 不论是非集合类对象还是集合类对象：
 
@@ -81,7 +89,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 
 
-5、如何让自己的类用 copy 修饰符？
+6、如何让自己的类用 copy 修饰符？
 
 想让自己所写的对象具有拷贝功能，则需实现 NSCopying 协议。如果自定义的对象分为可变版本与不可变版本，那么就要同时实现 NSCopying 与 NSMutableCopying 协议。
 
@@ -91,7 +99,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 
 
-6、@property 的本质是什么？
+7、@property 的本质是什么？
 
 @property = ivar + getter + setter;
 
@@ -99,7 +107,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 
 
-7、@protocol 和 category 中如何使用 @property？
+8、@protocol 和 category 中如何使用 @property？
 
 在 protocol 中使用 property 只会生成 setter 和 getter 方法声明，我们使用属性的目的，是希望遵守我协议的对象能实现该属性。
 
@@ -108,12 +116,6 @@ category 使用 @property 也是只会生成 setter 和 getter 方法的声明�
 - objc_setAssociatedObject
 - objc_getAssociatedObject
 
-
-8、runtime 如何实现 weak 属性？
-
-weak 此特质表明该属性定义了一种「非拥有关系」(nonowning relationship)。为这种属性设置新值时，设置方法既不持有新值，也不释放旧值。
-
-runtime 对注册的类，会进行内存布局，对于 weak 对象会放入一个 hash 表中。用 weak 指向的对象内存地址作为 key，当此对象的引用计数为 0 的时候会 dealloc，假如 weak 指向的对象内存地址是 a，那么就会以 a 为键，在这个 weak 表中搜索，找到所有以 a 为键的 weak 对象，从而设置为 nil。
 
 
 

@@ -53,6 +53,10 @@ copy 的语义是将对象拷贝一份给新的引用，通过新的引用对它
 @property (nonatomic, readwrite, strong) NSArray *myArray;
 
 NSArray *array = @[@1, @2, @3, @4];
+
+//NSMutableArray *invalidMutableArray = array; // Warning.
+//[invalidMutableArray removeAllObjects]; // Crash.
+
 NSMutableArray *mutableArray = [NSMutableArray arrayWithArray:array];
 
 self.myArray = mutableArray;

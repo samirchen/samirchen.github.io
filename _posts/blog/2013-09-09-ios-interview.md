@@ -21,11 +21,18 @@ weak 和 assign 的不同点：
 
 2、runtime 如何实现 weak 属性？
 
-weak 此特质表明该属性定义了一种「非拥有关系」(nonowning relationship)。为这种属性设置新值时，设置方法既不持有新值，也不释放旧值。
+weak 此特质表明该属性定义了一种「非拥有关系」(nonowning relationship)。为这种属性设置新值时，设置方法既不持有新值（新指向的对象），也不释放旧值（原来指向的对象）。
 
-runtime 对注册的类，会进行内存布局，对于 weak 对象会放入一个 hash 表中。用 weak 指向的对象内存地址作为 key，当此对象的引用计数为 0 的时候会 dealloc，假如 weak 指向的对象内存地址是 a，那么就会以 a 为键，在这个 weak 表中搜索，找到所有以 a 为键的 weak 对象，从而设置为 nil。
+runtime 对注册的类，会进行内存布局，从一个粗粒度的概念上来讲，这时候会有一个 hash 表，这是一个全局表，表中是用 weak 指向的对象内存地址作为 key，用所有指向该对象的 weak 指针表作为 value。当此对象的引用计数为 0 的时候会 dealloc，假如该对象内存地址是 a，那么就会以 a 为 key，在这个 weak 表中搜索，找到所有以 a 为键的 weak 对象，从而设置为 nil。
+
+runtime 如何实现 weak 属性具体流程大致分为 3 步：
+
+- 1、初始化时：runtime 会调用 objc_initWeak 函数，初始化一个新的 weak 指针指向对象的地址。
+- 2、添加引用时：objc_initWeak 函数会调用 objc_storeWeak() 函数，objc_storeWeak() 的作用是更新指针指向（指针可能原来指向着其他对象），创建对应的弱引用表。在这个过程中，为了防止多线程中竞争冲突，会有一些锁的操作。
+- 3、释放时：调用 clearDeallocating 函数，clearDeallocating 函数首先根据对象地址获取所有 weak 指针地址的数组，然后遍历这个数组把其中的数据设为 nil，最后把这个 entry 从 weak 表中删除，最后清理对象的记录。
 
 
+更详细的内容参见：[iOS 底层解析 weak 的实现原理][3]
 
 
 3、怎么用 copy 关键字？
@@ -534,3 +541,4 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/ios-interview
+[3]: http://www.cocoachina.com/ios/20170328/18962.html

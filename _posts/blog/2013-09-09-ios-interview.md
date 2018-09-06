@@ -120,7 +120,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 8、@protocol 和 category 中如何使用 @property？
 
-在 protocol 中使用 property 只会生成 setter 和 getter 方法声明，我们使用属性的目的，是希望遵守我协议的对象能实现该属性。
+在 protocol 中使用 property 只会生成 setter 和 getter 方法声明，我们使用属性的目的，是希望遵守我协议的对象能实现该属性。在实现 protocol 的类中如果要使用 property 对应的实例变量，则需要做一下 `@synthesize var = _var;`。
 
 category 使用 @property 也是只会生成 setter 和 getter 方法的声明，如果我们真的需要给 category 增加属性的实现，需要借助于运行时的两个函数：
 

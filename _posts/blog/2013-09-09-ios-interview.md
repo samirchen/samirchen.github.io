@@ -167,7 +167,16 @@ static const void *ViewIndexKey = &ViewIndexKey;
 更多信息参考：[深入理解 Objective-C：Category][4]
 
 
-9、@synthesize 和 @dynamic 分别有什么作用？
+
+9、category 和 extension 有什么区别？
+
+extension 在编译期决定，它就是类的一部分，在编译期和头文件里的 @interface 以及实现文件里的 @implement 一起形成一个完整的类，它伴随类的产生而产生，亦随之一起消亡。extension 一般用来隐藏类的私有信息，你必须有一个类的源码才能为一个类添加 extension，所以你无法为系统的类比如 NSString 添加 extension。
+
+但是 category 则完全不一样，它是在运行期决定的。就 category 和 extension 的区别来看，我们可以推导出一个明显的事实，extension 可以添加实例变量，而 category 是无法添加实例变量的（因为在运行期，对象的内存布局已经确定，如果添加实例变量就会破坏类的内部布局，这对编译型语言来说是灾难性的）。
+
+
+
+10、@synthesize 和 @dynamic 分别有什么作用？
 
 - @property 有两个对应的词，一个是 @synthesize，一个是 @dynamic。如果 @synthesize 和 @dynamic 都没写，那么默认的就是 `@syntheszie var = _var;`。
 - @synthesize 的语义是如果你没有手动实现 setter 方法和 getter 方法，那么编译器会自动为你加上这两个方法。
@@ -175,7 +184,7 @@ static const void *ViewIndexKey = &ViewIndexKey;
 
 
 
-10、ARC 下，不显式指定任何属性关键字时，默认的关键字都有哪些？
+11、ARC 下，不显式指定任何属性关键字时，默认的关键字都有哪些？
 
 对应基本数据类型默认关键字是：atomic, readwrite, assign。
 
@@ -183,7 +192,7 @@ static const void *ViewIndexKey = &ViewIndexKey;
 
 
 
-11、在有了自动合成属性实例变量之后，@synthesize 还有哪些使用场景？
+12、在有了自动合成属性实例变量之后，@synthesize 还有哪些使用场景？
 
 
 总结下 @synthesize 合成实例变量的规则，有以下几点：
@@ -204,7 +213,7 @@ static const void *ViewIndexKey = &ViewIndexKey;
 
 
 
-12、一个 objc 对象如何进行内存布局（考虑有父类的情况）？
+13、一个 objc 对象如何进行内存布局（考虑有父类的情况）？
 
 - 每一个对象内部都有一个 isa 指针，指向他的类对象，类对象中存放着本对象的：
 	- 对象方法列表（对象能够接收的消息列表，保存在它所对应的类对象中）。
@@ -227,13 +236,13 @@ Objective-C 对象的结构图：
 ![image](../../images/ios-interview/instance-structure.png)
 
 
-13、runtime 如何通过 selector 找到对应的 IMP 地址（分别考虑类方法和实例方法）？
+14、runtime 如何通过 selector 找到对应的 IMP 地址（分别考虑类方法和实例方法）？
 
 每一个类对象中都一个方法列表，方法列表中记录着方法的名称，方法实现，以及参数类型，其实 selector 本质就是方法名称，通过这个方法名称就可以在方法列表中找到对应的方法实现。
 
 
 
-14、objc 中的类方法和实例方法有什么本质区别和联系？
+15、objc 中的类方法和实例方法有什么本质区别和联系？
 
 类方法：
 
@@ -255,7 +264,7 @@ Objective-C 对象的结构图：
 
 
 
-15、`_objc_msgForward` 函数是做什么的？
+16、`_objc_msgForward` 函数是做什么的？
 
 `_objc_msgForward` 是 IMP 类型（函数指针），用于消息转发的：当向一个对象发送一条消息，但它并没有实现的时候，`_objc_msgForward` 会尝试做消息转发。
 
@@ -271,7 +280,7 @@ JSPatch 实现 hotpatch 具体实现，以替换 UIViewController 的 `-viewWill
 
 
 
-16、能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量？为什么？
+17、能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量？为什么？
 
 - 不能向编译后得到的类中增加实例变量。
 - 能向运行时创建的类中添加实例变量。
@@ -283,7 +292,7 @@ JSPatch 实现 hotpatch 具体实现，以替换 UIViewController 的 `-viewWill
 
 
 
-17、run loop 和线程有什么关系？
+18、run loop 和线程有什么关系？
 
 总的说来，run loop，正如其名，loop 表示某种循环，和 run 放在一起就表示一直在运行着的循环。实际上，run loop 和线程是紧密相连的，可以这样说 run loop 是为了线程而生，没有线程，它就没有存在的必要。run loop 是线程的基础架构部分，Cocoa 和 CoreFundation 都提供了 run loop 对象方便配置和管理线程的 run loop（以下都以 Cocoa 为例）。每个线程，包括程序的主线程（main thread）都有与之相应的 run loop 对象。
 
@@ -307,7 +316,7 @@ int main(int argc, char * argv[]) {
 
 
 
-18、run loop 的 mode 作用是什么？
+19、run loop 的 mode 作用是什么？
 
 model 主要是用来指定事件在运行循环中的优先级的，分为：
 
@@ -323,7 +332,7 @@ model 主要是用来指定事件在运行循环中的优先级的，分为：
 
 
 
-19、以 `+ scheduledTimerWithTimeInterval...` 的方式触发的 timer，在滑动页面上的列表时，timer 会暂定回调，为什么？如何解决？
+20、以 `+ scheduledTimerWithTimeInterval...` 的方式触发的 timer，在滑动页面上的列表时，timer 会暂定回调，为什么？如何解决？
 
 
 RunLoop 只能运行在一种 mode 下，如果要换 mode，当前的 loop 也需要停下重启成新的。利用这个机制，ScrollView 滚动过程中 NSDefaultRunLoopMode（kCFRunLoopDefaultMode）的 mode 会切换到 UITrackingRunLoopMode 来保证 ScrollView 的流畅滑动：只能在 NSDefaultRunLoopMode 模式下处理的事件会影响 ScrollView 的滑动。
@@ -351,7 +360,7 @@ NSTimer *timer = [NSTimer timerWithTimeInterval:1.0
 
 
 
-20、猜想 run loop 内部是如何实现的？
+21、猜想 run loop 内部是如何实现的？
 
 一般来讲，一个线程一次只能执行一个任务，执行完成后线程就会退出。如果我们需要一个机制，让线程能随时处理事件但并不退出，通常的代码逻辑 是这样的：
 
@@ -367,13 +376,13 @@ function loop() {
 
 
 
-21、objc 使用什么机制管理对象内存？
+22、objc 使用什么机制管理对象内存？
 
 通过 retainCount 的机制来决定对象是否需要释放。 每次 run loop 的时候，都会检查对象的 retainCount，如果 retainCount 为 0，说明该对象没有地方需要继续使用了，可以释放掉了。
 
 
 
-22、ARC 通过什么方式帮助开发者管理内存？
+23、ARC 通过什么方式帮助开发者管理内存？
 
 ARC 相对于 MRC，不是在编译时添加 retain/release/autorelease 这么简单。应该是编译期和运行期两部分共同帮助开发者管理内存。
 
@@ -381,7 +390,7 @@ ARC 相对于 MRC，不是在编译时添加 retain/release/autorelease 这么�
 
 
 
-23、一个 autorealese 对象在什么时刻释放？
+24、一个 autorealese 对象在什么时刻释放？
 
 分两种情况：手动干预释放时机、系统自动去释放。
 
@@ -427,7 +436,7 @@ __weak id reference = nil;
 
 
 
-24、如何实现 autoreleasepool 的？
+25、如何实现 autoreleasepool 的？
 
 
 autoreleasepool 以一个队列数组的形式实现，主要通过下列三个函数完成.
@@ -438,7 +447,7 @@ autoreleasepool 以一个队列数组的形式实现，主要通过下列三个�
 
 
 
-25、如何用 GCD 同步若干个异步调用？
+26、如何用 GCD 同步若干个异步调用？
 
 使用 Dispatch Group 追加 block 到 Global Group Queue，这些 block 如果全部执行完毕，就会执行 Main Dispatch Queue 中的结束处理的 block。
 
@@ -455,7 +464,7 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 
 
 
-26、dispatch_barrier_async 的作用是什么？
+27、dispatch_barrier_async 的作用是什么？
 
 dispatch_barrier_async 函数配合 Concurrent Dispatch Queue 一起使用可以在并行的任务中插入中间任务。
 
@@ -476,7 +485,7 @@ dispatch_barrier_async 函数会等待当前 Concurrent Dispatch Queue 中并行
 
 
 
-27、苹果为什么要废弃 dispatch_get_current_queue？
+28、苹果为什么要废弃 dispatch_get_current_queue？
 
 dispatch_get_current_queue 容易造成死锁。
 
@@ -498,7 +507,7 @@ dispatch_sync 函数用于将一个 block 提交到队列中同步执行，同�
 
 
 
-28、如何手动触发一个 value 的 KVO？
+29、如何手动触发一个 value 的 KVO？
 
 KVC，即是指 NSKeyValueCoding，一个非正式的 Protocol，提供一种机制来间接访问对象的属性。KVO 就是基于 KVC 实现的关键技术之一。
 
@@ -542,13 +551,13 @@ KVC，即是指 NSKeyValueCoding，一个非正式的 Protocol，提供一种机
 Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方法注入是在运行时而不是编译时实现的。这就是正确命名如此重要的原因。只有在使用 KVC 命名约定时，KVO 才能做到这一点。KVO 在实现中通过 isa 混写（isa-swizzling）把这个对象的 isa 指针（isa 指针告诉 Runtime 系统这个对象的类是什么）指向这个新创建的子类，对象就神奇的变成了新创建的子类的实例。Apple 还重写、覆盖了 -class 方法并返回原来的类，企图欺骗我们：这个类没有变，就是原本那个类。
 
 
-29、BAD_ACCESS 在什么情况下出现？
+30、BAD_ACCESS 在什么情况下出现？
 
 - 访问了野指针。比如对一个已经释放的对象执行了 release，访问已经释放对象的成员变量或者发消息。
 - 死循环。
 
 
-30、如何调试 BAD_ACCESS 错误？
+31、如何调试 BAD_ACCESS 错误？
 
 - 重写 object 的 respondsToSelector 方法，现实出现 EXEC_BAD_ACCESS 前访问的最后一个 object。
 - 通过 Zombie。
@@ -556,7 +565,7 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 - Xcode 7 已经集成了 BAD_ACCESS 捕获功能：Address Sanitizer。用法如下：在配置中勾选 Enable Address Sanitizer。
 
 
-31、动态计算文本高度的时候需要注意什么？
+32、动态计算文本高度的时候需要注意什么？
 
 ```
 + (CGSize)contentSizeForContent:(NSString *)content withFixedWidth:(CGFloat)width {

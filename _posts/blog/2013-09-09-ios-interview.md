@@ -168,11 +168,62 @@ static const void *ViewIndexKey = &ViewIndexKey;
 
 
 
-9、category 和 extension 有什么区别？
+9、category 和 extension 有什么区别？category 是如何加载的？category 的方法覆盖是怎么处理的？
 
 extension 在编译期决定，它就是类的一部分，在编译期和头文件里的 @interface 以及实现文件里的 @implement 一起形成一个完整的类，它伴随类的产生而产生，亦随之一起消亡。extension 一般用来隐藏类的私有信息，你必须有一个类的源码才能为一个类添加 extension，所以你无法为系统的类比如 NSString 添加 extension。
 
 但是 category 则完全不一样，它是在运行期决定的。就 category 和 extension 的区别来看，我们可以推导出一个明显的事实，extension 可以添加实例变量，而 category 是无法添加实例变量的（因为在运行期，对象的内存布局已经确定，如果添加实例变量就会破坏类的内部布局，这对编译型语言来说是灾难性的）。
+
+
+category 的加载是发生在运行时，加载 category 的过程：
+
+- 1) 把 category 的实例方法、协议以及属性添加到类上。
+- 2) 把 category 的类方法和协议添加到类的 metaclass 上。
+
+其中需要注意的是：
+
+- 1) category 的方法没有「完全替换掉」原来类已经有的方法，也就是说如果 category 和原来类都有 methodA，那么 category 附加完成之后，类的方法列表里会有两个 methodA。
+- 2) category 的方法被放到了新方法列表的前面，而原来类的方法被放到了新方法列表的后面，这也就是我们平常所说的category 的方法会「覆盖」掉原来类的同名方法，这是因为运行时在查找方法的时候是顺着方法列表的顺序查找的，它只要一找到对应名字的方法，就会返回，不会管后面可能还有一样名字的方法。
+
+
+在类和 category 中都可以有 `+load` 方法，那么有两个问题：
+
+- 1) 在类的 `+load` 方法调用的时候，我们可以调用 category 中声明的方法么？答案是：可以调用，因为附加 category 到类的工作会先于 `+load` 方法的执行。
+- 2) 这么些个 `+load` 方法，调用顺序是咋样的呢？答案是：`+load` 的执行顺序是先类，后 category，而 category 的 `+load` 执行顺序是根据编译顺序决定的。虽然对于 `+load` 的执行顺序是这样，但是对于「覆盖」掉的方法，则会先找到最后一个编译的 category 里的对应方法。
+
+
+上面讲到的方法覆盖，还有一个补充问题：怎么调用到原来类中被 category 覆盖掉的方法？对于这个问题，我们已经知道 category 其实并不是完全替换掉原来类的同名方法，只是 category 在方法列表的前面而已，所以我们只要顺着方法列表找到最后一个对应名字的方法，就可以调用原来类的方法：
+
+```
+// 假设被覆盖的方法名叫 printName。
+Class currentClass = [MyClass class];
+MyClass *my = [[MyClass alloc] init];
+
+if (currentClass) {
+    unsigned int methodCount;
+    Method *methodList = class_copyMethodList(currentClass, &methodCount);
+    IMP lastImp = NULL;
+    SEL lastSel = NULL;
+    for (NSInteger i = 0; i < methodCount; i++) {
+        Method method = methodList[i];
+        NSString *methodName = [NSString stringWithCString:sel_getName(method_getName(method)) encoding:NSUTF8StringEncoding];
+        if ([@"printName" isEqualToString:methodName]) {
+            lastImp = method_getImplementation(method);
+            lastSel = method_getName(method);
+        }
+    }
+    typedef void (*fn)(id,SEL);
+
+    if (lastImp != NULL) {
+        fn f = (fn) lastImp;
+        f(my, lastSel);
+    }
+    free(methodList);
+}
+```
+
+
+更多信息参考：[深入理解 Objective-C：Category][4]
 
 
 

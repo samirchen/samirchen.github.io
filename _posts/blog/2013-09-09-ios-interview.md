@@ -122,12 +122,49 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 在 protocol 中使用 property 只会生成 setter 和 getter 方法声明，我们使用属性的目的，是希望遵守我协议的对象能实现该属性。在实现 protocol 的类中如果要使用 property 对应的实例变量，则需要做一下 `@synthesize var = _var;`。
 
-category 使用 @property 也是只会生成 setter 和 getter 方法的声明，如果我们真的需要给 category 增加属性的实现，需要借助于运行时的两个函数：
+在 category 中增加属性的目的主要为了解耦，在很多第三方框架中会使用。在 category 中使用 @property 只会生成 setter 和 getter 方法的声明，并不会自动生成实例变量以及存取方法，Xcode 会警告需要手动实现 setter 和 getter 方法。为什么这样呢？这是因为 category 它是在运行时决定的。在编译时，对象的内存布局已经确定，如果添加实例变量就会破坏类的内部布局，这对编译型语言来说是灾难性的。所以一般使用 runtime 中的关联对象为已经存在的类添加属性。关联对象类似于成员变量，不过是在运行时添加的。在 runtime 中所有的关联对象都由 AssociationsManager 管理。AssociationsManager 里面是由一个静态 AssociationsHashMap 来存储所有的关联对象的。这相当于把所有对象的关联对象都存在一个全局 map 里面。而 map 的 key 是这个对象的指针地址（任意两个不同对象的指针地址一定是不同的），而这个 map 的 value 又是另外一个 AssociationsHashMap，里面保存了关联对象的 KV 对。runtime 的销毁对象函数 `objc_destructInstance` 里面会判断这个对象有没有关联对象，如果有，会调用 `_object_remove_assocations` 做关联对象的清理工作。如果我们真的需要给 category 增加属性的实现，需要借助于运行时的两个函数：
 
 - objc_setAssociatedObject
 - objc_getAssociatedObject
 
 
+示例：
+
+```
+// MyView+MyCategory.h
+#import "MyView.h"
+
+@interface MyView (MyCategory)
+
+// 在 Category 中定义属性：
+@property (assign, nonatomic) int32_t viewIndex;
+
+@end
+
+
+// MyView+MyCategory.m
+#import "MyView+MyCategory.h"
+#import <objc/runtime.h>
+
+// 标记属性的 Key：
+static const void *ViewIndexKey = &ViewIndexKey;
+
+@implementation MyView (MyCategory)
+
+@dynamic viewIndex;
+
+- (void)setViewIndex:(int32_t)viewIndex {
+    objc_setAssociatedObject(self, ViewIndexKey, @(viewIndex), OBJC_ASSOCIATION_ASSIGN);
+}
+
+- (int32_t)viewIndex {
+    return [objc_getAssociatedObject(self, ViewIndexKey) intValue];
+}
+
+@end
+```
+
+更多信息参考：[深入理解 Objective-C：Category][4]
 
 
 9、@synthesize 和 @dynamic 分别有什么作用？
@@ -546,3 +583,4 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/ios-interview
 [3]: http://www.cocoachina.com/ios/20170328/18962.html
+[4]: https://tech.meituan.com/DiveIntoCategory.html

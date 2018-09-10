@@ -287,9 +287,24 @@ Objective-C 对象的结构图：
 ![image](../../images/ios-interview/instance-structure.png)
 
 
-14、runtime 如何通过 selector 找到对应的 IMP 地址（分别考虑类方法和实例方法）？
+14、runtime 如何通过 selector 找到对应的 IMP 地址（分别考虑实例方法和类方法）？Selector、Method 和 IMP 的有什么区别与联系？
 
-每一个类对象中都一个方法列表，方法列表中记录着方法的名称，方法实现，以及参数类型，其实 selector 本质就是方法名称，通过这个方法名称就可以在方法列表中找到对应的方法实现。
+对于实例方法，每个实例的 isa 指针指向着对应类对象，而每一个类对象中都一个对象方法列表。对于类方法，每个类对象的 isa 指针都指向着对应的元对象，而每一个元对象中都有一个类方法列表。方法列表中记录着方法的名称，方法实现，以及参数类型，其实 selector 本质就是方法名称，通过这个方法名称就可以在方法列表中找到对应的方法实现。
+
+
+Selector、Method 和 IMP 的关系可以这样描述：在运行期分发消息，方法列表中的每一个实体都是一个方法（Method），它的名字叫做选择子（SEL），对应着一种方法实现（IMP）。
+
+```
+/// An opaque type that represents a method in a class definition.
+typedef struct objc_method *Method;
+
+struct objc_method {
+    SEL method_name;
+    char *method_types;
+    IMP method_imp;
+} 
+
+```
 
 
 

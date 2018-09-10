@@ -330,15 +330,38 @@ struct objc_method {
 
 
 
-16、`_objc_msgForward` 函数是做什么的？
+16、`objc_msgSend`、`_objc_msgForward` 都是做什么的？OC 中的消息调用流程是怎样的？
+
+`objc_msgSend` 是用来做消息发送的。在 OC 中，对方法的调用都会被转换成内部的消息发送执行对 `objc_msgSend` 方法的调用。示例如下：
+
+```
+// 1、创建对象。
+// 给 MessageSendTest 类发送消息，创建对象，这句话等同于：MessageSendTest *test = [MessageSendTest alloc];。
+MessageSendTest *test = ((MessageSendTest * (*)(id,SEL)) objc_msgSend)((id) [MessageSendTest class], @selector(alloc));
+
+// 2、初始化对象。
+// 给 test 对象发送消息进行初始化，这句话等同于：[test init];。
+test = ((MessageSendTest *(*)(id,SEL))objc_msgSend)((id) test, @selector(init));
+NSLog(@"test:%@", test);
+
+// 3、调用无参无返回值方法。
+((void(*)(id, SEL))objc_msgSend)((id) test, @selector(noArgumentsAndNoReturnValue));
+
+// 4、调用带一个参数但无返回值的方法。
+((void(*)(id, SEL, NSString *))objc_msgSend)((id) test, @selector(hasArguments:), @"带一个参数但是没有返回值");
+
+// 5、调用带参数带返回值的方法。
+int returnInt = ((int *(id, SEL, NSString *, int))objc_msgSend)((id) test, @selector(hasArguments:andReturnValue:), @"参数1", 1024);
+```
 
 `_objc_msgForward` 是 IMP 类型（函数指针），用于消息转发的：当向一个对象发送一条消息，但它并没有实现的时候，`_objc_msgForward` 会尝试做消息转发。
 
-在消息传递过程中，objc_msgSend 的动作比较清晰：首先在 Class 中的缓存查找 IMP （没缓存则初始化缓存），如果没找到，则向父类的 Class 查找。如果一直查找到根类仍旧没有实现，则用 `_objc_msgForward` 函数指针代替 IMP。最后，执行这个 IMP。
 
-当调用一个 NSObject 对象不存在的方法时，并不会马上抛出异常，而是会经过多层转发，层层调用对象的 `-resolveInstanceMethod:`, `-forwardingTargetForSelector:`, `-methodSignatureForSelector:`, `-forwardInvocation:` 等方法。其中最后 `-forwardInvocation:` 是会有一个 NSInvocation 对象，这个 NSInvocation 对象保存了这个方法调用的所有信息，包括 Selector 名，参数和返回值类型，最重要的是有所有参数值，可以从这个 NSInvocation 对象里拿到调用的所有参数值。我们可以想办法让每个需要被 JS 替换的方法调用最后都调到 `-forwardInvocation:`，就可以解决无法拿到参数值的问题了。
+在消息调用的过程中，`objc_msgSend` 的动作比较清晰：首先在 Class 中的缓存查找 IMP （没缓存则初始化缓存），如果没找到，则向父类的 Class 查找。如果一直查找到根类仍旧没有实现，则用 `_objc_msgForward` 函数指针代替 IMP。最后，执行这个 IMP。
 
-JSPatch 实现 hotpatch 具体实现，以替换 UIViewController 的 `-viewWillAppear:` 方法为例：
+当调用一个 NSObject 对象不存在的方法时，并不会马上抛出异常，而是会经过多层转发，层层调用对象的 `-resolveInstanceMethod:`、`-forwardingTargetForSelector:`、`-methodSignatureForSelector:`、`-forwardInvocation:` 等方法。其中最后 `-forwardInvocation:` 是会有一个 NSInvocation 对象，这个 NSInvocation 对象保存了这个方法调用的所有信息，包括 Selector 名，参数和返回值类型，最重要的是有所有参数值，可以从这个 NSInvocation 对象里拿到调用的所有参数值。我们可以想办法让每个需要被 JS 替换的方法调用最后都调到 `-forwardInvocation:`，就可以解决无法拿到参数值的问题了。
+
+这里以 JSPatch 实现 hotpatch 替换 UIViewController 的 `-viewWillAppear:` 方法为例：
 
 - 把 UIViewController 的 `-viewWillAppear:` 方法通过 `class_replaceMethod()` 接口指向一个不存在的 IMP: `class_getMethodImplementation(cls, @selector(__JPNONImplementSelector))`，这样调用这个方法时就会走到 `-forwardInvocation:`。
 - 为 UIViewController 添加 `-ORIGviewWillAppear:` 和 `-_JPviewWillAppear:` 两个方法，前者指向原来的 IMP 实现，后者是新的实现，稍后会在这个实现里回调 JS 函数。

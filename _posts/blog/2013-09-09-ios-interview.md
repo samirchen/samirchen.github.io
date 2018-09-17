@@ -6,6 +6,8 @@ category: blog
 tag: iOS, Objective-C, Swift
 ---
 
+## 面试集锦
+
 1、什么情况使用 weak 关键字，相比 assign 有什么不同？
 
 什么情况使用 weak 关键字？
@@ -677,8 +679,14 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 如上代码，需要注意算完高度需要用 `ceil` 来处理一下做向上取整。
 
 
+## 其他参考
+
+- [笔试面试知识整理][5]
+
+
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/ios-interview
 [3]: http://www.cocoachina.com/ios/20170328/18962.html
 [4]: https://tech.meituan.com/DiveIntoCategory.html
+[5]: https://hit-alibaba.github.io/interview/

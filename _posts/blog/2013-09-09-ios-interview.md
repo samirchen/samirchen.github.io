@@ -522,26 +522,54 @@ void runtimePropertySetterIMP(id self, SEL _cmd, NSString *s) {
 
 18、run loop 和线程有什么关系？
 
-总的说来，run loop，正如其名，loop 表示某种循环，和 run 放在一起就表示一直在运行着的循环。实际上，run loop 和线程是紧密相连的，可以这样说 run loop 是为了线程而生，没有线程，它就没有存在的必要。run loop 是线程的基础架构部分，Cocoa 和 CoreFundation 都提供了 run loop 对象方便配置和管理线程的 run loop（以下都以 Cocoa 为例）。每个线程，包括程序的主线程（main thread）都有与之相应的 run loop 对象。
+首先，iOS 开发中能遇到两个线程对象: pthread_t 和 NSThread。过去苹果有份文档标明了 NSThread 只是 pthread_t 的封装，但那份文档已经失效了，现在它们也有可能都是直接包装自最底层的 mach thread。苹果并没有提供这两个对象相互转换的接口，但不管怎么样，可以肯定的是 pthread_t 和 NSThread 是一一对应的。比如，你可以通过 `pthread_main_thread_np()` 或 `[NSThread mainThread]` 来获取主线程；也可以通过 `pthread_self()` 或 `[NSThread currentThread]` 来获取当前线程。CFRunLoop 是基于 pthread 来管理的。
 
-- 主线程的 run loop 默认是启动的。
+苹果不允许直接创建 RunLoop，它只提供了两个自动获取的函数：`CFRunLoopGetMain()` 和 `CFRunLoopGetCurrent()`。 这两个函数内部的逻辑大概是下面这样:
 
 ```
-int main(int argc, char * argv[]) {
-   @autoreleasepool {
-       return UIApplicationMain(argc, argv, nil, NSStringFromClass([AppDelegate class]));
-   }
+/// 全局的Dictionary，key 是 pthread_t， value 是 CFRunLoopRef
+static CFMutableDictionaryRef loopsDic;
+/// 访问 loopsDic 时的锁
+static CFSpinLock_t loopsLock;
+ 
+/// 获取一个 pthread 对应的 RunLoop。
+CFRunLoopRef _CFRunLoopGet(pthread_t thread) {
+    OSSpinLockLock(&loopsLock);
+    
+    if (!loopsDic) {
+        // 第一次进入时，初始化全局Dic，并先为主线程创建一个 RunLoop。
+        loopsDic = CFDictionaryCreateMutable();
+        CFRunLoopRef mainLoop = _CFRunLoopCreate();
+        CFDictionarySetValue(loopsDic, pthread_main_thread_np(), mainLoop);
+    }
+    
+    /// 直接从 Dictionary 里获取。
+    CFRunLoopRef loop = CFDictionaryGetValue(loopsDic, thread));
+    
+    if (!loop) {
+        /// 取不到时，创建一个
+        loop = _CFRunLoopCreate();
+        CFDictionarySetValue(loopsDic, thread, loop);
+        /// 注册一个回调，当线程销毁时，顺便也销毁其对应的 RunLoop。
+        _CFSetTSD(..., thread, loop, __CFFinalizeRunLoop);
+    }
+    
+    OSSpinLockUnLock(&loopsLock);
+    return loop;
+}
+ 
+CFRunLoopRef CFRunLoopGetMain() {
+    return _CFRunLoopGet(pthread_main_thread_np());
+}
+ 
+CFRunLoopRef CFRunLoopGetCurrent() {
+    return _CFRunLoopGet(pthread_self());
 }
 ```
 
-重点是 UIApplicationMain() 函数，这个方法会为 main thread 设置一个 NSRunLoop 对象，这就解释了：为什么我们的应用可以在无人操作的时候休息，需要让它干活的时候又能立马响应。
+从上面的代码可以看出，线程和 RunLoop 之间是一一对应的，其关系是保存在一个全局的 Dictionary 里。线程刚创建时并没有 RunLoop，如果你不主动获取，那它一直都不会有。RunLoop 的创建是发生在第一次获取时，RunLoop 的销毁是发生在线程结束时。你只能在一个线程的内部获取其 RunLoop（主线程除外）。
 
-- 对其它线程来说，run loop 默认是没有启动的，如果你需要更多的线程交互则可以手动配置和启动，如果线程只是去执行一个长时间的已确定的任务则不需要。
-
-- 在任何一个 Cocoa 程序的线程中，都可以通过以下代码来获取到当前线程的 run loop。
-	- `NSRunLoop *runloop = [NSRunLoop currentRunLoop];`
-
-
+更多信息可以参考：[深入理解 RunLoop][6]
 
 
 19、run loop 的 mode 作用是什么？
@@ -827,3 +855,4 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 [3]: http://www.cocoachina.com/ios/20170328/18962.html
 [4]: https://tech.meituan.com/DiveIntoCategory.html
 [5]: https://hit-alibaba.github.io/interview/
+[6]: https://blog.ibireme.com/2015/05/18/runloop/

@@ -384,6 +384,7 @@ int returnInt = ((int *(id, SEL, NSString *, int))objc_msgSend)((id) test, @sele
 动态构建类的代码示例：
 
 ```
+#pragma mark - Runtime Class Construct
 int32_t testRuntimeMethodIMP(id self, SEL _cmd, NSDictionary *dic) {
     NSLog(@"testRuntimeMethodIMP: %@", dic);
     // Print:
@@ -396,7 +397,6 @@ int32_t testRuntimeMethodIMP(id self, SEL _cmd, NSDictionary *dic) {
 }
 
 - (void)runtimeConstruct {
-    
 #pragma clang diagnostic push
 #pragma clang diagnostic ignored "-Wundeclared-selector"
 
@@ -437,7 +437,85 @@ int32_t testRuntimeMethodIMP(id self, SEL _cmd, NSDictionary *dic) {
     objc_disposeClassPair(cls);
     
 #pragma clang diagnostic pop
+}
 
+#pragma mark - Runtime Ivar&Property Construct
+NSString * runtimePropertyGetterIMP(id self, SEL _cmd) {
+    Ivar ivar = class_getInstanceVariable([self class], "_runtimeProperty");
+    
+    return object_getIvar(self, ivar);
+}
+
+void runtimePropertySetterIMP(id self, SEL _cmd, NSString *s) {
+    Ivar ivar = class_getInstanceVariable([self class], "_runtimeProperty");
+    NSString *old = (NSString *) object_getIvar(self, ivar);
+    if (![old isEqualToString:s]) {
+        object_setIvar(self, ivar, s);
+    }
+}
+
+- (void)aboutIvarAndProperty {
+    
+    
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
+
+    // 1: Add property and getter/setter.
+    Class cls = objc_allocateClassPair(SuperClass.class, "RuntimePropertySubClass", 0);
+
+    BOOL b = class_addIvar(cls, "_runtimeProperty", sizeof(cls), log2(sizeof(cls)), @encode(NSString));
+    NSLog(@"%@", b ? @"YES" : @"NO"); // Print: YES
+    
+    objc_property_attribute_t type = {"T", "@\"NSString\""};
+    objc_property_attribute_t ownership = {"C", ""}; // C = copy
+    objc_property_attribute_t isAtomic = {"N", ""}; // N = nonatomic
+    objc_property_attribute_t backingivar  = {"V", "_runtimeProperty"};
+    objc_property_attribute_t attrs[] = {type, ownership, isAtomic, backingivar};
+    class_addProperty(cls, "runtimeProperty", attrs, 4);
+    class_addMethod(cls, @selector(runtimeProperty), (IMP) runtimePropertyGetterIMP, "@@:");
+    class_addMethod(cls, @selector(setRuntimeProperty), (IMP) runtimePropertySetterIMP, "v@:@");
+    
+    // You can only register a class once.
+    objc_registerClassPair(cls);
+
+    
+    // 2: Print all properties.
+    unsigned int outCount = 0;
+    objc_property_t *properties = class_copyPropertyList(cls, &outCount);
+    for (int32_t i = 0; i < outCount; i++) {
+        objc_property_t property = properties[i];
+        NSLog(@"%s, %s\n", property_getName(property), property_getAttributes(property));
+    }
+    // Print:
+    // runtimeProperty, T@"NSString",C,N,V_runtimeProperty
+    free(properties);
+    
+    
+    // 3: Print all ivars.
+    Ivar *ivars = class_copyIvarList(cls, &outCount);
+    for (int32_t i = 0; i < outCount; i++) {
+        Ivar ivar = ivars[i];
+        NSLog(@"%s, %s\n", ivar_getName(ivar), ivar_getTypeEncoding(ivar));
+    }
+    // Print:
+    // _runtimeProperty, {NSString=#}
+    free(ivars);
+    
+    
+    // 4: Use runtime property.
+    id sub = [[cls alloc] init];
+    [sub performSelector:@selector(setRuntimeProperty) withObject:@"It-is-a-runtime-property."];
+    NSString *s = [sub performSelector:@selector(runtimeProperty)]; //[sub valueForKey:@"runtimeProperty"];
+    NSLog(@"%@", s); // Print: It-is-a-runtime-property.
+    
+    
+    // 5: Clear.
+    // Destroy instances of cls class before destroy cls class.
+    sub = nil;
+    // Do not call this function if instances of the cls class or any subclass exist.
+    objc_disposeClassPair(cls);
+
+#pragma clang diagnostic pop
 }
 ```
 

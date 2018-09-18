@@ -381,6 +381,65 @@ int returnInt = ((int *(id, SEL, NSString *, int))objc_msgSend)((id) test, @sele
 - 因为编译后的类已经注册在 runtime 中，类结构体中的 objc_ivar_list 实例变量的链表和 instance_size 实例变量的内存大小已经确定，同时 runtime 会调用 class_setIvarLayout 或 class_setWeakIvarLayout 来处理 strong weak 引用。所以不能向存在的类中添加实例变量。
 - 运行时创建的类是可以添加实例变量，调用 class_addIvar 函数。但是得在调用 objc_allocateClassPair 之后，objc_registerClassPair 之前，原因同上。
 
+动态构建类的代码示例：
+
+```
+int32_t testRuntimeMethodIMP(id self, SEL _cmd, NSDictionary *dic) {
+    NSLog(@"testRuntimeMethodIMP: %@", dic);
+    // Print:
+    // testRuntimeMethodIMP: {
+    //     a = "para_a";
+    //     b = "para_b";
+    // }
+    
+    return 99;
+}
+
+- (void)runtimeConstruct {
+    
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wundeclared-selector"
+
+    Class cls = objc_allocateClassPair(SuperClass.class, "RuntimeSubClass", 0);
+    // Method returns: "int32_t"; accepts: "id self", "SEL _cmd", "NSDictionary *dic". So use "i@:@" here.
+    class_addMethod(cls, @selector(testRuntimeMethod), (IMP) testRuntimeMethodIMP, "i@:@");
+    // You can only register a class once.
+    objc_registerClassPair(cls);
+    
+
+    id sub = [[cls alloc] init];
+    NSLog(@"%@, %@", object_getClass(sub), class_getSuperclass(object_getClass(sub))); // Print: RuntimeSubClass, SuperClass
+    Class metaCls = objc_getMetaClass("RuntimeSubClass");
+    if (class_isMetaClass(metaCls)) {
+        NSLog(@"YES, %@, %@, %@", metaCls, class_getSuperclass(metaCls), object_getClass(metaCls)); // Print: YES, RuntimeSubClass, SuperClass, NSObject
+    } else {
+        NSLog(@"NO");
+    }
+    
+    
+    unsigned int outCount = 0;
+    Method *methods = class_copyMethodList(cls, &outCount);
+    for (int32_t i = 0; i < outCount; i++) {
+        Method method = methods[i];
+        NSLog(@"%@, %s", NSStringFromSelector(method_getName(method)), method_getTypeEncoding(method));
+    }
+    // Print: testRuntimeMethod, i@:@
+    free(methods);
+    
+    
+    int32_t result = (int) [sub performSelector:@selector(testRuntimeMethod) withObject:@{@"a":@"para_a", @"b":@"para_b"}];
+    NSLog(@"%d", result); // Print: 99
+    
+    
+    // Destroy instances of cls class before destroy cls class.
+    sub = nil;
+    // Do not call this function if instances of the cls class or any subclass exist.
+    objc_disposeClassPair(cls);
+    
+#pragma clang diagnostic pop
+
+}
+```
 
 
 18、run loop 和线程有什么关系？

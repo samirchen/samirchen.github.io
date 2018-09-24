@@ -567,14 +567,37 @@ CFRunLoopRef CFRunLoopGetCurrent() {
 }
 ```
 
-从上面的代码可以看出，线程和 RunLoop 之间是一一对应的，其关系是保存在一个全局的 Dictionary 里。线程刚创建时并没有 RunLoop，如果你不主动获取，那它一直都不会有。RunLoop 的创建是发生在第一次获取时，RunLoop 的销毁是发生在线程结束时。你只能在一个线程的内部获取其 RunLoop（主线程除外）。
+从上面的代码可以看出，**线程和 RunLoop 之间是一一对应的，其关系是保存在一个全局的 Dictionary 里。线程刚创建时并没有 RunLoop，如果你不主动获取，那它一直都不会有。RunLoop 的创建是发生在第一次获取时，RunLoop 的销毁是发生在线程结束时。你只能在一个线程的内部获取其 RunLoop（主线程除外）。**
 
 更多信息可以参考：[深入理解 RunLoop][6]
 
 
 19、run loop 的 mode 作用是什么？
 
-线程的运行的过程中需要去响应各种不同的事件和处理不同情境，mode 则是这个情景模式，告诉当前应该响应哪些事件，忽略哪些事件。mode 主要是用来指定事件在运行循环中的优先级的。
+在 CoreFoundation 里面关于 RunLoop 有 5 个类，分别对应不同的概念：
+
+- CFRunLoopRef，对应 runloop。
+- CFRunLoopModeRef，对应 runloop mode。CFRunLoopModeRef 类并没有对外暴露，只是通过 CFRunLoopRef 的接口进行了封装
+- CFRunLoopSourceRef，对应 source，表示事件产生的地方。Source 有两个版本：Source0 和 Source1。Source0 只包含了一个回调（函数指针），它并不能主动触发事件。使用时，你需要先调用 CFRunLoopSourceSignal(source)，将这个 Source 标记为待处理，然后手动调用 CFRunLoopWakeUp(runloop) 来唤醒 RunLoop，让其处理这个事件。Source1 包含了一个 mach_port 和一个回调（函数指针），被用于通过内核和其他线程相互发送消息。这种 Source 能主动唤醒 RunLoop 的线程。
+- CFRunLoopTimerRef，对应 timer，是基于时间的触发器。它和 NSTimer 是 toll-free bridged 的，可以混用。其包含一个时间长度和一个回调（函数指针）。当其加入到 RunLoop 时，RunLoop 会注册对应的时间点，当时间点到时，RunLoop 会被唤醒以执行那个回调。
+- CFRunLoopObserverRef，对应 observer，表示观察者。每个 Observer 都包含了一个回调（函数指针），当 RunLoop 的状态发生变化时，观察者就能通过回调接受到这个变化。可以观测的时间点有以下几个：
+    - kCFRunLoopEntry，即将进入Loop
+    - kCFRunLoopBeforeTimers，即将处理 Timer
+    - kCFRunLoopBeforeSources，即将处理 Source
+    - kCFRunLoopBeforeWaiting，即将进入休眠
+    - kCFRunLoopAfterWaiting，刚从休眠中唤醒
+    - kCFRunLoopExit，即将退出Loop
+
+上面的 Source/Timer/Observer 被统称为 mode item，一个 item 可以被同时加入多个 mode。但一个 item 被重复加入同一个 mode 时是不会有效果的。如果一个 mode 中一个 item 都没有，则 RunLoop 会直接退出，不进入循环。
+
+这些概念的包含关系如下图所示：
+
+![image](../../images/ios-interview/runloop_mode.png)
+
+
+**线程的运行的过程中需要去处理不同情境的不同事件，mode 则是这个情景的标识，告诉当前应该响应哪些事件。一个 RunLoop 包含若干个 Mode，每个 Mode 又包含若干个 Source/Timer/Observer。每次调用 RunLoop 的主函数时，只能指定其中一个 Mode，这个 Mode 被称作 CurrentMode。如果需要切换 Mode，只能退出 Loop，再重新指定一个 Mode 进入。这样做主要是为了分隔开不同组的 Source/Timer/Observer，让其互不影响。**
+
+
 
 CFRunLoopMode 和 CFRunLoop 的结构大致如下：
 
@@ -675,6 +698,14 @@ function loop() {
     } while (message != quit);
 }
 ```
+
+其内容运行的逻辑大致如图所示：
+
+![image](../../images/ios-interview/runloop_logic.png)
+
+可以看到，实际上 RunLoop 就是这样一个函数，其内部是一个 do-while 循环。当你调用 CFRunLoopRun() 时，线程就会一直停留在这个循环里；直到超时或被手动停止，该函数才会返回。
+
+
 
 
 

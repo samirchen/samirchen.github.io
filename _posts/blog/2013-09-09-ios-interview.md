@@ -1233,9 +1233,6 @@ void * dispatch_get_specific(const void *key)
 
 
 
-
-
-
 29、如何手动触发一个 value 的 KVO？
 
 KVC，即是指 NSKeyValueCoding，一个非正式的 Protocol，提供一种机制来间接访问对象的属性。KVO 就是基于 KVC 实现的关键技术之一。

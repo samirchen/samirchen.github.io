@@ -1045,8 +1045,351 @@ ARC 相对于 MRC，不是在编译时添加 retain/release/autorelease 这么�
 在编译期，ARC 用的是更底层的 C 接口实现的 retain/release/autorelease，这样做性能更好，也是为什么不能在 ARC 环境下手动 retain/release/autorelease，同时对同一上下文的同一对象的成对 retain/release 操作进行优化（即忽略掉不必要的操作）；ARC 也包含运行期组件，这个地方做的优化比较复杂，但也不能被忽略。
 
 
+24、iOS 开发中常见的内存问题有哪些？
 
-24、一个 autorealese 对象在什么时刻释放？
+内存问题主要包括两个部分，一个是iOS中常见循环引用导致的内存泄露 ，另外就是大量数据加载及使用导致的内存警告。
+
+#### mmap
+
+虽然苹果并没有明确每个 App 在运行期间可以使用的内存最大值，但是有开发者进行了实验和统计，一般在占用系统内存超过 20% 的时候会有内存警告，而超过 50% 的时候，就很容易 Crash 了，所以内存使用率还是尽量要少，对于数据量比较大的应用，可以采用分步加载数据的方式，或者采用 mmap 方式。mmap 是使用逻辑内存对磁盘文件进行映射，中间只是进行映射没有任何拷贝操作，避免了写文件的数据拷贝。 操作内存就相当于在操作文件，避免了内核空间和用户空间的频繁切换。
+
+
+#### 循环引用
+
+循环引用是 iOS 开发中经常遇到的问题，尤其对于新手来说是个头疼的问题。循环引用对 App 有潜在的危害，会使内存消耗过高，性能变差和 Crash 等，iOS 常见的内存主要以下三种情况：
+
+1）Delegate
+
+代理协议是一个最典型的场景，需要你使用弱引用来避免循环引用。ARC 时代，需要将代理声明为 weak 是一个即好又安全的做法：
+
+```
+@property (nonatomic, weak) id <MyCustomDelegate> delegate;
+```
+
+
+2）block
+
+Block 的循环引用，主要是发生在 ViewController 中持有了block，比如：
+
+```
+@property (nonatomic, copy) LFCallbackBlock callbackBlock;
+```
+
+同时在对 callbackBlock 进行赋值的时候又调用了 ViewController 的方法，比如：
+
+```
+self.callbackBlock = ^{
+    [self doSomething];
+}];
+```
+
+
+就会发生循环引用，因为：ViewController -> 强引用了 callback -> 强引用了 ViewController，解决方法也很简单：
+
+
+```
+__weak __typeof(self) weakSelf = self;
+self.callbackBlock = ^{
+  [weakSelf doSomething];
+}];
+```
+
+原因是使用 MRC 管理内存时，Block 的内存管理需要区分是 Global(全局)、Stack(栈)还是 Heap(堆)，而在使用了 ARC 之后，苹果自动会将所有原本应该放在栈中的 Block 全部放到堆中。全局的 Block 比较简单，凡是没有引用到 Block 作用域外面的参数的 Block 都会放到全局内存块中，在全局内存块的 Block 不用考虑内存管理问题。(放在全局内存块是为了在之后再次调用该 Block 时能快速反应，当然没有调用外部参数的 Block 根本不会出现内存管理问题)。
+
+所以 Block 的内存管理出现问题的，绝大部分都是在堆内存中的 Block 出现了问题。默认情况下，Block 初始化都是在栈上的，但可能随时被收回，通过将 Block 类型声明为 copy 类型，这样对 Block 赋值的时候，会进行 copy 操作，copy 到堆上，如果里面有对 self 的引用，则会有一个强引用的指针指向 self，就会发生循环引用，如果采用 weakSelf，内部不会有强类型的指针，所以可以解决循环引用问题。
+
+那是不是所有的 block 都会发生循环引用呢？其实不然，比如 UIView 的类方法 Block 动画，NSArray 等的类的遍历方法，也都不会发生循环引用，因为当前控制器一般不会强引用一个类。
+
+
+
+
+3）NSTimer
+
+NSTimer 我们开发中会用到很多，比如下面一段代码：
+
+```
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    self.myTimer = [NSTimer scheduledTimerWithTimeInterval:1 target:self selector:@selector(doSomeThing) userInfo:nil repeats:YES];
+}
+
+- (void)doSomeThing {
+}
+
+- (void)dealloc {
+     [self.timer invalidate];
+     self.timer = nil;
+}
+```
+
+这是典型的循环引用，因为 timer 会强引用 self，而 self 又持有了 timer，所有就造成了循环引用。那有人可能会说，我使用一个 weak 指针，比如：
+
+```
+__weak typeof(self) weakSelf = self;
+self.myTimer = [NSTimer scheduledTimerWithTimeInterval:1 target:weakSelf selector:@selector(doSomeThing) userInfo:nil repeats:YES];
+```
+
+但是其实并没有用，因为不管是 weakSelf 还是 strongSelf，最终在 NSTimer 内部都会重新生成一个新的指针指向 self，这是一个强引用的指针，结果就会导致循环引用。那怎么解决呢？主要有如下三种方式：
+
+
+3.1）使用中间类
+
+创建一个继承 NSObject 的子类 MyTimerTarget，并创建开启计时器的方法。
+
+
+```
+// MyTimerTarget.h
+
+#import <Foundation/Foundation.h>
+
+@interface MyTimerTarget : NSObject
+
++ (NSTimer *)scheduledTimerWithTimeInterval:(NSTimeInterval)interval target:(id)target selector:(SEL)selector userInfo:(id)userInfo repeats:(BOOL)repeats;
+
+@end
+
+
+// MyTimerTarget.m
+
+#import "MyTimerTarget.h"
+
+@interface MyTimerTarget ()
+@property (assign, nonatomic) SEL outSelector;
+@property (weak, nonatomic) id outTarget;
+@end
+
+@implementation MyTimerTarget
+
++ (NSTimer *)scheduledTimerWithTimeInterval:(NSTimeInterval)interval target:(id)target selector:(SEL)selector userInfo:(id)userInfo repeats:(BOOL)repeats {
+    MyTimerTarget *timerTarget = [[MyTimerTarget alloc] init];
+    timerTarget.outTarget = target;
+    timerTarget.outSelector = selector;
+    NSTimer *timer = [NSTimer scheduledTimerWithTimeInterval:interval target:timerTarget selector:@selector(timerSelector:) userInfo:userInfo repeats:repeats];
+    return timer;
+}
+
+- (void)timerSelector:(NSTimer *)timer {
+    if (self.outTarget && [self.outTarget respondsToSelector:self.outSelector]) {
+        [self.outTarget performSelector:self.outSelector withObject:timer.userInfo];
+    } else {
+        [timer invalidate];
+    }
+}
+
+@end
+
+
+// 调用方
+@property (strong, nonatomic) NSTimer *myTimer;
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    self.myTimer = [MyTimerTarget scheduledTimerWithTimeInterval:1 target:self selector:@selector(doSomething) userInfo:nil repeats:YES];
+}
+
+- (void)doSomeThing {
+
+}
+
+- (void)dealloc {
+    NSLog(@"MyViewController dealloc");
+}
+```
+
+VC 强引用 timer，因为 timer 的 target 是 MyTimerTarget 实例，所以 timer 强引用 MyTimerTarget 实例，而 MyTimerTarget 实例弱引用 VC，解除循环引用。这种方案 VC 在退出时都不用管 timer，因为自己释放后自然会触发 `timerSelector:` 中的 `[timer invalidate]` 逻辑，timer 也会被释放。
+
+
+
+3.2）使用类方法
+
+我们还可以对 NSTimer 做一个 category，通过 block 将 timer 的 target 和 selector 绑定到一个类方法上，来实现解除循环引用。
+
+```
+// NSTimer+MyUtil.h
+
+#import <Foundation/Foundation.h>
+
+@interface NSTimer (MyUtil)
++ (NSTimer *)MyUtil_scheduledTimerWithTimeInterval:(NSTimeInterval)interval block:(void(^)())block repeats:(BOOL)repeats;
+@end
+
+
+// NSTimer+MyUtil.m
+
+#import "NSTimer+MyUtil.h"
+
+@implementation NSTimer (MyUtil)
++ (NSTimer *)MyUtil_scheduledTimerWithTimeInterval:(NSTimeInterval)interval block:(void(^)())block repeats:(BOOL)repeats {
+    return [self scheduledTimerWithTimeInterval:interval target:self selector:@selector(MyUtil_blockInvoke:) userInfo:[block copy] repeats:repeats];
+}
+
++ (void)MyUtil_blockInvoke:(NSTimer *)timer {
+    void (^block)() = timer.userInfo;
+    if (block) {
+        block();
+    }
+}
+@end
+
+
+
+// 调用方
+
+@property (strong, nonatomic) NSTimer *myTimer;
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    self.myTimer = [NSTimer MyUtil_scheduledTimerWithTimeInterval:1 block:^{
+        NSLog(@"doSomething");
+    } repeats:YES];
+}
+
+- (void)dealloc {
+    if (_myTimer) {
+        [_myTimer invalidate];
+    }
+    NSLog(@"MyViewController dealloc");
+}
+```
+
+这种方案下，VC 强引用 timer，但是不会被 timer 强引用，但有个问题是 VC 退出被释放时，如果要停掉 timer 需要自己调用一下 timer 的 invalidate 方法。
+
+
+
+3.2）使用 weakProxy
+
+创建一个继承 NSProxy 的子类 MyProxy，并实现消息转发的相关方法。NSProxy 是 iOS 开发中一个消息转发的基类，它不继承自 NSObject。因为他也是 Foundation 框架中的基类, 通常用来实现消息转发, 我们可以用它来包装 NSTimer 的 target, 达到弱引用的效果。
+
+
+
+```
+// MyProxy.h
+
+#import <Foundation/Foundation.h>
+
+@interface MyProxy : NSProxy
++ (instancetype)proxyWithTarget:(id)target;
+@end
+
+
+// MyProxy.m
+
+#import "MyProxy.h"
+
+@interface MyProxy ()
+@property (weak, readonly, nonatomic) id weakTarget;
+@end
+
+@implementation MyProxy
+
++ (instancetype)proxyWithTarget:(id)target {
+    return [[MyProxy alloc] initWithTarget:target];
+}
+
+- (instancetype)initWithTarget:(id)target {
+    _weakTarget = target;
+    return self;
+}
+
+- (void)forwardInvocation:(NSInvocation *)invocation {
+    SEL sel = [invocation selector];
+    if (_weakTarget && [self.weakTarget respondsToSelector:sel]) {
+        [invocation invokeWithTarget:self.weakTarget];
+    }
+}
+
+- (NSMethodSignature *)methodSignatureForSelector:(SEL)sel {
+    return [self.weakTarget methodSignatureForSelector:sel];
+}
+
+- (BOOL)respondsToSelector:(SEL)aSelector {
+    return [self.weakTarget respondsToSelector:aSelector];
+}
+
+@end
+
+
+// 调用方
+@property (strong, nonatomic) NSTimer *myTimer;
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    self.myTimer = [NSTimer scheduledTimerWithTimeInterval:1 target:[MyProxy proxyWithTarget:self] selector:@selector(doSomething) userInfo:nil repeats:YES];
+}
+
+- (void)dealloc {
+    if (_myTimer) {
+        [_myTimer invalidate];
+    }
+    NSLog(@"MyViewController dealloc");
+}
+```
+
+上面的代码中，了解一下消息转发的过程就可以知道 `-forwardInvocation:` 是会有一个 NSInvocation 对象，这个 NSInvocation 对象保存了这个方法调用的所有信息，包括 Selector 名，参数和返回值类型，最重要的是有所有参数值，可以从这个 NSInvocation 对象里拿到调用的所有参数值。这时候我们把转发过来的消息和 weakTarget 的 selector 信息做对比，然后转发过去即可。
+
+这里需要注意的是，在调用方的 dealloc 中一定要调用 timer 的 invalidate 方法，因为如果这里不清理 timer，这个调用方 dealloc 被释放后，消息转发就找不到接收方了，就会 crash。
+
+
+
+
+3.3）使用 GCD timer
+
+GCD 提供的定时器叫 dispatch_source_t。使用方式如下：
+
+```
+// 调用方
+@property (strong, nonatomic) dispatch_source_t myGCDTimer;
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    dispatch_source_t timer = dispatch_source_create(DISPATCH_SOURCE_TYPE_TIMER, 0, 0, dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0));
+    if (timer) {
+        self.myGCDTimer = timer;
+        dispatch_source_set_timer(timer, dispatch_walltime(NULL, 0), 1 * NSEC_PER_SEC, 1ull * NSEC_PER_SEC);
+        dispatch_source_set_event_handler(timer, ^ {
+            NSLog(@"doSomething");
+        });
+        dispatch_resume(timer);
+    }
+}
+
+- (void)dealloc {
+    if (_myGCDTimer) {
+        dispatch_cancel(_myGCDTimer);
+    }
+    NSLog(@"MyViewController dealloc");
+}
+```
+
+
+更多详情见：[NSTimer 循环引用解决方案][15]
+
+
+#### 其他内存问题
+
+
+- NSNotification addObserver 之后，记得在 dealloc 里面添加 remove。
+- 动画的 repeat count 无限大，而且也不主动停止动画，基本就等于无限循环了。
+- forwardingTargetForSelector 返回了 self。
+
+
+#### 内存解决思路
+
+- 通过 Instruments 来查看 leaks。
+- 集成 Facebook 开源的 [FBRetainCycleDetector][13]。
+- 集成 [MLeaksFinder][14]。
+
+
+
+更多信息参加：[iOS App 稳定性指标及监测][12]
+
+
+25、一个 autorealese 对象在什么时刻释放？
 
 分两种情况：手动干预释放时机、系统自动去释放。
 
@@ -1103,7 +1446,7 @@ autoreleasepool 以一个队列数组的形式实现，主要通过下列三个�
 
 
 
-26、如何用 GCD 同步若干个异步调用？
+27、如何用 GCD 同步若干个异步调用？
 
 使用 Dispatch Group 追加 block 到 Global Group Queue，这些 block 如果全部执行完毕，就会执行 Main Dispatch Queue 中的结束处理的 block。
 
@@ -1120,7 +1463,7 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 
 
 
-27、dispatch_barrier_async 的作用是什么？
+28、dispatch_barrier_async 的作用是什么？
 
 dispatch_barrier_async 函数配合 Concurrent Dispatch Queue 一起使用可以在并行的任务中插入中间任务。
 
@@ -1141,7 +1484,7 @@ dispatch_barrier_async 函数会等待当前 Concurrent Dispatch Queue 中并行
 
 
 
-28、苹果为什么要废弃 dispatch_get_current_queue？
+29、苹果为什么要废弃 dispatch_get_current_queue？
 
 
 1）派发队列其实是按照层级结构来组织的，如下图所示：
@@ -1233,7 +1576,7 @@ void * dispatch_get_specific(const void *key)
 
 
 
-29、如何手动触发一个 value 的 KVO？
+30、如何手动触发一个 value 的 KVO？
 
 KVC，即是指 NSKeyValueCoding，一个非正式的 Protocol，提供一种机制来间接访问对象的属性。KVO 就是基于 KVC 实现的关键技术之一。
 
@@ -1277,13 +1620,13 @@ KVC，即是指 NSKeyValueCoding，一个非正式的 Protocol，提供一种机
 Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方法注入是在运行时而不是编译时实现的。这就是正确命名如此重要的原因。只有在使用 KVC 命名约定时，KVO 才能做到这一点。KVO 在实现中通过 isa 混写（isa-swizzling）把这个对象的 isa 指针（isa 指针告诉 Runtime 系统这个对象的类是什么）指向这个新创建的子类，对象就神奇的变成了新创建的子类的实例。Apple 还重写、覆盖了 -class 方法并返回原来的类，企图欺骗我们：这个类没有变，就是原本那个类。
 
 
-30、BAD_ACCESS 在什么情况下出现？
+31、BAD_ACCESS 在什么情况下出现？
 
 - 访问了野指针。比如对一个已经释放的对象执行了 release，访问已经释放对象的成员变量或者发消息。
 - 死循环。
 
 
-31、如何调试 BAD_ACCESS 错误？
+32、如何调试 BAD_ACCESS 错误？
 
 - 重写 object 的 respondsToSelector 方法，现实出现 EXEC_BAD_ACCESS 前访问的最后一个 object。
 - 通过 Zombie。
@@ -1291,7 +1634,7 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 - Xcode 7 已经集成了 BAD_ACCESS 捕获功能：Address Sanitizer。用法如下：在配置中勾选 Enable Address Sanitizer。
 
 
-32、动态计算文本高度的时候需要注意什么？
+33、动态计算文本高度的时候需要注意什么？
 
 ```
 + (CGSize)contentSizeForContent:(NSString *)content withFixedWidth:(CGFloat)width {
@@ -1331,3 +1674,7 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 [9]: https://github.com/facebook/AsyncDisplayKit
 [10]: https://github.com/AFNetworking/AFNetworking/blob/master/AFNetworking%2FAFURLConnectionOperation.m
 [11]: https://github.com/AFNetworking/AFNetworking
+[12]: https://juejin.im/post/58ca0832a22b9d006418fe43
+[13]: https://github.com/facebook/FBRetainCycleDetector
+[14]: https://github.com/Tencent/MLeaksFinder
+[15]: https://www.jianshu.com/p/aaf7b13864d9

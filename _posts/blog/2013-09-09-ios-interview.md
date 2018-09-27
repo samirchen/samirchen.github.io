@@ -1657,6 +1657,24 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 如上代码，需要注意算完高度需要用 `ceil` 来处理一下做向上取整。
 
 
+34、如何优化 App 的启动耗时？
+
+
+iOS 的 App 启动时长大概可以这样计算：
+
+t(App总启动时间) = t1(main() 之前的加载时间) + t2(main() 之后的加载时间)。
+
+t1 = 系统dylib(动态链接库)和自身App可执行文件的加载； 
+
+t2 = main方法执行之后到AppDelegate类中的 `application:didFinishLaunchingWithOptions:`方法执行结束前这段时间，主要是构建第一个界面，并完成渲染展示。
+
+
+
+
+更多信息见：[今日头条 iOS 客户端启动速度优化][16]
+
+
+
 ## 其他参考
 
 - [笔试面试知识整理][5]
@@ -1678,3 +1696,4 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 [13]: https://github.com/facebook/FBRetainCycleDetector
 [14]: https://github.com/Tencent/MLeaksFinder
 [15]: https://www.jianshu.com/p/aaf7b13864d9
+[16]: https://techblog.toutiao.com/2017/01/17/iosspeed/

@@ -1687,8 +1687,8 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
 - 将多个 dylib 动态库合并成一个。
 - 使用静态库。
 - 避免对框架使用 optional linking, 只对出现在部署目标版本之后的框架使用 optional。
-- 减少 Objective-C Class、Selector、Category 的数量；
-- `+initialize` 替换 `+load()` 方法；
+- 减少 Objective-C Class、Selector、Category 的数量。
+- `+initialize` 替换 `+load` 方法，`+initialize` 是在第一次初始化这个类之前被调用，`+load` 在加载类的时候就被调用。尽量将 `+load` 里的代码延后调用。
 - 不要使用 `__atribute__((constructor))` 将方法显式标记为初始化器，而是让初始化方法调用时才执行。比如使用 `dispatch_once()`，`pthread_once()` 或 `std::once()`。
 - 在初始化方法中不调用 `dlopen()`，`dlopen()` 有性能和死锁的可能性。
 - 在初始化方法中不创建线程。
@@ -1697,6 +1697,8 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
 在 t2 阶段加快 App 启动的建议：
 
 - 不要在 xib 中存放太多的视图。
+- 尽量不要使用 xib/storyboard，而是用纯代码作为首页 UI。
+- 对 `application:didFinishLaunchingWithOptions:` 里的任务尽量延迟加载或懒加载。
 - 不要在 NSUserDefaults 中存放太多的数据，NSUserDefaults 是一个 plist 文件，plist 文件被反序列化一次。
 - 避免在启动时打印过多的 log。
 - 少用 NSLog，因为每一次 NSLog 的调用都会创建一个新的 NSCalendar 实例。

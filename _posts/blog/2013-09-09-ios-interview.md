@@ -1788,6 +1788,42 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
         - 开启 BitCode
 
 
+36、什么是事件响应链？
+
+对于 iOS 设备用户来说，他们操作设备的方式主要有三种：触摸屏幕、晃动设备、通过遥控设施控制设备。对应的事件类型有以下三种：
+
+- 1、触屏事件（Touch Event）
+- 2、运动事件（Motion Event）
+- 3、远端控制事件（Remote-Control Event）
+
+响应者对象（Responder Object），指的是有响应和处理上述事件能力的对象。响应者链就是由一系列的响应者对象构成的一个层次结构。
+
+UIResponder 是所有响应对象的基类，在 UIResponder 类中定义了处理上述各种事件的接口。我们熟悉的 UIApplication、UIWindow、UIViewController、UIView 都直接或间接继承自 UIResponder，所以它们的实例都是可以构成响应者链的响应者对象。
+
+一个 App 的响应链如图所示：
+
+
+![image](../../images/ios-interview/responder-chain.png)
+
+
+当用户点击屏幕时响应链是如何工作的呢？
+
+iOS 系统检测到手指触摸操作时会将其打包成一个 UIEvent 对象，并放入当前活动 Application 的事件队列，单例的 UIApplication 会从事件队列中取出触摸事件并传递给单例的 UIWindow 来处理，UIWindow 对象首先会使用 `hitTest:withEvent:` 方法寻找此次 touch 操作初始点所在的视图(View)，即需要将触摸事件传递给其处理的视图，这个过程称之为 hit-test。
+
+UIWindow 实例对象会首先在它的内容视图上调用 `hitTest:withEvent:`，此方法会在其视图层级结构中的每个视图上调用 `pointInside:withEvent:`（该方法用来判断点击事件发生的位置是否处于当前视图范围内，以确定用户是否点击的是当前视图），如果 `pointInside:withEvent:` 返回 YES，则继续在其子视图中逐级调用，直到找到 touch 操作发生的位置，这个视图也就是要找的 hit-test view。
+
+ `hitTest:withEvent:` 方法的处理流程如下：首先调用当前视图的 `pointInside:withEvent:` 方法判断触摸点是否在当前视图内，若返回 NO，则 `hitTest:withEvent:` 返回 nil；若返回 YES，则向当前视图的所有子视图(subviews)发送 `hitTest:withEvent:` 消息，所有子视图的遍历顺序是从最顶层视图一直到到最底层视图，即从 subviews 数组的末尾向前遍历，直到有子视图返回非空对象或者全部子视图遍历完毕；若第一次有子视图返回非空对象，则 `hitTest:withEvent:` 方法返回此对象，处理结束；如所有子视图都返回 nil，则 `hitTest:withEvent:` 方法返回该视图自身。
+
+
+ 这里有一个场景实践：[实现 iOS UIView 及其 Subview 透明区域的事件穿透][25]
+
+
+
+
+
+
+
+
 ## 其他参考
 
 - [笔试面试知识整理][5]
@@ -1818,3 +1854,4 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
 [22]: https://mp.weixin.qq.com/s/WQ7rrTJm-cn3Cb6e_zZ4cA
 [23]: http://clang.llvm.org/docs/AutomaticReferenceCounting.html
 [24]: https://satanwoo.github.io/2018/02/04/iOS-iVar/
+[25]: http://www.samirchen.com/view-gesture-responser/

@@ -1037,6 +1037,10 @@ ASDK 仿照 QuartzCore/UIKit 框架的模式，实现了一套类似的界面更
 用的是引用计数的机制。通过 retainCount 的机制来决定对象是否需要释放。每次 run loop 的时候，都会检查对象的 retainCount，如果 retainCount 为 0，说明该对象没有地方需要继续使用了，可以释放掉了。
 
 
+关于 iOS 内存管理更多的内容，参见 [iOS Memory Deep Dive][22]。
+
+
+
 
 23、ARC 通过什么方式帮助开发者管理内存？
 
@@ -1790,3 +1794,4 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
 [19]: https://imageoptim.com/
 [20]: https://tinypng.com/
 [21]: https://github.com/huanxsd/LinkMap
+[22]: https://mp.weixin.qq.com/s/WQ7rrTJm-cn3Cb6e_zZ4cA

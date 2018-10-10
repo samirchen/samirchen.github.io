@@ -811,7 +811,7 @@ CFRunLoop {
 }
 ```
 
-可以看到，系统默认注册了 5 个Mode：
+可以看到，系统默认注册了 5 个 Mode：
 
 - 1、kCFRunLoopDefaultMode: App的默认 Mode，通常主线程是在这个 Mode 下运行的。
 2、UITrackingRunLoopMode: 界面跟踪 Mode，用于 ScrollView 追踪触摸滑动，保证界面滑动时不受其他 Mode 影响。
@@ -1073,7 +1073,7 @@ ARC 相对于 MRC，不是在编译时添加 retain/release/autorelease 这么�
 
 2）block
 
-Block 的循环引用，主要是发生在 ViewController 中持有了block，比如：
+Block 的循环引用，主要是发生在 ViewController 中持有了 block，比如：
 
 ```
 @property (nonatomic, copy) LFCallbackBlock callbackBlock;
@@ -1105,6 +1105,7 @@ self.callbackBlock = ^{
 那是不是所有的 block 都会发生循环引用呢？其实不然，比如 UIView 的类方法 Block 动画，NSArray 等的类的遍历方法，也都不会发生循环引用，因为当前控制器一般不会强引用一个类。
 
 
+此外，还有一种情况是在 self.callbackBlock 中使用了 ivar，也会造成循环引用。因为对 ivar 变量的直接访问还是会依赖 self 的编译地址再进行偏移。详情可以参考：[谈谈 ivar 的直接访问][24]。
 
 
 3）NSTimer
@@ -1816,3 +1817,4 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
 [21]: https://github.com/huanxsd/LinkMap
 [22]: https://mp.weixin.qq.com/s/WQ7rrTJm-cn3Cb6e_zZ4cA
 [23]: http://clang.llvm.org/docs/AutomaticReferenceCounting.html
+[24]: https://satanwoo.github.io/2018/02/04/iOS-iVar/

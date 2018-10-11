@@ -716,35 +716,87 @@ ViewController.m
 
 对象在接收到未知的消息时，首先会调用所属类的类方法 `+resolveInstanceMethod:` 或者 `+resolveClassMethod:`，前者处理实例方法调用，后者处理类方法调用。我们可以它们里面用 `class_addMethod()` 加入异常处理的方法，不过前提是我们以及实现了处理方法。示例代码如下：
 
-	#import <objc/runtime.h>
+```
+#import <objc/runtime.h>
 
-	- (void)viewDidLoad {
-	    [super viewDidLoad];
+- (void)viewDidLoad {
+    [super viewDidLoad];
 
-	    [self performSelector:@selector(unknownMethod)];
-	}
+    [self performSelector:@selector(unknownMethod)];
 
-	void dealWithExceptionForUnknownMethod(id self, SEL _cmd) {
-	    NSLog(@"%@, %p", self, _cmd); // Print: <ViewController: 0x7ff96be33e60>, 0x1078259fc
-	}
+}
 
-	+ (BOOL)resolveInstanceMethod:(SEL)sel {
-	    NSString *selectorString = NSStringFromSelector(sel);
-	    if ([selectorString isEqualToString:@"unknownMethod"]) {
-	        class_addMethod(self.class, @selector(unknownMethod), (IMP) dealWithExceptionForUnknownMethod, "v@:");
-	    }
+void dealWithExceptionForUnknownMethod(id self, SEL _cmd) {
+    NSLog(@"%@, %p", self, _cmd); // Print: <ViewController: 0x7ff96be33e60>, 0x1078259fc
+}
 
-	    return [super resolveInstanceMethod:sel];
-	}
++ (BOOL)resolveInstanceMethod:(SEL)sel {
+    NSString *selectorString = NSStringFromSelector(sel);
+    if ([selectorString isEqualToString:@"unknownMethod"]) {
+        class_addMethod(self.class, @selector(unknownMethod), (IMP) dealWithExceptionForUnknownMethod, "v@:");
+    }
+
+    return [super resolveInstanceMethod:sel];
+}
+```
 
 代码打印：
 	
-	<ViewController: 0x7ff96be33e60>, 0x1078259fc
-
+```
+<ViewController: 0x7ff96be33e60>, 0x1078259fc
+```
 
 可以发现对 `unknownMethod` 方法的调用被截获了并在 `dealWithExceptionForUnknownMethod` 函数中进行了处理，程序没有再崩溃。
 
 `@dynamic` 属性就可以用这种方案来实现。
+
+
+如果要处理的方法是类方法，对应的处理逻辑则有一些差异：
+
+
+```
+#import <objc/runtime.h>
+
+- (void)viewDidLoad {
+    [super viewDidLoad];
+
+    [self.class performSelector:@selector(unknownClassMethod)];
+}
+
+void dealWithExceptionForUnknownClassMethod(id self, SEL _cmd) {
+    NSLog(@"%@, %p", self, _cmd); // Print: <ViewController: 0x7ff650524330>, 0x107b8490c
+}
+
+// 另一种写法：
+// + (void)dealWithExceptionForUnknowClassMethod {
+//     NSLog(@"%@, %p", self, _cmd);
+// }
+
++ (BOOL)resolveClassMethod:(SEL)sel {
+    NSString *selectorString = NSStringFromSelector(sel);
+    if ([selectorString isEqualToString:@"unknownClassMethod"]) {
+        class_addMethod(object_getClass(self), sel, (IMP) dealWithExceptionForUnknownClassMethod, "v@:");
+        
+        // 另一种写法：
+		// Method method = class_getClassMethod(object_getClass(self), @selector(dealWithExceptionForUnknowClassMethod));
+		// class_addMethod(object_getClass(self), sel, class_getMethodImplementation(object_getClass(self), @selector(dealWithExceptionForUnknowClassMethod)), method_getTypeEncoding(method));
+    }
+    
+    return [class_getSuperclass(self) resolveClassMethod:sel];
+}
+```
+
+代码打印：
+	
+```
+<ViewController: 0x7ff96be33e60>, 0x1078259fc
+```
+
+这里需要理解 `[self class]` 与 `object_getClass(self)` 甚至 `object_getClass([self class])` 的关系，其实并不难，重点在于 self 的类型：
+
+- 当 self 为实例对象时，`[self class]` 与 `object_getClass(self)` 等价，因为前者会调用后者，返回的是类对象。而 `object_getClass([self class])` 返回的元类对象。
+- 当 self 为类对象时，`[self class]` 返回值为自身，还是 self。`object_getClass(self)` 与 `object_getClass([self class])` 等价，返回的元类对象。
+
 
 
 
@@ -760,67 +812,75 @@ ViewController.m
 
 RuntimeMethodHelper.h
 
-	#import <Foundation/Foundation.h>
+```
+#import <Foundation/Foundation.h>
 
-	@interface RuntimeMethodHelper : NSObject
-	- (void)unknownMethod2;
-	@end
+@interface RuntimeMethodHelper : NSObject
+- (void)unknownMethod2;
+@end
+```
 
 RuntimeMethodHelper.m
 
-	#import "RuntimeMethodHelper.h"
+```
+#import "RuntimeMethodHelper.h"
 
-	@implementation RuntimeMethodHelper
-	- (void)unknownMethod2 {
-	    NSLog(@"%@, %p", self, _cmd); // Print: <RuntimeMethodHelper: 0x7fb61042f410>, 0x10170d99a
-	}
-	@end
+@implementation RuntimeMethodHelper
+- (void)unknownMethod2 {
+    NSLog(@"%@, %p", self, _cmd); // Print: <RuntimeMethodHelper: 0x7fb61042f410>, 0x10170d99a
+}
+@end
+```
 
 ViewController.m
 
-	#import <objc/runtime.h>
+```
+#import <objc/runtime.h>
 
-	- (void)viewDidLoad {
-	    [super viewDidLoad];
+- (void)viewDidLoad {
+    [super viewDidLoad];
 
-	    [self performSelector:@selector(unknownMethod)];
-	    [self performSelector:@selector(unknownMethod2)];
-	}
+    [self performSelector:@selector(unknownMethod)];
+    [self performSelector:@selector(unknownMethod2)];
+}
 
-	// Deal with unknownMethod.
-	void dealWithExceptionForUnknownMethod(id self, SEL _cmd) {
-	    NSLog(@"%@, %p", self, _cmd); // Print: <ViewController: 0x7ff96be33e60>, 0x1078259fc
-	}
+// Deal with unknownMethod.
+void dealWithExceptionForUnknownMethod(id self, SEL _cmd) {
+    NSLog(@"%@, %p", self, _cmd); // Print: <ViewController: 0x7ff96be33e60>, 0x1078259fc
+}
 
-	+ (BOOL)resolveInstanceMethod:(SEL)sel {
-	    NSString *selectorString = NSStringFromSelector(sel);
-	    if ([selectorString isEqualToString:@"unknownMethod"]) {
-	        class_addMethod(self.class, @selector(unknownMethod), (IMP) dealWithExceptionForUnknownMethod, "v@:");
-	    }
++ (BOOL)resolveInstanceMethod:(SEL)sel {
+    NSString *selectorString = NSStringFromSelector(sel);
+    if ([selectorString isEqualToString:@"unknownMethod"]) {
+        class_addMethod(self.class, @selector(unknownMethod), (IMP) dealWithExceptionForUnknownMethod, "v@:");
+    }
 
-	    return [super resolveInstanceMethod:sel];
-	}
+    return [super resolveInstanceMethod:sel];
+}
 
-	// Deal with unknownMethod2.
-	- (id)forwardingTargetForSelector:(SEL)aSelector {
-	    NSString *selectorString = NSStringFromSelector(aSelector);
-	    if ([selectorString isEqualToString:@"unknownMethod2"]) {
-	        return [[RuntimeMethodHelper alloc] init];
-	    }
+// Deal with unknownMethod2.
+- (id)forwardingTargetForSelector:(SEL)aSelector {
+    NSString *selectorString = NSStringFromSelector(aSelector);
+    if ([selectorString isEqualToString:@"unknownMethod2"]) {
+        return [[RuntimeMethodHelper alloc] init];
+    }
 
-	    return [super forwardingTargetForSelector:aSelector];
-	}
-
+    return [super forwardingTargetForSelector:aSelector];
+}
+```
 
 代码打印信息：
 
-	<ViewController: 0x7fca10d268f0>, 0x109c1f98c
-	<RuntimeMethodHelper: 0x7fca11837d90>, 0x109c1f99a
-
+```
+<ViewController: 0x7fca10d268f0>, 0x109c1f98c
+<RuntimeMethodHelper: 0x7fca11837d90>, 0x109c1f99a
+```
 
 可以看到，对于 `unknownMethod` 方法已经在`第一步：动态方法解析`中被 `+resolveInstanceMethod` 处理，而 `unknownMethod2` 则放到了`第二步：备用接收者`才被处理。
 
 这一步适用于当我们只想将消息转发到另一个能处理该消息的对象上的情况，它无法进一步对消息进行处理，比如：操作消息的参数和返回值。
+
+
 
 ##### 第三步：完整转发
 

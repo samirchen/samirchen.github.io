@@ -1854,7 +1854,7 @@ UIWindow 实例对象会首先在它的内容视图上调用 `hitTest:withEvent:
 
 加密分为对称加密和非对称加密。这个在[李永乐老师讲 RSA 加密算法][26]中讲的挺形象的。
 
-![image](../../images/ios-interview/digital-signature.png)
+![image](../../images/ios-interview/encryption.png)
 
 对称加密采用了对称密码编码技术，它的特点是加密和解密使用相同的密钥。
 
@@ -1874,7 +1874,7 @@ UIWindow 实例对象会首先在它的内容视图上调用 `hitTest:withEvent:
 
 数字签名在[数字签名是如何保证信息安全的][27]中讲的挺形象的。
 
-![image](../../images/ios-interview/encryption.png)
+![image](../../images/ios-interview/digital-signature.png)
 
 
 数字签名是非对称加密的一种典型应用。这个过程中将摘要信息用发送者的私钥加密，与原文一起传送给接收者。接收者只有用发送者的公钥才能解密被加密的摘要信息，然后用 Hash 函数对收到的原文产生一个摘要信息，与解密的摘要信息对比。如果相同，则说明收到的信息是完整的，在传输过程中没有被修改，否则说明信息被修改过，因此数字签名能够验证信息的完整性。

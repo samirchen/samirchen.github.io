@@ -1030,9 +1030,59 @@ ASDK 仿照 QuartzCore/UIKit 框架的模式，实现了一套类似的界面更
 
 
 
+22、聊一聊 iOS 中的离屏渲染？
+
+GPU 渲染机制：CPU 计算好显示内容提交到 GPU，GPU 渲染完成后将渲染结果放入帧缓冲区，随后视频控制器会按照 VSync 信号逐行读取帧缓冲区的数据，经过可能的数模转换传递给显示器显示。
+
+GPU 屏幕渲染有以下两种方式：
+
+- 1）On-Screen Rendering，意为当前屏幕渲染，指的是 GPU 的渲染操作是在当前用于显示的屏幕缓冲区中进行。
+- 2）Off-Screen Rendering，意为离屏渲染，指的是 GPU 在当前屏幕缓冲区以外新开辟一个缓冲区进行渲染操作。
+
+特殊的离屏渲染：如果将不在 GPU 的当前屏幕缓冲区中进行的渲染都称为离屏渲染，那么就还有另一种特殊的“离屏渲染”方式：CPU 渲染。如果我们重写了 drawRect 方法，并且使用任何 Core Graphics 的技术进行了绘制操作，就涉及到了 CPU 渲染。整个渲染过程由 CPU 在 App 内同步地
+完成，渲染得到的 bitmap 最后再交由 GPU 用于显示。备注：Core Graphics 通常是线程安全的，所以可以进行异步绘制，显示的时候再放回主线程，一个简单的异步绘制过程大致如下：
+
+```
+- (void)display {
+ dispatch_async(backgroundQueue, ^{
+     CGContextRef ctx = CGBitmapContextCreate(...);
+     // draw in context...
+     CGImageRef img = CGBitmapContextCreateImage(ctx);
+     CFRelease(ctx);
+     dispatch_async(mainQueue, ^{
+         layer.contents = img;
+     });
+ });
+}
+```
+
+离屏渲染的触发方式：
+
+- 1）shouldRasterize（光栅化），光栅化是比较特别的一种。光栅化概念：将图转化为一个个栅格组成的图象。光栅化特点：每个元素对应帧缓冲区中的一像素。`shouldRasterize = YES` 在其他属性触发离屏渲染的同时，会将光栅化后的内容缓存起来，如果对应的 layer 及其 sublayers 没有发生改变，在下一帧的时候可以直接复用。`shouldRasterize = YES` 这将隐式的创建一个位图，各种阴影遮罩等效果也会保存到位图中并缓存起来，从而减少渲染的频度。相当于光栅化是把 GPU 的操作转到 CPU 上了，生成位图缓存，直接读取复用。当你使用光栅化时，你可以开启 Color Hits Green and Misses Red 来检查该场景下光栅化操作是否是一个好的选择。绿色表示缓存被复用，红色表示缓存在被重复创建。如果光栅化的层变红得太频繁那么光栅化对优化可能没有多少用处。位图缓存从内存中删除又重新创建得太过频繁，红色表明缓存重建得太迟。可以针对性的选择某个较小而较深的层结构进行光栅化，来尝试减少渲染时间。对于经常变动的内容，这个时候不要开启，否则会造成性能的浪费。例如经常打交道的 TableViewCell，因为 TableViewCell 的重绘是很频繁的（因为 Cell 的复用），如果 Cell 的内容不断变化，则 Cell 需要不断重绘，如果此时设置了 cell.layer 可光栅化，则会造成大量的离屏渲染，降低图形性能。
+- 2）masks（遮罩）
+- 3）shadows（阴影）
+- 4）edge antialiasing（抗锯齿）
+- 5）group opacity（不透明）
+- 6）复杂形状设置圆角等
+- 7）渐变
 
 
-22、objc 使用什么机制管理对象内存？
+为什么会使用离屏渲染：当使用圆角，阴影，遮罩的时候，图层属性的混合体被指定为在未预合成之前（下一个 VSync 信号开始前）不能直接在屏幕中绘制，所以就需要屏幕外渲染被唤起。屏幕外渲染并不意味着软件绘制，但是它意味着图层必须在被显示之前在一个屏幕外上下文中被渲染（不论 CPU 还是 GPU）。所以当使用离屏渲染的时候会很容易造成性能消耗，因为离屏渲染会单独在内存中创建一个屏幕外缓冲区并进行渲染，而屏幕外缓冲区跟当前屏幕缓冲区上下文切换是很耗性能的。由于垂直同步的机制，如果在一个 VSync 时间内，CPU 或者 GPU 没有完成内容提交，则那一帧就会被丢弃，等待下一次机会再显示，而这时显示屏会保留之前的内容不变。这就是界面卡顿的原因。
+
+
+Instruments 监测离屏渲染：
+
+- 1）Color Offscreen-Rendered Yellow，开启后会把那些需要离屏渲染的图层高亮成黄色，这就意味着黄色图层可能存在性能问题。
+- 2）Color Hits Green and Misses Red，如果 shouldRasterize 被设置成 YES，对应的渲染结果会被缓存，如果图层是绿色，就表示这些缓存被复用；如果是红色就表示缓存会被重复创建，这就表示该处存在性能问题了。
+
+
+iOS 版本上的优化：
+
+- 1）iOS 9.0 之前 UIimageView、UIButton 设置圆角都会触发离屏渲染。
+- 2）iOS 9.0 之后 UIButton 设置圆角会触发离屏渲染，而 UIImageView 里 png 图片设置圆角不会触发离屏渲染了，如果设置其他阴影效果之类的还是会触发离屏渲染的。
+
+
+23、objc 使用什么机制管理对象内存？
 
 用的是引用计数的机制。通过 retainCount 的机制来决定对象是否需要释放。每次 run loop 的时候，都会检查对象的 retainCount，如果 retainCount 为 0，说明该对象没有地方需要继续使用了，可以释放掉了。
 
@@ -1042,14 +1092,14 @@ ASDK 仿照 QuartzCore/UIKit 框架的模式，实现了一套类似的界面更
 
 
 
-23、ARC 通过什么方式帮助开发者管理内存？
+24、ARC 通过什么方式帮助开发者管理内存？
 
 ARC 相对于 MRC，不是在编译时添加 retain/release/autorelease 这么简单。应该是编译期和运行期两部分共同帮助开发者管理内存。
 
 在编译期，ARC 用的是更底层的 C 接口实现的 retain/release/autorelease，这样做性能更好，也是为什么不能在 ARC 环境下手动 retain/release/autorelease，同时对同一上下文的同一对象的成对 retain/release 操作进行优化（即忽略掉不必要的操作）；ARC 也包含运行期组件，这个地方做的优化比较复杂，但也不能被忽略。
 
 
-24、iOS 开发中常见的内存问题有哪些？
+25、iOS 开发中常见的内存问题有哪些？
 
 内存问题主要包括两个部分，一个是iOS中常见循环引用导致的内存泄露 ，另外就是大量数据加载及使用导致的内存警告。
 
@@ -1414,7 +1464,7 @@ GCD 提供的定时器叫 dispatch_source_t。使用方式如下：
 更多信息参加：[iOS App 稳定性指标及监测][12]
 
 
-25、一个 autorealese 对象在什么时刻释放？
+26、一个 autorealese 对象在什么时刻释放？
 
 分两种情况：手动干预释放时机、系统自动去释放。
 
@@ -1460,7 +1510,7 @@ __weak id reference = nil;
 
 
 
-25、如何实现 autoreleasepool 的？
+27、如何实现 autoreleasepool 的？
 
 
 autoreleasepool 以一个队列数组的形式实现，主要通过下列三个函数完成.
@@ -1471,7 +1521,7 @@ autoreleasepool 以一个队列数组的形式实现，主要通过下列三个�
 
 
 
-27、如何用 GCD 同步若干个异步调用？
+28、如何用 GCD 同步若干个异步调用？
 
 使用 Dispatch Group 追加 block 到 Global Group Queue，这些 block 如果全部执行完毕，就会执行 Main Dispatch Queue 中的结束处理的 block。
 
@@ -1488,7 +1538,7 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 
 
 
-28、dispatch_barrier_async 的作用是什么？
+29、dispatch_barrier_async 的作用是什么？
 
 dispatch_barrier_async 函数配合 Concurrent Dispatch Queue 一起使用可以在并行的任务中插入中间任务。
 
@@ -1509,7 +1559,7 @@ dispatch_barrier_async 函数会等待当前 Concurrent Dispatch Queue 中并行
 
 
 
-29、苹果为什么要废弃 dispatch_get_current_queue？
+30、苹果为什么要废弃 dispatch_get_current_queue？
 
 
 1）派发队列其实是按照层级结构来组织的，如下图所示：
@@ -1601,7 +1651,7 @@ void * dispatch_get_specific(const void *key)
 
 
 
-30、如何手动触发一个 value 的 KVO？
+31、如何手动触发一个 value 的 KVO？
 
 KVC，即是指 NSKeyValueCoding，一个非正式的 Protocol，提供一种机制来间接访问对象的属性。KVO 就是基于 KVC 实现的关键技术之一。
 
@@ -1645,13 +1695,13 @@ KVC，即是指 NSKeyValueCoding，一个非正式的 Protocol，提供一种机
 Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方法注入是在运行时而不是编译时实现的。这就是正确命名如此重要的原因。只有在使用 KVC 命名约定时，KVO 才能做到这一点。KVO 在实现中通过 isa 混写（isa-swizzling）把这个对象的 isa 指针（isa 指针告诉 Runtime 系统这个对象的类是什么）指向这个新创建的子类，对象就神奇的变成了新创建的子类的实例。Apple 还重写、覆盖了 -class 方法并返回原来的类，企图欺骗我们：这个类没有变，就是原本那个类。
 
 
-31、BAD_ACCESS 在什么情况下出现？
+32、BAD_ACCESS 在什么情况下出现？
 
 - 访问了野指针。比如对一个已经释放的对象执行了 release，访问已经释放对象的成员变量或者发消息。
 - 死循环。
 
 
-32、如何调试 BAD_ACCESS 错误？
+33、如何调试 BAD_ACCESS 错误？
 
 - 重写 object 的 respondsToSelector 方法，现实出现 EXEC_BAD_ACCESS 前访问的最后一个 object。
 - 通过 Zombie。
@@ -1659,7 +1709,7 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 - Xcode 7 已经集成了 BAD_ACCESS 捕获功能：Address Sanitizer。用法如下：在配置中勾选 Enable Address Sanitizer。
 
 
-33、动态计算文本高度的时候需要注意什么？
+34、动态计算文本高度的时候需要注意什么？
 
 ```
 + (CGSize)contentSizeForContent:(NSString *)content withFixedWidth:(CGFloat)width {
@@ -1682,7 +1732,7 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 如上代码，需要注意算完高度需要用 `ceil` 来处理一下做向上取整。
 
 
-34、如何优化 App 的启动耗时？
+35、如何优化 App 的启动耗时？
 
 
 iOS 的 App 启动主要分为以下步骤：
@@ -1741,7 +1791,7 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
 - [WWDC 2016:Optimizing App Startup Time][17]
 
 
-35、如何优化 App 的的包大小？
+36、如何优化 App 的的包大小？
 
 直接上建议：
 
@@ -1788,7 +1838,7 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
         - 开启 BitCode
 
 
-36、什么是事件响应链？
+37、什么是事件响应链？
 
 对于 iOS 设备用户来说，他们操作设备的方式主要有三种：触摸屏幕、晃动设备、通过遥控设施控制设备。对应的事件类型有以下三种：
 
@@ -1818,7 +1868,7 @@ UIWindow 实例对象会首先在它的内容视图上调用 `hitTest:withEvent:
  这里有一个场景实践：[实现 iOS UIView 及其 Subview 透明区域的事件穿透][25]
 
 
-36、当我们要做一些基于 CALayer 的动画时，有时需要设置 layer 的锚点来配合动画，这时候我们需要注意什么？
+38、当我们要做一些基于 CALayer 的动画时，有时需要设置 layer 的锚点来配合动画，这时候我们需要注意什么？
 
 需要注意的是设置锚点会引起原来 position 的变化，可能会发生不符合预期的行为，所以要做一下转化，示例代码如下：
 
@@ -1849,7 +1899,7 @@ UIWindow 实例对象会首先在它的内容视图上调用 `hitTest:withEvent:
 
 
 
-37、聊一聊加密和数字签名的区别？
+39、聊一聊加密和数字签名的区别？
 
 
 加密分为对称加密和非对称加密。这个在[李永乐老师讲 RSA 加密算法][26]中讲的挺形象的。
@@ -1881,12 +1931,12 @@ UIWindow 实例对象会首先在它的内容视图上调用 `hitTest:withEvent:
 数字签名是个加密的过程，数字签名验证是个解密的过程。
 
 
-38、聊一聊 TCP 的滑动窗口协议？
+40、聊一聊 TCP 的滑动窗口协议？
 
 TCP 引入了一些技术和设计来做网络流控，Sliding Window 是其中一个技术。前面我们说过，TCP 头里有一个字段叫 Window，又叫 Advertised-Window，这个字段是接收端告诉发送端自己还有多少缓冲区可以接收数据。于是发送端就可以根据这个接收端的处理能力来发送数据，而不会导致接收端处理不过来。
 
 
-39、聊一聊 TCP 的拥塞控制相关过程？
+41、聊一聊 TCP 的拥塞控制相关过程？
 
 TCP 的拥塞控制主要是四个算法：1）慢启动；2）拥塞避免；3）拥塞发生；4）快速恢复。
 
@@ -1965,7 +2015,7 @@ TCP Reno 这个算法定义在 RFC5681。快速重传和快速恢复算法一般
 更多信息参见：[TCP 的那些事儿][28]
 
 
-39、聊一聊你知道的几种查找树？
+42、聊一聊你知道的几种查找树？
 
 
 

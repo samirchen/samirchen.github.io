@@ -1419,7 +1419,7 @@ GCD 提供的定时器叫 dispatch_source_t。使用方式如下：
 分两种情况：手动干预释放时机、系统自动去释放。
 
 - 手动干预释放时机：手动指定 autoreleasepool 的 autorelease 对象，在当前作用域大括号结束时释放。
-- 系统自动去释放：不手动指定 autoreleasepool 的 autorelease 对象出了作用域之后，会被添加到最近一次创建的自动释放池中，并会在当前的 runloop 迭代结束时释放。而它能够释放的原因是系统在每个 runloop 迭代中都加入了自动释放池 Push 和 Pop。
+- 系统自动去释放：不手动指定 autoreleasepool 的 autorelease 对象出了作用域之后，会被添加到最近一次创建的自动释放池中，并会在当前的 runloop 迭代结束时释放。而它能够释放的原因是系统在每个 runloop 迭代中都加入了自动释放池 Push 和 Pop。一个典型的例子是在一个类方法中创建一个对象并作为返回值，这时就需要将该对象放置到对应的 autoreleasepool 中。
 
 例子：
 

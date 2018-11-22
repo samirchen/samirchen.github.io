@@ -1440,7 +1440,7 @@ GCD 提供的定时器叫 dispatch_source_t。使用方式如下：
 - 小心方法中的 self，在 Objective-C 的方法中隐含的 self 是 `__unsafed_unretain` 的。
 - 使用 Autorelease Pool 来降低循环中的内存峰值，避免 OOM。
 - 要处理 Memory Warning。
-- 需要在收到内存警告的时候释放的缓存类数据，在选用数据结构时，用 NSCache 代替 NSDictionary，使用 NSPurgableData 代替 NSData。在其他常见的操作系统上，由于局部性原理，OS 会将不常用的内存页面写回磁盘，频繁的写磁盘会缩短磁盘或闪存的生命，iOS 为了提升闪存的生命周期，所以没有交换空间，取而代之的是内存压缩技术，iOS 将不常用到的 dirty 页面压缩以减少页面占用量，在再次访问到的时候重新解压缩。这些都在操作系统层面实现，对进程无感知。倘若在使用 NSDictionary 的时候收到内存警告，然后去释放这个 NSDictionary，如果占据的内存过大，很可能在内存解压的过程中造成内存压力更大而导致 App 就被 JetSem 给 Kill 掉了，如果你的内存只是缓存或者是可重建的数据，就把 NSCache 当初 NSDictionary 用。同理 NSPurableData 也是。
+- 需要在收到内存警告的时候释放的缓存类数据，在选用数据结构时，用 NSCache 代替 NSDictionary，使用 NSPurgableData 代替 NSData。在其他常见的操作系统上，由于局部性原理，OS 会将不常用的内存页面写回磁盘，频繁的写磁盘会缩短磁盘或闪存的生命，iOS 为了提升闪存的生命周期，所以没有交换空间，取而代之的是内存压缩技术，iOS 将不常用到的 dirty 页面压缩以减少页面占用量，在再次访问到的时候重新解压缩。这些都在操作系统层面实现，对进程无感知。倘若在使用 NSDictionary 的时候收到内存警告，然后去释放这个 NSDictionary，如果占据的内存过大，很可能在内存解压的过程中造成内存压力更大而导致 App 就被 JetSam 给 Kill 掉了，如果你的内存只是缓存或者是可重建的数据，就把 NSCache 当初 NSDictionary 用。同理 NSPurableData 也是。
 - UITableView/UICollectionView 的重用不单单是 cell 重用，cell 使用的子 view 也要重用。
 - `[UIImage imageNamed:]` 适合于 UI 界面中的贴图的读取，较大的资源文件应该尽量避免使用。
 - WKWebView 是跨进程通信的，不会占用我们的 APP 使用的物理内存量。

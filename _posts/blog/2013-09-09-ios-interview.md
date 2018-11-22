@@ -1105,7 +1105,9 @@ ARC 相对于 MRC，不是在编译时添加 retain/release/autorelease 这么�
 
 #### mmap
 
-虽然苹果并没有明确每个 App 在运行期间可以使用的内存最大值，但是有开发者进行了实验和统计，一般在占用系统内存超过 20% 的时候会有内存警告，而超过 50% 的时候，就很容易 Crash 了，所以内存使用率还是尽量要少，对于数据量比较大的应用，可以采用分步加载数据的方式，或者采用 mmap 方式。mmap 是使用逻辑内存对磁盘文件进行映射，中间只是进行映射没有任何拷贝操作，避免了写文件的数据拷贝。 操作内存就相当于在操作文件，避免了内核空间和用户空间的频繁切换。
+虽然苹果并没有明确每个 App 在运行期间可以使用的内存最大值，但是有开发者进行了实验和统计，一般在占用系统内存超过 20% 的时候会有内存警告，而超过 50% 的时候，就很容易 Crash 了，所以内存使用率还是尽量要少，对于数据量比较大的应用，可以采用分步加载数据的方式，或者采用 mmap 方式。mmap 是使用逻辑内存对磁盘文件进行映射，中间只是进行映射没有任何拷贝操作，避免了写文件的数据拷贝。 操作内存就相当于在操作文件，避免了内核空间和用户空间的频繁切换，能够提供高性能的写入速度。此外，mmap 可以保持数据的一致性，即使在对应的用户进程崩溃后，内存映射的文件仍然可以落盘。参见：[mmap 实现数据一致性][29]。因为，用户进程崩溃后，内核会托管 mmap 的交换区，保证对应的数据能够存盘。sqlite 里也使用 mmap 提高性能防止丢数据。
+
+
 
 
 #### 循环引用
@@ -2090,3 +2092,5 @@ TCP Reno 这个算法定义在 RFC5681。快速重传和快速恢复算法一般
 [26]: https://v.qq.com/x/page/y06414rp1lq.html
 [27]: https://tv.sohu.com/v/dXMvMjA5NTQ2MzcwLzEwMjgzMDMyMy5zaHRtbA==.html
 [28]: https://coolshell.cn/articles/11609.html
+[29]: https://stackoverflow.com/questions/5902629/mmap-msync-and-linux-process-termination
+[30]: https://www.realworldtech.com/forum/?threadid=113923&curpostid=114068

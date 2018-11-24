@@ -1561,6 +1561,177 @@ dispatch_barrier_async 函数会等待当前 Concurrent Dispatch Queue 中并行
 
 
 
+29、聊一聊 iOS 中的锁？
+
+下面一张图说明了 iOS 中各种锁的性能：
+
+![image](../../images/ios-interview/lock.png)
+
+
+#### OSSpinLock
+
+[不再安全的 OSSpinLock](https://link.juejin.im/?target=http%3A%2F%2Fblog.ibireme.com%2F2016%2F01%2F16%2Fspinlock_is_unsafe_in_ios%2F) 一文中介绍了 OSSpinLock 不再安全，主要原因发生在低优先级线程拿到锁时，高优先级线程进入忙等(busy-wait)状态，消耗大量 CPU 时间，从而导致低优先级线程拿不到 CPU 时间，也就无法完成任务并释放锁。这种问题被称为优先级反转。
+
+为什么忙等会导致低优先级线程拿不到时间片？这还得从操作系统的线程调度说起。
+现代操作系统在管理普通线程时，通常采用时间片轮转算法(Round Robin，简称 RR)。每个线程会被分配一段时间片(quantum)，通常在 10-100 毫秒左右。当线程用完属于自己的时间片以后，就会被操作系统挂起，放入等待队列中，直到下一次被分配时间片。
+
+
+#### 信号量
+
+信号量 `dispatch_semaphore_t` 的实现原理，它最终会调用到 `sem_wait` 方法，这个方法在 glibc 中被实现如下:
+
+```
+int sem_wait (sem_t *sem) {
+  int *futex = (int *) sem;
+  if (atomic_decrement_if_positive (futex) > 0)
+    return 0;
+  int err = lll_futex_wait (futex, 0);
+    return -1;
+)
+```
+
+首先会把信号量的值减一，并判断是否大于零。如果大于零，说明不用等待，所以立刻返回。具体的等待操作在 `lll_futex_wait` 函数中实现，`lll` 是 low level lock 的简称。这个函数通过汇编代码实现，调用到 `SYS_futex` 这个系统调用，使线程进入睡眠状态，主动让出时间片，这个函数在互斥锁的实现中，也有可能被用到。
+
+主动让出时间片并不总是代表效率高。让出时间片会导致操作系统切换到另一个线程，这种上下文切换通常需要 10 微秒左右，而且至少需要两次切换。如果等待时间很短，比如只有几个微秒，忙等就比线程睡眠更高效。
+
+可以看到，自旋锁和信号量的实现都非常简单，这也是两者的加解锁耗时分别排在第一和第二的原因。再次强调，加解锁耗时不能准确反应出锁的效率(比如时间片切换就无法发生)，它只能从一定程度上衡量锁的实现复杂程度。
+
+
+详情参见：[介绍 GCD 底层实现的文章](https://link.juejin.im/?target=https%3A%2F%2Fbestswifter.com%2F%23open)
+
+
+
+#### pthread_mutex
+
+pthread 表示 POSIX thread，定义了一组跨平台的线程相关的 API，`pthread_mutex` 表示互斥锁。互斥锁的实现原理与信号量非常相似，不是使用忙等，而是阻塞线程并睡眠，需要进行上下文切换。
+
+互斥锁的常见用法如下:
+
+```
+pthread_mutexattr_t attr;
+pthread_mutexattr_init(&attr);
+pthread_mutexattr_settype(&attr, PTHREAD_MUTEX_NORMAL);  // 定义锁的属性
+
+pthread_mutex_t mutex;
+pthread_mutex_init(&mutex, &attr) // 创建锁
+
+pthread_mutex_lock(&mutex); // 申请锁
+    // 临界区
+pthread_mutex_unlock(&mutex); // 释放锁
+```
+
+对于 `pthread_mutex` 来说，它的用法和之前没有太大的改变，比较重要的是锁的类型，可以有 `PTHREAD_MUTEX_NORMAL`、`PTHREAD_MUTEX_ERRORCHECK`、`PTHREAD_MUTEX_RECURSIVE` 等等，具体的特性就不做解释了，网上有很多相关资料。
+
+一般情况下，一个线程只能申请一次锁，也只能在获得锁的情况下才能释放锁，多次申请锁或释放未获得的锁都会导致崩溃。假设在已经获得锁的情况下再次申请锁，线程会因为等待锁的释放而进入睡眠状态，因此就不可能再释放锁，从而导致死锁。
+
+然而这种情况经常会发生，比如某个函数申请了锁，在临界区内又递归调用了自己。辛运的是 `pthread_mutex` 支持递归锁，也就是允许一个线程递归的申请锁，只要把 attr 的类型改成 `PTHREAD_MUTEX_RECURSIVE` 即可。
+
+互斥锁在申请锁时，调用了 `pthread_mutex_lock` 方法，它在不同的系统上实现各有不同，有时候它的内部是使用信号量来实现，即使不用信号量，也会调用到 `lll_futex_wait` 函数，从而导致线程休眠。
+
+上文说到如果临界区很短，忙等的效率也许更高，所以在有些版本的实现中，会首先尝试一定次数(比如 1000 次)的 test_and_test，这样可以在错误使用互斥锁时提高性能。
+
+另外，由于 `pthread_mutex` 有多种类型，可以支持递归锁等，因此在申请加锁时，需要对锁的类型加以判断，这也就是为什么它和信号量的实现类似，但效率略低的原因。
+
+
+
+#### NSLock
+
+NSLock 是 Objective-C 以对象的形式暴露给开发者的一种锁，它的实现非常简单，通过宏，定义了 lock 方法:
+
+```
+#define    MLOCK \
+- (void) lock\
+{\
+  int err = pthread_mutex_lock(&_mutex);\
+  // 错误处理 ……
+}
+```
+
+NSLock 只是在内部封装了一个 `pthread_mutex`，属性为 `PTHREAD_MUTEX_ERRORCHECK`，它会损失一定性能换来错误提示。
+
+这里使用宏定义的原因是，OC 内部还有其他几种锁，他们的 lock 方法都是一模一样，仅仅是内部 `pthread_mutex` 互斥锁的类型不同。通过宏定义，可以简化方法的定义。
+
+NSLock 比 `pthread_mutex` 略慢的原因在于它需要经过方法调用，同时由于缓存的存在，多次方法调用不会对性能产生太大的影响。
+
+
+
+
+
+#### NSCondition
+
+NSCondition 的底层是通过条件变量(condition variable) `pthread_cond_t` 来实现的。条件变量有点像信号量，提供了线程阻塞与信号机制，因此可以用来阻塞某个线程，并等待某个数据就绪，随后唤醒线程，比如常见的生产者-消费者模式。
+
+
+
+#### NSRecursiveLock
+
+
+上文已经说过，递归锁也是通过 `pthread_mutex_lock` 函数来实现，在函数内部会判断锁的类型，如果显示是递归锁，就允许递归调用，仅仅将一个计数器加一，锁的释放过程也是同理。
+
+NSRecursiveLock 与 NSLock 的区别在于内部封装的 `pthread_mutex_t` 对象的类型不同，前者的类型为 `PTHREAD_MUTEX_RECURSIVE`。
+
+
+
+
+#### NSConditionLock
+
+
+NSConditionLock 借助 NSCondition 来实现，它的本质就是一个生产者-消费者模型。“条件被满足”可以理解为生产者提供了新的内容。NSConditionLock 的内部持有一个 NSCondition 对象，以及 `_condition_value` 属性，在初始化时就会对这个属性进行赋值：
+
+
+```
+// 简化版代码
+- (id) initWithCondition: (NSInteger)value {
+    if (nil != (self = [super init])) {
+        _condition = [NSCondition new]
+        _condition_value = value;
+    }
+    return self;
+}
+```
+
+它的 `lockWhenCondition` 方法其实就是消费者方法：
+
+
+```
+- (void) lockWhenCondition: (NSInteger)value {
+    [_condition lock];
+    while (value != _condition_value) {
+        [_condition wait];
+    }
+}
+```
+
+对应的 `unlockWhenCondition` 方法则是生产者，使用了 `broadcast` 方法通知了所有的消费者：
+
+```
+- (void) unlockWithCondition: (NSInteger)value {
+    _condition_value = value;
+    [_condition broadcast];
+    [_condition unlock];
+}
+```
+
+
+#### @synchronized
+
+这其实是一个 OC 层面的锁， 主要是通过牺牲性能换来语法上的简洁与可读。
+
+我们知道 `@synchronized` 后面需要紧跟一个 OC 对象，它实际上是把这个对象当做锁来使用。这是通过一个哈希表来实现的，OC 在底层使用了一个互斥锁的数组(你可以理解为锁池)，通过对对象去哈希值来得到对应的互斥锁。
+
+
+
+具体参考：[关于 @synchronized，这儿比你想知道的还要多](https://link.juejin.im/?target=http%3A%2F%2Fyulingtianxia.com%2Fblog%2F2015%2F11%2F01%2FMore-than-you-want-to-know-about-synchronized%2F)
+
+
+
+更多信息参见：
+
+- [深入理解 iOS 开发中的锁](https://juejin.im/post/57f6e9f85bbb50005b126e5f)
+- [iOS 开发中的 11 种锁以及性能对比](https://www.jianshu.com/p/b1edc6b0937a)
+
+
+
 30、苹果为什么要废弃 dispatch_get_current_queue？
 
 

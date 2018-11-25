@@ -1570,6 +1570,22 @@ dispatch_barrier_async 函数会等待当前 Concurrent Dispatch Queue 中并行
 
 #### OSSpinLock
 
+
+关键字：**忙等**
+
+
+自旋锁的目的是为了确保临界区只有一个线程可以访问，它的使用可以用下面这段伪代码来描述：
+
+```
+do {
+    Acquire Lock // 原子操作
+        Critical section  // 临界区
+    Release Lock
+        Reminder section // 不需要锁保护的代码
+}
+```
+
+
 新版 iOS 中，系统维护了 5 个不同的线程优先级：background，utility，default，user-initiated，user-interactive。高优先级线程始终会在低优先级线程前执行，一个线程不会受到比它更低优先级线程的干扰。这种线程调度算法会产生潜在的优先级反转问题，从而破坏了 spin lock。
 
 [不再安全的 OSSpinLock](https://link.juejin.im/?target=http%3A%2F%2Fblog.ibireme.com%2F2016%2F01%2F16%2Fspinlock_is_unsafe_in_ios%2F) 一文中介绍了 OSSpinLock 不再安全，主要原因是当高优先级的线程和低优先级的线程都竞争相同的资源时，在低优先级线程拿到锁时，高优先级线程进入忙等(busy-wait)状态，消耗大量 CPU 时间，从而导致低优先级线程拿不到 CPU 时间，也就无法完成任务并释放锁。这种问题被称为优先级反转。
@@ -1579,6 +1595,8 @@ dispatch_barrier_async 函数会等待当前 Concurrent Dispatch Queue 中并行
 
 
 #### 信号量
+
+关键字：**使线程进入睡眠状态，主动让出时间片**
 
 信号量 `dispatch_semaphore_t` 的实现原理，它最终会调用到 `sem_wait` 方法，这个方法在 glibc 中被实现如下:
 
@@ -1604,6 +1622,9 @@ int sem_wait (sem_t *sem) {
 
 
 #### pthread_mutex
+
+关键字：**阻塞线程并睡眠，需要进行上下文切换**
+
 
 pthread 表示 POSIX thread，定义了一组跨平台的线程相关的 API，`pthread_mutex` 表示互斥锁。互斥锁的实现原理与信号量非常相似，不是使用忙等，而是阻塞线程并睡眠，需要进行上下文切换。
 
@@ -1638,6 +1659,8 @@ pthread_mutex_unlock(&mutex); // 释放锁
 
 #### NSLock
 
+关键字：**内部封装了一个 `pthread_mutex`，`PTHREAD_MUTEX_ERRORCHECK`**
+
 NSLock 是 Objective-C 以对象的形式暴露给开发者的一种锁，它的实现非常简单，通过宏，定义了 lock 方法:
 
 ```
@@ -1661,12 +1684,15 @@ NSLock 比 `pthread_mutex` 略慢的原因在于它需要经过方法调用，�
 
 #### NSCondition
 
+关键字：**条件变量(condition variable) `pthread_cond_t`，提供了线程阻塞与信号机制**
+
 NSCondition 的底层是通过条件变量(condition variable) `pthread_cond_t` 来实现的。条件变量有点像信号量，提供了线程阻塞与信号机制，因此可以用来阻塞某个线程，并等待某个数据就绪，随后唤醒线程，比如常见的生产者-消费者模式。
 
 
 
 #### NSRecursiveLock
 
+关键字：**内部封装了一个 `pthread_mutex`，`PTHREAD_MUTEX_RECURSIVE`**
 
 上文已经说过，递归锁也是通过 `pthread_mutex_lock` 函数来实现，在函数内部会判断锁的类型，如果显示是递归锁，就允许递归调用，仅仅将一个计数器加一，锁的释放过程也是同理。
 
@@ -1677,6 +1703,7 @@ NSRecursiveLock 与 NSLock 的区别在于内部封装的 `pthread_mutex_t` 对�
 
 #### NSConditionLock
 
+关键字：**NSCondition，生产者-消费者模型**
 
 NSConditionLock 借助 NSCondition 来实现，它的本质就是一个生产者-消费者模型。“条件被满足”可以理解为生产者提供了新的内容。NSConditionLock 的内部持有一个 NSCondition 对象，以及 `_condition_value` 属性，在初始化时就会对这个属性进行赋值：
 
@@ -1716,6 +1743,10 @@ NSConditionLock 借助 NSCondition 来实现，它的本质就是一个生产者
 
 
 #### @synchronized
+
+
+关键字：**OC 层面，哈希表，互斥锁**
+
 
 这其实是一个 OC 层面的锁， 主要是通过牺牲性能换来语法上的简洁与可读。
 

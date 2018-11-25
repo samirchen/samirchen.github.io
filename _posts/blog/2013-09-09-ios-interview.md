@@ -1570,6 +1570,8 @@ dispatch_barrier_async 函数会等待当前 Concurrent Dispatch Queue 中并行
 
 #### OSSpinLock
 
+新版 iOS 中，系统维护了 5 个不同的线程优先级：background，utility，default，user-initiated，user-interactive。高优先级线程始终会在低优先级线程前执行，一个线程不会受到比它更低优先级线程的干扰。这种线程调度算法会产生潜在的优先级反转问题，从而破坏了 spin lock。
+
 [不再安全的 OSSpinLock](https://link.juejin.im/?target=http%3A%2F%2Fblog.ibireme.com%2F2016%2F01%2F16%2Fspinlock_is_unsafe_in_ios%2F) 一文中介绍了 OSSpinLock 不再安全，主要原因发生在低优先级线程拿到锁时，高优先级线程进入忙等(busy-wait)状态，消耗大量 CPU 时间，从而导致低优先级线程拿不到 CPU 时间，也就无法完成任务并释放锁。这种问题被称为优先级反转。
 
 为什么忙等会导致低优先级线程拿不到时间片？这还得从操作系统的线程调度说起。

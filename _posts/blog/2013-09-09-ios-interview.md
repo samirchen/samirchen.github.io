@@ -6,9 +6,9 @@ category: blog
 tag: iOS, Objective-C, Swift
 ---
 
-## 面试集锦
 
-1、什么情况使用 weak 关键字，相比 assign 有什么不同？
+
+## 1、什么情况使用 weak 关键字，相比 assign 有什么不同？
 
 什么情况使用 weak 关键字？
 
@@ -21,7 +21,7 @@ weak 和 assign 的不同点：
 - assign 可以用非 OC 对象以及基本类型，而 weak 必须用于 OC 对象。
 
 
-2、runtime 如何实现 weak 属性？
+## 2、runtime 如何实现 weak 属性？
 
 weak 此特质表明该属性定义了一种「非拥有关系」(nonowning relationship)。为这种属性设置新值时，设置方法既不持有新值（新指向的对象），也不释放旧值（原来指向的对象）。
 
@@ -37,7 +37,7 @@ runtime 如何实现 weak 属性具体流程大致分为 3 步：
 更详细的内容参见：[iOS 底层解析 weak 的实现原理][3]
 
 
-3、怎么用 copy 关键字？
+## 3、怎么用 copy 关键字？
 
 copy 的语义是将对象拷贝一份给新的引用，通过新的引用对它的修改不影响原来那个被拷贝的对象。
 
@@ -46,7 +46,7 @@ copy 的语义是将对象拷贝一份给新的引用，通过新的引用对它
 
 
 
-4、用 @property 声明的 NSString（或 NSArray，NSDictionary）经常使用 copy 关键字，为什么？如果改用 strong 关键字，可能造成什么问题？
+## 4、用 @property 声明的 NSString（或 NSArray，NSDictionary）经常使用 copy 关键字，为什么？如果改用 strong 关键字，可能造成什么问题？
 
 - 使用 copy 无论给我传入是一个可变对象还是不可对象，我本身持有的就是一个不可变的副本。
 - 如果使用 strong，那么这个属性就有可能指向一个可变对象，如果这个可变对象在外部被修改了，那么会影响该属性。
@@ -73,7 +73,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 
 
-5、怎么理解浅拷贝与深拷贝？
+## 5、怎么理解浅拷贝与深拷贝？
 
 不论是非集合类对象还是集合类对象：
 
@@ -102,7 +102,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 
 
-6、如何让自己的类用 copy 修饰符？
+## 6、如何让自己的类用 copy 修饰符？
 
 想让自己所写的对象具有拷贝功能，则需实现 NSCopying 协议。如果自定义的对象分为可变版本与不可变版本，那么就要同时实现 NSCopying 与 NSMutableCopying 协议。
 
@@ -112,7 +112,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 
 
-7、@property 的本质是什么？
+## 7、@property 的本质是什么？
 
 @property = ivar + getter + setter;
 
@@ -120,7 +120,7 @@ NSLog(@"%@", self.myArray); // (1,2,3,4)
 
 
 
-8、@protocol 和 category 中如何使用 @property？
+## 8、@protocol 和 category 中如何使用 @property？
 
 在 protocol 中使用 property 只会生成 setter 和 getter 方法声明，我们使用属性的目的，是希望遵守我协议的对象能实现该属性。在实现 protocol 的类中如果要使用 property 对应的实例变量，则需要做一下 `@synthesize var = _var;`。
 
@@ -170,7 +170,7 @@ static const void *ViewIndexKey = &ViewIndexKey;
 
 
 
-9、category 和 extension 有什么区别？category 是如何加载的？category 的方法覆盖是怎么处理的？
+## 9、category 和 extension 有什么区别？category 是如何加载的？category 的方法覆盖是怎么处理的？
 
 extension 在编译期决定，它就是类的一部分，在编译期和头文件里的 @interface 以及实现文件里的 @implement 一起形成一个完整的类，它伴随类的产生而产生，亦随之一起消亡。extension 一般用来隐藏类的私有信息，你必须有一个类的源码才能为一个类添加 extension，所以你无法为系统的类比如 NSString 添加 extension。
 
@@ -229,7 +229,7 @@ if (currentClass) {
 
 
 
-10、@synthesize 和 @dynamic 分别有什么作用？
+## 10、@synthesize 和 @dynamic 分别有什么作用？
 
 - @property 有两个对应的词，一个是 @synthesize，一个是 @dynamic。如果 @synthesize 和 @dynamic 都没写，那么默认的就是 `@syntheszie var = _var;`。
 - @synthesize 的语义是如果你没有手动实现 setter 方法和 getter 方法，那么编译器会自动为你加上这两个方法。
@@ -237,7 +237,7 @@ if (currentClass) {
 
 
 
-11、ARC 下，不显式指定任何属性关键字时，默认的关键字都有哪些？
+## 11、ARC 下，不显式指定任何属性关键字时，默认的关键字都有哪些？
 
 对应基本数据类型默认关键字是：atomic, readwrite, assign。
 
@@ -245,7 +245,7 @@ if (currentClass) {
 
 
 
-12、在有了自动合成属性实例变量之后，@synthesize 还有哪些使用场景？
+## 12、在有了自动合成属性实例变量之后，@synthesize 还有哪些使用场景？
 
 
 总结下 @synthesize 合成实例变量的规则，有以下几点：
@@ -266,7 +266,7 @@ if (currentClass) {
 
 
 
-13、一个 objc 对象如何进行内存布局（考虑有父类的情况）？
+## 13、一个 objc 对象如何进行内存布局（考虑有父类的情况）？
 
 - 每一个对象内部都有一个 isa 指针，指向他的类对象，类对象中存放着本对象的：
 	- 对象方法列表（对象能够接收的消息列表，保存在它所对应的类对象中）。
@@ -289,7 +289,7 @@ Objective-C 对象的结构图：
 ![image](../../images/ios-interview/instance-structure.png)
 
 
-14、runtime 如何通过 selector 找到对应的 IMP 地址（分别考虑实例方法和类方法）？Selector、Method 和 IMP 的有什么区别与联系？
+## 14、runtime 如何通过 selector 找到对应的 IMP 地址（分别考虑实例方法和类方法）？Selector、Method 和 IMP 的有什么区别与联系？
 
 对于实例方法，每个实例的 isa 指针指向着对应类对象，而每一个类对象中都一个对象方法列表。对于类方法，每个类对象的 isa 指针都指向着对应的元对象，而每一个元对象中都有一个类方法列表。方法列表中记录着方法的名称，方法实现，以及参数类型，其实 selector 本质就是方法名称，通过这个方法名称就可以在方法列表中找到对应的方法实现。
 
@@ -310,7 +310,7 @@ struct objc_method {
 
 
 
-15、objc 中的类方法和实例方法有什么本质区别和联系？
+## 15、objc 中的类方法和实例方法有什么本质区别和联系？
 
 类方法：
 
@@ -332,7 +332,7 @@ struct objc_method {
 
 
 
-16、`objc_msgSend`、`_objc_msgForward` 都是做什么的？OC 中的消息调用流程是怎样的？
+## 16、`objc_msgSend`、`_objc_msgForward` 都是做什么的？OC 中的消息调用流程是怎样的？
 
 `objc_msgSend` 是用来做消息发送的。在 OC 中，对方法的调用都会被转换成内部的消息发送执行对 `objc_msgSend` 方法的调用。示例如下：
 
@@ -371,7 +371,7 @@ int returnInt = ((int *(id, SEL, NSString *, int))objc_msgSend)((id) test, @sele
 
 
 
-17、能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量？为什么？
+## 17、能否向编译后得到的类中增加实例变量？能否向运行时创建的类中添加实例变量？为什么？
 
 - 不能向编译后得到的类中增加实例变量。
 - 能向运行时创建的类中添加实例变量。
@@ -520,7 +520,7 @@ void runtimePropertySetterIMP(id self, SEL _cmd, NSString *s) {
 ```
 
 
-18、run loop 和线程有什么关系？
+## 18、run loop 和线程有什么关系？
 
 首先，iOS 开发中能遇到两个线程对象: pthread_t 和 NSThread。过去苹果有份文档标明了 NSThread 只是 pthread_t 的封装，但那份文档已经失效了，现在它们也有可能都是直接包装自最底层的 mach thread。苹果并没有提供这两个对象相互转换的接口，但不管怎么样，可以肯定的是 pthread_t 和 NSThread 是一一对应的。比如，你可以通过 `pthread_main_thread_np()` 或 `[NSThread mainThread]` 来获取主线程；也可以通过 `pthread_self()` 或 `[NSThread currentThread]` 来获取当前线程。CFRunLoop 是基于 pthread 来管理的。
 
@@ -572,7 +572,7 @@ CFRunLoopRef CFRunLoopGetCurrent() {
 更多信息可以参考：[深入理解 RunLoop][6]
 
 
-19、run loop 的 mode 作用是什么？
+## 19、run loop 的 mode 作用是什么？
 
 在 CoreFoundation 里面关于 RunLoop 有 5 个类，分别对应不同的概念：
 
@@ -657,7 +657,7 @@ CFRunLoopRemoveTimer(CFRunLoopRef rl, CFRunLoopTimerRef timer, CFStringRef mode)
 
 
 
-20、以 `+ scheduledTimerWithTimeInterval...` 的方式触发的 timer，在滑动页面上的列表时，timer 会暂定回调，为什么？如何解决？
+## 20、以 `+ scheduledTimerWithTimeInterval...` 的方式触发的 timer，在滑动页面上的列表时，timer 会暂定回调，为什么？如何解决？
 
 
 RunLoop 只能运行在一种 mode 下，如果要换 mode，当前的 loop 也需要停下重启成新的。利用这个机制，ScrollView 滚动过程中 NSDefaultRunLoopMode（kCFRunLoopDefaultMode）的 mode 会切换到 UITrackingRunLoopMode 来保证 ScrollView 的流畅滑动：只能在 NSDefaultRunLoopMode 模式下处理的事件会影响 ScrollView 的滑动。
@@ -685,7 +685,7 @@ NSTimer *timer = [NSTimer timerWithTimeInterval:1.0
 
 
 
-21、猜想 run loop 内部是如何实现的？
+## 21、猜想 run loop 内部是如何实现的？
 
 一般来讲，一个线程一次只能执行一个任务，执行完成后线程就会退出。如果我们需要一个机制，让线程能随时处理事件但并不退出，通常的代码逻辑 是这样的：
 
@@ -1030,7 +1030,7 @@ ASDK 仿照 QuartzCore/UIKit 框架的模式，实现了一套类似的界面更
 
 
 
-22、聊一聊 iOS 中的离屏渲染？
+## 22、聊一聊 iOS 中的离屏渲染？
 
 GPU 渲染机制：CPU 计算好显示内容提交到 GPU，GPU 渲染完成后将渲染结果放入帧缓冲区，随后视频控制器会按照 VSync 信号逐行读取帧缓冲区的数据，经过可能的数模转换传递给显示器显示。
 
@@ -1082,7 +1082,7 @@ iOS 版本上的优化：
 - 2）iOS 9.0 之后 UIButton 设置圆角会触发离屏渲染，而 UIImageView 里 png 图片设置圆角不会触发离屏渲染了，如果设置其他阴影效果之类的还是会触发离屏渲染的。
 
 
-23、objc 使用什么机制管理对象内存？
+## 23、objc 使用什么机制管理对象内存？
 
 用的是引用计数的机制。通过 retainCount 的机制来决定对象是否需要释放。每次 run loop 的时候，都会检查对象的 retainCount，如果 retainCount 为 0，说明该对象没有地方需要继续使用了，可以释放掉了。
 
@@ -1092,14 +1092,14 @@ iOS 版本上的优化：
 
 
 
-24、ARC 通过什么方式帮助开发者管理内存？
+## 24、ARC 通过什么方式帮助开发者管理内存？
 
 ARC 相对于 MRC，不是在编译时添加 retain/release/autorelease 这么简单。应该是编译期和运行期两部分共同帮助开发者管理内存。
 
 在编译期，ARC 用的是更底层的 C 接口实现的 retain/release/autorelease，这样做性能更好，也是为什么不能在 ARC 环境下手动 retain/release/autorelease，同时对同一上下文的同一对象的成对 retain/release 操作进行优化（即忽略掉不必要的操作）；ARC 也包含运行期组件，这个地方做的优化比较复杂，但也不能被忽略。
 
 
-25、iOS 开发中常见的内存问题有哪些？
+## 25、iOS 开发中常见的内存问题有哪些？
 
 内存问题主要包括两个部分，一个是iOS中常见循环引用导致的内存泄露 ，另外就是大量数据加载及使用导致的内存警告。
 
@@ -1466,7 +1466,7 @@ GCD 提供的定时器叫 dispatch_source_t。使用方式如下：
 更多信息参加：[iOS App 稳定性指标及监测][12]
 
 
-26、一个 autorealese 对象在什么时刻释放？
+## 26、一个 autorealese 对象在什么时刻释放？
 
 分两种情况：手动干预释放时机、系统自动去释放。
 
@@ -1512,7 +1512,7 @@ __weak id reference = nil;
 
 
 
-27、如何实现 autoreleasepool 的？
+## 27、如何实现 autoreleasepool 的？
 
 
 autoreleasepool 以一个队列数组的形式实现，主要通过下列三个函数完成.
@@ -1523,7 +1523,7 @@ autoreleasepool 以一个队列数组的形式实现，主要通过下列三个�
 
 
 
-28、如何用 GCD 同步若干个异步调用？
+## 28、如何用 GCD 同步若干个异步调用？
 
 使用 Dispatch Group 追加 block 到 Global Group Queue，这些 block 如果全部执行完毕，就会执行 Main Dispatch Queue 中的结束处理的 block。
 
@@ -1540,7 +1540,7 @@ dispatch_group_notify(group, dispatch_get_main_queue(), ^{
 
 
 
-29、dispatch_barrier_async 的作用是什么？
+## 29、dispatch_barrier_async 的作用是什么？
 
 dispatch_barrier_async 函数配合 Concurrent Dispatch Queue 一起使用可以在并行的任务中插入中间任务。
 
@@ -1561,7 +1561,7 @@ dispatch_barrier_async 函数会等待当前 Concurrent Dispatch Queue 中并行
 
 
 
-29、聊一聊 iOS 中的锁？
+## 30、聊一聊 iOS 中的锁？
 
 下面一张图说明了 iOS 中各种锁的性能：
 
@@ -1765,7 +1765,7 @@ NSConditionLock 借助 NSCondition 来实现，它的本质就是一个生产者
 
 
 
-30、苹果为什么要废弃 dispatch_get_current_queue？
+## 31、苹果为什么要废弃 dispatch_get_current_queue？
 
 
 1）派发队列其实是按照层级结构来组织的，如下图所示：
@@ -1857,7 +1857,7 @@ void * dispatch_get_specific(const void *key)
 
 
 
-31、如何手动触发一个 value 的 KVO？
+## 32、如何手动触发一个 value 的 KVO？
 
 KVC，即是指 NSKeyValueCoding，一个非正式的 Protocol，提供一种机制来间接访问对象的属性。KVO 就是基于 KVC 实现的关键技术之一。
 
@@ -1901,13 +1901,13 @@ KVC，即是指 NSKeyValueCoding，一个非正式的 Protocol，提供一种机
 Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方法注入是在运行时而不是编译时实现的。这就是正确命名如此重要的原因。只有在使用 KVC 命名约定时，KVO 才能做到这一点。KVO 在实现中通过 isa 混写（isa-swizzling）把这个对象的 isa 指针（isa 指针告诉 Runtime 系统这个对象的类是什么）指向这个新创建的子类，对象就神奇的变成了新创建的子类的实例。Apple 还重写、覆盖了 -class 方法并返回原来的类，企图欺骗我们：这个类没有变，就是原本那个类。
 
 
-32、BAD_ACCESS 在什么情况下出现？
+## 33、BAD_ACCESS 在什么情况下出现？
 
 - 访问了野指针。比如对一个已经释放的对象执行了 release，访问已经释放对象的成员变量或者发消息。
 - 死循环。
 
 
-33、如何调试 BAD_ACCESS 错误？
+## 34、如何调试 BAD_ACCESS 错误？
 
 - 重写 object 的 respondsToSelector 方法，现实出现 EXEC_BAD_ACCESS 前访问的最后一个 object。
 - 通过 Zombie。
@@ -1915,7 +1915,7 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 - Xcode 7 已经集成了 BAD_ACCESS 捕获功能：Address Sanitizer。用法如下：在配置中勾选 Enable Address Sanitizer。
 
 
-34、动态计算文本高度的时候需要注意什么？
+## 35、动态计算文本高度的时候需要注意什么？
 
 ```
 + (CGSize)contentSizeForContent:(NSString *)content withFixedWidth:(CGFloat)width {
@@ -1938,7 +1938,7 @@ Apple 使用了 isa 混写（isa-swizzling）来实现 KVO，这种继承和方�
 如上代码，需要注意算完高度需要用 `ceil` 来处理一下做向上取整。
 
 
-35、如何优化 App 的启动耗时？
+## 36、如何优化 App 的启动耗时？
 
 
 iOS 的 App 启动主要分为以下步骤：
@@ -1997,7 +1997,7 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
 - [WWDC 2016:Optimizing App Startup Time][17]
 
 
-36、如何优化 App 的的包大小？
+## 37、如何优化 App 的的包大小？
 
 直接上建议：
 
@@ -2044,7 +2044,7 @@ t2 = main 方法执行之后到 AppDelegate 类中的 `application:didFinishLaun
         - 开启 BitCode
 
 
-37、什么是事件响应链？
+## 38、什么是事件响应链？
 
 对于 iOS 设备用户来说，他们操作设备的方式主要有三种：触摸屏幕、晃动设备、通过遥控设施控制设备。对应的事件类型有以下三种：
 
@@ -2074,7 +2074,7 @@ UIWindow 实例对象会首先在它的内容视图上调用 `hitTest:withEvent:
  这里有一个场景实践：[实现 iOS UIView 及其 Subview 透明区域的事件穿透][25]
 
 
-38、当我们要做一些基于 CALayer 的动画时，有时需要设置 layer 的锚点来配合动画，这时候我们需要注意什么？
+## 39、当我们要做一些基于 CALayer 的动画时，有时需要设置 layer 的锚点来配合动画，这时候我们需要注意什么？
 
 需要注意的是设置锚点会引起原来 position 的变化，可能会发生不符合预期的行为，所以要做一下转化，示例代码如下：
 
@@ -2105,7 +2105,7 @@ UIWindow 实例对象会首先在它的内容视图上调用 `hitTest:withEvent:
 
 
 
-39、聊一聊加密和数字签名的区别？
+## 40、聊一聊加密和数字签名的区别？
 
 
 加密分为对称加密和非对称加密。这个在[李永乐老师讲 RSA 加密算法][26]中讲的挺形象的。
@@ -2137,12 +2137,12 @@ UIWindow 实例对象会首先在它的内容视图上调用 `hitTest:withEvent:
 数字签名是个加密的过程，数字签名验证是个解密的过程。
 
 
-40、聊一聊 TCP 的滑动窗口协议？
+## 41、聊一聊 TCP 的滑动窗口协议？
 
 TCP 引入了一些技术和设计来做网络流控，Sliding Window 是其中一个技术。前面我们说过，TCP 头里有一个字段叫 Window，又叫 Advertised-Window，这个字段是接收端告诉发送端自己还有多少缓冲区可以接收数据。于是发送端就可以根据这个接收端的处理能力来发送数据，而不会导致接收端处理不过来。
 
 
-41、聊一聊 TCP 的拥塞控制相关过程？
+## 42、聊一聊 TCP 的拥塞控制相关过程？
 
 TCP 的拥塞控制主要是四个算法：1）慢启动；2）拥塞避免；3）拥塞发生；4）快速恢复。
 
@@ -2221,7 +2221,7 @@ TCP Reno 这个算法定义在 RFC5681。快速重传和快速恢复算法一般
 更多信息参见：[TCP 的那些事儿][28]
 
 
-42、聊一聊你知道的几种查找树？
+## 43、聊一聊你知道的几种查找树？
 
 
 

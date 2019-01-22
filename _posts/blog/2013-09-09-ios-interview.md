@@ -2250,20 +2250,20 @@ TCP Reno 这个算法定义在 RFC5681。快速重传和快速恢复算法一般
 load 函数是当类或分类（Category）被加载到 Objective-C runtime 时（就是被引用的时候）被调用的，实现这个方法可以让我们在类加载的时候执行一些类相关的行为。当类被引用进项目的时候就会执行 load 函数（在 main 函数开始执行之前），与这个类是否被用到无关，每个类的 load 函数只会自动调用一次。load 函数调用特点如下：
 
 
-- 1. 当父类和子类都实现 load 函数时，二者的 load 方法都会被调用，父类的 load 方法执行顺序要优先于子类。
-- 2. 当子类未实现 load 方法时，在加载该子类时，不会去调用其父类 load 方法。
-- 3. 类中的 load 方法执行顺序要优先于类别（Category）。
-- 4. 当有多个类别（Category）都实现了 load 方法，这几个 load 方法都会执行，但执行顺序与编译顺序一致，即与类别在 Compile Sources 中出现的顺序一致。
-- 5. 当有多个不同的类的时候，每个类 load 执行顺序与编译顺序一致，即与其在 Compile Sources 出现的顺序一致。
+- 1、当父类和子类都实现 load 函数时，二者的 load 方法都会被调用，父类的 load 方法执行顺序要优先于子类。
+- 2、当子类未实现 load 方法时，在加载该子类时，不会去调用其父类 load 方法。
+- 3、类中的 load 方法执行顺序要优先于类别（Category）。
+- 4、当有多个类别（Category）都实现了 load 方法，这几个 load 方法都会执行，但执行顺序与编译顺序一致，即与类别在 Compile Sources 中出现的顺序一致。
+- 5、当有多个不同的类的时候，每个类 load 执行顺序与编译顺序一致，即与其在 Compile Sources 出现的顺序一致。
 
 
 
 initialize 函数是在类或者其子类的收到第一条消息之前调用。这里所指的消息包括实例方法和类方法的调用。也就是说 initialize 方法是以懒加载的方式被调用的，如果程序一直没有给某个类或它的子类发送消息，那么这个类的 initialize 方法是永远不会被调用的。
 
 
-- 1. 父类的 initialize 方法会比子类先执行。
-- 2. 当子类未实现 initialize 方法时，在该子类收到第一条消息之前，会调用父类 initialize 方法，子类实现 initialize 方法时，则会覆盖父类 initialize 方法。有点多态的意思。
-- 3. 当有多个 Category 都实现了 initialize 方法，会覆盖类中的方法，只执行最后那个被编译的，即 Compile Sources 列表中最后一个 Category 的 initialize 方法。
+- 1、父类的 initialize 方法会比子类先执行。
+- 2、当子类未实现 initialize 方法时，在该子类收到第一条消息之前，会调用父类 initialize 方法，子类实现 initialize 方法时，则会覆盖父类 initialize 方法。有点多态的意思。
+- 3、当有多个 Category 都实现了 initialize 方法，会覆盖类中的方法，只执行最后那个被编译的，即 Compile Sources 列表中最后一个 Category 的 initialize 方法。
 
 
 

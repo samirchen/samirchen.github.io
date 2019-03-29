@@ -25,8 +25,10 @@ $ ruby -e "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/maste
 ## 使用 brew 安装依赖库
 
 ```
-$ brew install automake fdk-aac git libtool libvorbis libvpx opus sdl shtool yasm texi2html theora wget x264 xvid lame libass
+$ brew install automake fdk-aac git libtool libvorbis libvpx opus sdl2 shtool yasm texi2html theora wget x264 xvid lame libass
 ```
+
+这里有一点需要注意的，根据 ffmpeg 的版本不同可能需要对应的 sdl 或 sdl2，如果后面你发现你的 ffmpeg 版本要求 sdl，那么就 `brew uninstall sdl2` 再 `brew install sdl`，反之亦然。没有正确的 sdl 库，后面编译 ffmpeg 会编不出来 ffplay。
 
 在安装这些库时，如果发生错误，可以重试一下，有时候可能是由于网络原因导致下载未完成而引起安装失败。你可以这样来单独安装一个库：
 
@@ -68,7 +70,7 @@ $ git clone http://source.ffmpeg.org/git/ffmpeg.git ffmpeg
 $ cd ffmpeg
 $ ./configure  --prefix=/usr/local --enable-gpl --enable-nonfree --enable-libass \
 --enable-libfdk-aac --enable-libfreetype --enable-libmp3lame --enable-libopus \
---enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-libxvid --extra-ldflags=-L/usr/local/lib
+--enable-libtheora --enable-libvorbis --enable-libvpx --enable-libx264 --enable-sdl --enable-libxvid --extra-ldflags=-L/usr/local/lib
 $ make && make install
 ```
 

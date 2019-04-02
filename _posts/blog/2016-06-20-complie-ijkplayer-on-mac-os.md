@@ -64,6 +64,26 @@ FF_ALL_ARCHS_IOS8_SDK="arm64 i386 x86_64"
 
 
 
+2、如果要支持 HTTPS，需要按如下步骤来：
+
+```
+# 获取 openssl 并初始化
+./init-ios-openssl.sh
+
+# 在 module.sh 文件中添加一行配置以启用 openssl 组件
+export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-openssl"
+
+
+./compile-ffmpeg.sh clean
+
+# 编译 openssl
+./compile-openssl.sh all
+
+# 编译 ffmpeg
+./compile-ffmpeg.sh all
+```
+
+然后，在 IJKMediaDemo 工程中要把 IJKMediaFramework 库替换为 IJKMediaFrameworkWithSSL。
 
 
 

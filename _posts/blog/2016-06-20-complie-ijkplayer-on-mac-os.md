@@ -1,7 +1,7 @@
 ---
 layout: post
-title: 在 Mac OS 上编译 FFmpeg
-description: 介绍在 Mac OS 上编译 FFmpeg 的流程。
+title: 在 Mac OS 上编译 IJKPlayer
+description: 介绍在 Mac OS 上编译 IJKPlayer 的流程。
 category: blog
 tag: Audio, Video, FFmpeg, IJKPlayer
 ---

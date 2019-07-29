@@ -129,7 +129,7 @@ rtmp {
 nginx -s reload
 ```
 
-重启 nginx：
+
 
 
 ## 使用 FFmpeg 来推流

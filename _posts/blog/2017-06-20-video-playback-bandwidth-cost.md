@@ -86,7 +86,7 @@ H.265 又称作 HEVC（High Efficiency Video Coding），是 ITU-T H.264/MPEG-4 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/video-playback-bandwidth-cost
-[3]: http://www.infoq.com/cn/presentations/one-billion-levels-of-video-playback-technology-optimization-secret
+[3]: https://mp.weixin.qq.com/s?__biz=MjM5MDE0Mjc4MA==&mid=2650997049&idx=1&sn=079d954687944e74778df58f31078bd3&chksm=bdbef96a8ac9707cd094f3737f6a32ce849066f50857b0b260fc2804e2eda22d3f6452b3cbfa&scene=27#wechat_redirect
 [4]: https://github.com/robbiehanson/CocoaHTTPServer
 [5]: https://github.com/ChangbaDevs/KTVHTTPCache
 [6]: https://github.com/robbiehanson/CocoaAsyncSocket

@@ -40,7 +40,7 @@ IJKPlayer 项目的目录结构大致如下：
 
 ![image](../../images/video-concept/video-data-flow.jpg)
 
-下面就结合 ijkplayer(k0.7.6) 的 iOS 代码具体讲讲 IJKPlayer 的工作流程。
+下面就结合 [ijkplayer(k0.7.6)](https://github.com/bilibili/ijkplayer/tree/k0.7.6)  的 iOS 代码具体讲讲 IJKPlayer 的工作流程。
 
 
 ## 播放器初始化流程

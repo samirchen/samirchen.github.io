@@ -331,7 +331,7 @@ is->frame_last_delay = 40e-3;
 if (pkt->pts != AV_NOPTS_VALUE) {
 	is->audio_clock = av_q2d(is->audio_st->time_base) * pkt->pts;
 }
-``
+```
 一个 packet 包含多个 frame 的时候：
 
 ```

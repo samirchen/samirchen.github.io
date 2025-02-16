@@ -32,6 +32,20 @@
 
     {{ content }}
 
+    <script type="text/javascript">
+        $(function(){
+            $('.home-follow').click(function(e){
+                e.preventDefault();
+
+                if($('.home-contact').is(':visible')){
+                    $('.home-contact').slideUp(100);
+                }else{
+                    $('.home-contact').slideDown(100);
+                }
+            });
+        })
+    </script>
+
     <!-- 看到这里请删除下面的代码哦！--> 
     <!-- Google Analytics -->
     <!-- Google tag (gtag.js) -->

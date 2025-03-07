@@ -93,6 +93,10 @@ export COMMON_FF_CFG_FLAGS="$COMMON_FF_CFG_FLAGS --enable-openssl"
 
 
 
+更多的音视频技术文章可以去看：[关键帧Keyframe：https://gjzkeyframe.github.io/](https://gjzkeyframe.github.io/)
+
+
+
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/complie-ijkplayer-on-mac-os

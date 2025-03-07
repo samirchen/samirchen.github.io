@@ -322,6 +322,8 @@ if (frame_queue_init(&is->pictq, &is->videoq, ffp->pictq_size, 1) < 0)
 
 
 
+更多的音视频技术文章可以去看：[关键帧Keyframe：https://gjzkeyframe.github.io/](https://gjzkeyframe.github.io/)
+
 
 ## 参考
 

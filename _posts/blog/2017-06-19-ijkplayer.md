@@ -905,6 +905,7 @@ int media_player_msg_loop(void* arg)
 
 
 
+更多的音视频技术文章可以去看：[关键帧Keyframe：https://gjzkeyframe.github.io/](https://gjzkeyframe.github.io/)
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"

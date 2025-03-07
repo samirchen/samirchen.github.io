@@ -55,6 +55,7 @@ tag: Audio, Video, Live, RTMP, HLS
 - HTTP-FLV: RTMP over HTTP；基于长连接 HTTP；每个时刻收到的数据立即转发，使用 HTTP 协议；延时 1~3s。 
 
 
+更多的音视频技术文章可以去看：[关键帧Keyframe：https://gjzkeyframe.github.io/](https://gjzkeyframe.github.io/)
 
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})

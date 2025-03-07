@@ -47,6 +47,7 @@ tag: Audio, Video, Live, Delay
 
 
 
+更多的音视频技术文章可以去看：[关键帧Keyframe：https://gjzkeyframe.github.io/](https://gjzkeyframe.github.io/)
 
 
 [SamirChen]: http://www.samirchen.com "SamirChen"

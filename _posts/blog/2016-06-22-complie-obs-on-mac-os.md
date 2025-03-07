@@ -69,6 +69,10 @@ cd rundir/RelWithDebInfo/bin/
 你还可以从 [https://obsproject.com/download][4] 直接下载 OBS 安装包来安装 OBS。
 
 
+
+更多的音视频技术文章可以去看：[关键帧Keyframe：https://gjzkeyframe.github.io/](https://gjzkeyframe.github.io/)
+
+
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/complie-obs-on-mac-os

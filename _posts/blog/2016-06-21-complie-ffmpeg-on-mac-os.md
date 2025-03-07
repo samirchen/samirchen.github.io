@@ -91,6 +91,10 @@ $ ffplay http://devimages.apple.com.edgekey.net/streaming/examples/bipbop_16x9/g
 如果你想要编译 FFmpeg 来适用于 iOS 项目，你可以看一下 [FFmpegCompileTool][7]。
 
 
+
+更多的音视频技术文章可以去看：[关键帧Keyframe：https://gjzkeyframe.github.io/](https://gjzkeyframe.github.io/)
+
+
 [SamirChen]: http://www.samirchen.com "SamirChen"
 [1]: {{ page.url }} ({{ page.title }})
 [2]: http://www.samirchen.com/complie-ffmpeg-on-mac-os

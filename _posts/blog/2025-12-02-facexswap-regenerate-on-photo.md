@@ -38,30 +38,14 @@ _评论区求提示词_
 - 4、**点击“生成”，然后…3、2、1，魔法已经完成。**
 
 
-{%
-  include embed/video.html
-  src='https://gjzkeyframe.github.io/assets/resource/aigc-product/facexswap-regenerate-on-photo-3.mp4'
-  types='mp4'
-  poster=''
-  title='FaceXSwap 换脸生成过程'
-  autoplay=true
-  loop=true
-  muted=true
-%}
+FaceXSwap 换脸生成过程：[https://gjzkeyframe.github.io/assets/resource/aigc-product/facexswap-regenerate-on-photo-3.mp4](https://gjzkeyframe.github.io/assets/resource/aigc-product/facexswap-regenerate-on-photo-3.mp4)
+
 
 那组原本就惊艳的圣诞写真里，“圣诞精灵”赫然变成了 **安妮·海瑟薇**！她或俏皮或温柔地出现在每一个完美构图中，红色围巾映衬着她完美的五官，**FaceXSwap 的融合精准到发丝和眼神光，仿佛这套写真是为她量身定制的**。
 
+FaceXSwap 换脸效果：[https://gjzkeyframe.github.io/assets/resource/aigc-product/facexswap-regenerate-on-photo-4.mp4](https://gjzkeyframe.github.io/assets/resource/aigc-product/facexswap-regenerate-on-photo-4.mp4)
 
-{%
-  include embed/video.html
-  src='https://gjzkeyframe.github.io/assets/resource/aigc-product/facexswap-regenerate-on-photo-4.mp4'
-  types='mp4'
-  poster=''
-  title='FaceXSwap 换脸效果'
-  autoplay=true
-  loop=true
-  muted=true
-%}
+
 
 看到这令人满意的换脸效果，我带着这组“海瑟薇圣诞大片”，回到原博评论区，礼貌回复：“大佬的这组圣诞写真太有感觉了。琢磨不出来提示词的我，只好上邪修玩法了 😋 比大佬的效果还有差距，不过能换上女神 安妮海瑟薇，我也心满意足了。”
 

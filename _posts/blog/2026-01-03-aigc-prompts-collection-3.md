@@ -83,7 +83,7 @@ Prompt：
 本文所介绍的 AI 人物生成，也可以使用 FaceXSwap 端侧离线换脸生成。
 
 ![FaceXSwap 端侧离线换脸生成新内容](https://gjzkeyframe.github.io/assets/resource/aigc-product/facexswap_preview_short.gif)
-FaceXSwap 端侧离线换脸生成新内容_
+
 
 
 

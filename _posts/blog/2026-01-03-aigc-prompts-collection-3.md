@@ -446,4 +446,7 @@ Prompt:
 
 
 
+[SamirChen]: http://www.samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{ page.title }})
+[2]: http://samirchen.com/aigc-prompts-collection-3/
 

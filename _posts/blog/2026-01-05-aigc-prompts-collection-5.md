@@ -214,3 +214,8 @@ Prompt:
 - FaceXSwap iOS App 下载：<a href="https://apps.apple.com/app/id6752116909  " target="_blank">FaceXSwap iOS App Download</a>
 
 
+
+
+[SamirChen]: http://www.samirchen.com "SamirChen"
+[1]: {{ page.url }} ({{ page.title }})
+[2]: http://samirchen.com/aigc-prompts-collection-4/
